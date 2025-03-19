@@ -1,5 +1,5 @@
 // src/styles/global.scss
-@import 'variables';
+@use 'variables' as vars;
 
 * {
   margin: 0;
@@ -9,14 +9,14 @@
 }
 
 body {
-  background-color: $primary-color;
-  font-family: $font-family-sans;
-  color: $white;
+  background-color: vars.$primary-color;
+  font-family: vars.$font-family-sans;
+  color: vars.$white;
 }
 
 a {
   text-decoration: none;
-  color: $white;
+  color: vars.$white;
 }
 
 button {

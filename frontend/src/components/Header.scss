@@ -1,5 +1,6 @@
-@import '../styles/variables';
-@import '../styles/mixins';
+@use "sass:color";
+@use '../styles/variables' as vars;
+@use '../styles/mixins' as mix;
 
 .header {
   position: fixed;
@@ -10,20 +11,40 @@
   justify-content: space-between;
   align-items: center;
   padding: 40px 40px;
-  background-color: $primary-color;
+  background-color: vars.$primary-color;
   z-index: 1000;
-
-  &__logo {
-    font-family: $font-family-logo;
-    font-size: 4rem;
-    color: $white;
-  }
 }
 
 .header__logo {
-  font-family: $font-family-logo;
+  font-family: vars.$font-family-logo;
   font-size: 4rem;
-  color: $white;
+  color: vars.$white;
+  flex: 1;
+}
+
+// New mobile menu wrapper
+.header__mobile-menu {
+  display: flex;
+  align-items: center;
+  flex: 2;
+}
+
+@include mix.mobile {
+  .header__mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100px;
+    left: 0;
+    width: 100%;
+    flex-direction: column;
+    background-color: vars.$primary-color;
+    padding: 20px;
+    align-items: center;
+  }
+
+  .header__mobile-menu--open {
+    display: flex;
+  }
 }
 
 .header__nav {
@@ -31,19 +52,12 @@
   align-items: center;
 }
 
-.header__nav--open {
-  display: block;
-}
-
-@include mobile {
+@include mix.mobile {
   .header__nav {
-    display: none;
-    position: absolute;
-    top: 60px;
-    left: 0;
+    display: flex;
     width: 100%;
-    background-color: $primary-color;
-    padding: 20px;
+    justify-content: center; // Center the nav horizontally
+    align-items: center;
   }
 }
 
@@ -54,9 +68,12 @@
   padding: 0;
 }
 
-@include mobile {
+@include mix.mobile {
   .header__nav-list {
     flex-direction: column;
+    width: 100%;
+    align-items: center;
+    text-align: center;
   }
 }
 
@@ -64,14 +81,14 @@
   margin-right: 40px;
 }
 
-@include mobile {
+@include mix.mobile {
   .header__nav-item {
     margin: 10px 0;
   }
 }
 
 .header__nav-link {
-  color: $white;
+  color: vars.$white;
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -84,20 +101,32 @@
 .header__auth {
   display: flex;
   align-items: center;
+  flex: 1;
+  justify-content: flex-end;
 }
 
-@include mobile {
+@include mix.mobile {
   .header__auth {
     flex-direction: column;
+    width: 100%;
     margin-top: 20px;
+    align-items: center;
+    text-align: center;
   }
 }
 
 .header__auth-login {
-  color: $white;
+  color: vars.$white;
   text-decoration: none;
   margin-right: 20px;
   font-size: 2rem;
+}
+
+@include mix.mobile {
+  .header__auth-login {
+    margin: 0;
+    margin-bottom: 20px;
+  }
 }
 
 .header__auth-login:hover {
@@ -105,8 +134,8 @@
 }
 
 .header__auth-signup {
-  background-color: $white;
-  color: $primary-color;
+  background-color: vars.$white;
+  color: vars.$primary-color;
   border: none;
   border-radius: 20px;
   padding: 8px 16px;
@@ -116,7 +145,7 @@
 }
 
 .header__auth-signup:hover {
-  background-color: darken($white, 10%);
+  background-color: color.adjust(vars.$white, $lightness: -10%);
 }
 
 .header__hamburger {
@@ -127,7 +156,7 @@
   border: none;
 }
 
-@include mobile {
+@include mix.mobile {
   .header__hamburger {
     display: flex;
   }
@@ -136,6 +165,6 @@
 .header__hamburger-line {
   width: 25px;
   height: 3px;
-  background-color: $white;
+  background-color: vars.$white;
   margin: 3px 0;
 }
