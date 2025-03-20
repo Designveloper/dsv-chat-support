@@ -44,8 +44,6 @@ export class AuthService {
 
   async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const payload = this.jwtService.verify(refreshToken);
-
       const tokenRecord = await this.refreshTokensService.findOneByToken(refreshToken);
       if (!tokenRecord || tokenRecord.expires_time < new Date()) {
         throw new UnauthorizedException('Invalid or expired refresh token');

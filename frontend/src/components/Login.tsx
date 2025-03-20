@@ -1,22 +1,35 @@
 import React, { useState } from "react";
 import "./Login.scss";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "./Button";
 import Input from "./Input";
+import { useAuth } from "../context/AuthContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const { login, loading, error } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Email:", email, "Password:", password);
+
+    try {
+      const user = await login(email, password);
+      if (user) {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="login">
       <form className="login__form" onSubmit={handleSubmit}>
         <h2 className="login__title">Login</h2>
+
+        {error && <div className="login__error">{error}</div>}
         <Input
           id="email"
           type="email"
@@ -34,7 +47,7 @@ const Login: React.FC = () => {
           required
         />
         <Button
-          label="Login"
+          label={loading ? "Logging in..." : "Login"}
           type="submit"
           className="login__button"
           variant="primary"

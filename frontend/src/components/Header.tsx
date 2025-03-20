@@ -1,12 +1,18 @@
-// src/components/Header/Header.tsx
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Header.scss";
+import { useAuth } from "../context/AuthContext";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleDashboardClick = () => {
+    navigate("/dashboard");
+  };
 
   return (
     <header className="header">
@@ -46,10 +52,25 @@ const Header: React.FC = () => {
           </ul>
         </nav>
         <div className="header__auth">
-          <Link to="/login" className="header__auth-login">
-            Login
-          </Link>
-          <button className="header__auth-signup">Signup</button>
+          {isAuthenticated ? (
+            <>
+              <button
+                className="header__auth-dashboard"
+                onClick={handleDashboardClick}
+              >
+                Open Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="header__auth-login">
+                Login
+              </Link>
+              <Link to="/signup" className="header__auth-signup-link">
+                <button className="header__auth-signup">Signup</button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
       <button

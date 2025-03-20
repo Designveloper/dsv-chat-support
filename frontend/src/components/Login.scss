@@ -63,6 +63,12 @@
   cursor: pointer;
 }
 
+.login__error {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
 @include mix.mobile {
   .login__form {
     padding: 30px 20px;
