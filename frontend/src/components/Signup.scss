@@ -82,13 +82,21 @@
   margin-top: 20px;
 }
 
+.signup__login-label {
+  color: vars.$primary-color;
+  font-size: 1.2rem;
+}
+
 .signup__login-link {
   color: vars.$primary-color;
-  text-decoration: underline;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-left: 6px;
 }
 
 .signup__login-link:hover {
-  text-decoration: none;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 @include mix.mobile {
