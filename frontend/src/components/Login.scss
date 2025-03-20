@@ -21,60 +21,10 @@
 }
 
 .login__title {
-  font-family: vars.$font-family-logo;
-  font-size: 3rem;
+  font-size: 30px;
   color: vars.$primary-color;
   text-align: center;
   margin-bottom: 30px;
-}
-
-.login__field {
-  margin-bottom: 20px;
-}
-
-.login__label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: vars.$primary-color;
-}
-
-.login__input {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-  transition: border-color 0.3s;
-}
-
-.login__input:focus {
-  outline: none;
-  border-color: vars.$primary-color;
-}
-
-.login__button {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: vars.$white;
-  background-color: vars.$primary-color;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.login__button:hover {
-  background-color: color.adjust(vars.$primary-color, $lightness: 10%);
-}
-
-.login__button:disabled {
-  background-color: color.adjust(vars.$primary-color, $lightness: -10%);
-  cursor: not-allowed;
 }
 
 .login__forgot-password {
@@ -84,7 +34,7 @@
 
 .login__forgot-password-link {
   color: vars.$primary-color;
-  font-size: 1.4rem;
+  font-size: 14px;
 }
 
 .login__forgot-password-link:hover {
@@ -97,13 +47,13 @@
 }
 
 .login__signup-label {
-  font-size: 1.2rem;
+  font-size: 12px;
   color: vars.$primary-color;
 }
 
 .login__signup-link {
   color: vars.$primary-color;
-  font-size: 1.2rem;
+  font-size: 12px;
   font-weight: 500;
   margin-left: 6px;
 }
@@ -119,7 +69,7 @@
   }
   
   .login__title {
-    font-size: 2.4rem;
+    font-size: 24px;
   }
   
   .login__input {

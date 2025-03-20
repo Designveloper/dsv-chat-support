@@ -1,0 +1,95 @@
+@use "sass:color";
+@use "../styles/variables" as vars;
+@use "../styles/mixins" as mix;
+
+/* Base input container */
+.input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.input--full-width {
+    width: 100%;
+}
+
+/* Label styles */
+.input__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #333;;
+}
+
+.input__required {
+    color: #f44336;
+    margin-left: 4px;
+}
+
+/* Input field styles */
+.input__field {
+    font-family: inherit;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    transition: all 0.2s ease;
+    outline: none;
+    color: #333;
+}
+
+.input__field::placeholder {
+    color: #999;
+}
+
+.input__field:hover:not(:disabled) {
+    border-color: color.adjust(#333, $lightness: 10%);
+}
+
+/* Input states */
+.input__field--focused {
+    border-color: vars.$primary-color;
+    box-shadow: 0 0 0 2px rgba(vars.$primary-color, 0.2);
+}
+
+.input__field--error {
+    border-color: #f44336;
+}
+
+.input__field--disabled {
+    background-color: #f9f9f9;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.input__field--full-width {
+    width: 100%;
+}
+
+/* Input field sizes */
+.input__field--small {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+.input__field--medium {
+    padding: 8px 16px;
+    font-size: 1rem;
+}
+
+.input__field--large {
+    padding: 10px 16px;
+    font-size: 1.125rem;
+}
+
+/* Helper and error text */
+.input__helper {
+    font-size: 0.75rem;
+    margin-top: 4px;
+    color: #666;
+}
+
+.input__error {
+    font-size: 0.75rem;
+    margin-top: 4px;
+    color: #f44336;
+}
