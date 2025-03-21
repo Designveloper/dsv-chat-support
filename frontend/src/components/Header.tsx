@@ -16,7 +16,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="header">
-      <div className="header__logo">Chattio</div>
+      <div className="header__logo">Chatlio</div>
       <div
         className={`header__mobile-menu ${
           isMenuOpen ? "header__mobile-menu--open" : ""

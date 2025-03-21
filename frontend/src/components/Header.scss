@@ -185,19 +185,3 @@
     cursor: pointer;
   }
 }
-
-.header__auth-logout {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: color.adjust(#f44336, $lightness: -10%);
-    cursor: pointer;
-  }
-}

@@ -7,6 +7,10 @@ interface AuthResponse {
     refreshToken?: string;
 }
 
+interface UserProfile {
+    email: string;
+}
+
 export const authService = {
     async signup(email: string, password: string): Promise<AuthResponse> {
         const response = await fetch(`${API_URL}/auth/signup`, {
@@ -14,6 +18,7 @@ export const authService = {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ email, password }),
         });
 
@@ -31,6 +36,7 @@ export const authService = {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ email, password }),
         });
 
@@ -42,17 +48,12 @@ export const authService = {
         return response.json();
     },
 
-    saveTokens(accessToken: string, refreshToken: string) {
+    saveTokens(accessToken: string) {
         localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
     },
 
     getAccessToken() {
         return localStorage.getItem('accessToken');
-    },
-
-    getRefreshToken() {
-        return localStorage.getItem('refreshToken');
     },
 
     clearTokens() {
@@ -66,18 +67,14 @@ export const authService = {
     },
 
     async refreshAccessToken(): Promise<string> {
-        const refreshToken = this.getRefreshToken();
-        if (!refreshToken) {
-            throw new Error('No refresh token available');
-        }
-
         try {
             const response = await axios.post(
                 `${API_URL}/auth/refresh`,
-                { refreshToken },
+                {},
                 {
+                    withCredentials: true,
                     headers: {
-                        Authorization: `Bearer ${this.getAccessToken()}`
+                        'Content-Type': 'application/json',
                     }
                 }
             );
@@ -88,6 +85,38 @@ export const authService = {
         } catch {
             this.clearTokens();
             throw new Error('Session expired. Please login again');
+        }
+    },
+
+    async getUserProfile(): Promise<UserProfile> {
+        try {
+            const accessToken = this.getAccessToken();
+            if (!accessToken) {
+                throw new Error('Access token not found');
+            }
+
+            const response = await fetch(`${API_URL}/users/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.log('Access token expired. Refreshing token...');
+                    await this.refreshAccessToken();
+                    return this.getUserProfile();
+                }
+                throw new Error('Failed to fetch user profile');
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
         }
     },
 

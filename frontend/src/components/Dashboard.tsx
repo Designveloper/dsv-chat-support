@@ -5,6 +5,7 @@ import "./Dashboard.scss";
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  console.log(user);
   const navigate = useNavigate();
 
   const handleLogout = () => {

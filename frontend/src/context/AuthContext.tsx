@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -23,21 +23,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       const token = authService.getAccessToken();
       if (token) {
-        setIsAuthenticated(true);
+        try {
+          const userData = await authService.getUserProfile();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (err) {
+          console.log("Failed to authenticate", err);
+          authService.logout();
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       }
       setLoading(false);
     };
@@ -50,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     try {
       const response = await authService.login(email, password);
-      authService.saveTokens(response.accessToken, response.refreshToken || "");
+      authService.saveTokens(response.accessToken);
       setIsAuthenticated(true);
       setUser({ email });
       return true;
@@ -68,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     try {
       const response = await authService.signup(email, password);
-      authService.saveTokens(response.accessToken, response.refreshToken || "");
+      authService.saveTokens(response.accessToken);
       setIsAuthenticated(true);
       setUser({ email });
       return true;
@@ -86,6 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
   };
+
+  console.log("user", user);
 
   const value = {
     user,
