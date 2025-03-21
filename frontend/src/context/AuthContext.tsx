@@ -19,6 +19,8 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<boolean>;
   confirmEmail: (email: string, code: string) => Promise<boolean>;
   resendConfirmation: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
   isAuthenticated: boolean;
@@ -122,6 +124,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.forgotPassword(email);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset password");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string, code: string, newPassword: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.resetPassword(email, code, newPassword);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset password");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -136,6 +166,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signup,
     confirmEmail,
     resendConfirmation,
+    forgotPassword,
+    resetPassword,
     logout,
     clearError,
     isAuthenticated,

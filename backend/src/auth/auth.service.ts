@@ -131,4 +131,25 @@ export class AuthService {
     await this.usersService.save(user);
     await this.sendConfirmationEmail(user.email, confirmationCode);
   }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    const resetCode = crypto.randomBytes(3).toString('hex');
+    user.resetCode = resetCode;
+    await this.usersService.save(user);
+    await this.sendEmail(user.email, 'Password Reset', `Your password reset code is: ${resetCode}`);
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user || user.resetCode !== code) {
+      throw new UnauthorizedException('Invalid reset code');
+    }
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetCode = "";
+    await this.usersService.save(user);
+  }
 }

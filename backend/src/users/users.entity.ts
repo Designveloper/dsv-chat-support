@@ -19,6 +19,9 @@ export class User {
   @Column({ default: false })
   isEmailConfirmed: boolean;
 
+  @Column({ nullable: true })
+  resetCode: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

@@ -11,6 +11,7 @@ CREATE TABLE `users` (
   `password` varchar(255),
   `confirmationCode` varchar(255),
   `isConfirmed` boolean,
+  `resetCode` varchar(255),
   `created_at` timestamp,
   `updated_at` timestamp
 );

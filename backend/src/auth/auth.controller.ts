@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -61,6 +63,20 @@ export class AuthController {
   async resendConfirmation(@Body('email') email: string) {
     await this.authService.resendConfirmation(email);
     return { message: 'Confirmation email resent' };
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
+    await this.authService.forgotPassword(email);
+    return { message: 'Please check your email to reset your password' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    const { email, code, newPassword } = resetPasswordDto;
+    await this.authService.resetPassword(email, code, newPassword);
+    return { message: 'Password reset successfully' };
   }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {

@@ -45,7 +45,6 @@ export const authService = {
         }
     },
 
-    // resend confirmation code
     async resendConfirmation(email: string): Promise<void> {
         const response = await fetch(`${API_URL}/auth/resend-confirmation`, {
             method: 'POST',
@@ -58,6 +57,36 @@ export const authService = {
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to resend confirmation code');
+        }
+    },
+
+    async forgotPassword(email: string): Promise<void> {
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to send password reset code');
+        }
+    },
+
+    async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+        const response = await fetch(`${API_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, code, newPassword }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to reset password');
         }
     },
 
