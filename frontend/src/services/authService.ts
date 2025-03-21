@@ -30,6 +30,37 @@ export const authService = {
         return response.json();
     },
 
+    async confirmEmail(email: string, code: string): Promise<void> {
+        const response = await fetch(`${API_URL}/auth/confirm`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, code }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to confirm email');
+        }
+    },
+
+    // resend confirmation code
+    async resendConfirmation(email: string): Promise<void> {
+        const response = await fetch(`${API_URL}/auth/resend-confirmation`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to resend confirmation code');
+        }
+    },
+
     async login(email: string, password: string): Promise<AuthResponse> {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
@@ -58,12 +89,10 @@ export const authService = {
 
     clearTokens() {
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
     },
 
     logout() {
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
     },
 
     async refreshAccessToken(): Promise<string> {

@@ -15,8 +15,10 @@ const Signup: React.FC = () => {
     e.preventDefault();
 
     try {
-      await signup(email, password);
-      navigate("/");
+      const response = await signup(email, password);
+      if (response) {
+        navigate("/confirm", { state: { email } });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -27,7 +29,6 @@ const Signup: React.FC = () => {
       <form className="signup__form" onSubmit={handleSubmit}>
         <h2 className="signup__title">Sign up</h2>
 
-        {error && <div className="signup__error">{error}</div>}
         <Input
           id="email"
           type="email"
@@ -50,6 +51,7 @@ const Signup: React.FC = () => {
           className="signup__button"
           variant="primary"
         />
+        {error && <div className="signup__error">{error}</div>}
 
         <div className="signup__login">
           <span className="signup__login-label">Already have an account?</span>

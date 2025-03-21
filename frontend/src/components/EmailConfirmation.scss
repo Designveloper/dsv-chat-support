@@ -24,22 +24,59 @@
   font-size: 30px;
   color: vars.$primary-color;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+.email-confirmation__instructions {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 14px;
+}
+
+.email-confirmation__error {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.email-confirmation__resend {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.email-confirmation__resend-button {
+  background: none;
+  border: none;
+  color: vars.$primary-color;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 5px;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 @include mix.mobile {
   .email-confirmation__form {
     padding: 30px 20px;
   }
-  
+
   .email-confirmation__title {
     font-size: 24px;
   }
-  
+
   .email-confirmation__input {
     padding: 10px;
   }
-  
+
   .email-confirmation__button {
     padding: 10px;
   }

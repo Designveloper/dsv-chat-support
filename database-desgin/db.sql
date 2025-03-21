@@ -9,6 +9,8 @@ CREATE TABLE `users` (
   `id` integer PRIMARY KEY,
   `email` varchar(255) UNIQUE,
   `password` varchar(255),
+  `confirmationCode` varchar(255),
+  `isConfirmed` boolean,
   `created_at` timestamp,
   `updated_at` timestamp
 );

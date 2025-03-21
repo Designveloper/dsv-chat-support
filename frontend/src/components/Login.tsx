@@ -29,7 +29,6 @@ const Login: React.FC = () => {
       <form className="login__form" onSubmit={handleSubmit}>
         <h2 className="login__title">Login</h2>
 
-        {error && <div className="login__error">{error}</div>}
         <Input
           id="email"
           type="email"
@@ -52,6 +51,8 @@ const Login: React.FC = () => {
           className="login__button"
           variant="primary"
         />
+
+        {error && <div className="login__error">{error}</div>}
 
         <div className="login__forgot-password">
           <Link to="/forgot-password" className="login__forgot-password-link">

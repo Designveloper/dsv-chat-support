@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
 import Signup from "./components/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmailConfirmation from "./components/EmailConfirmation";
 import Dashboard from "./components/Dashboard";
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/confirm" element={<EmailConfirmation />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
