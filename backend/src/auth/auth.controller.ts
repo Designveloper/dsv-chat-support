@@ -3,6 +3,7 @@ import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -10,15 +11,9 @@ export class AuthController {
   constructor(private authService: AuthService) { }
 
   @Post('signup')
-  async signup(@Body() signupDto: SignupDto, @Res({ passthrough: true }) response: Response) {
-    const { accessToken, refreshToken } = await this.authService.signup(
-      signupDto.email,
-      signupDto.password
-    );
-
-    this.setRefreshTokenCookie(response, refreshToken);
-
-    return { accessToken };
+  async signup(@Body() signupDto: SignupDto) {
+    await this.authService.signup(signupDto.email, signupDto.password);
+    return { message: 'Please check your email to confirm your account.' };
   }
 
   @Post('login')
@@ -54,6 +49,18 @@ export class AuthController {
     });
 
     return { success: true };
+  }
+
+  @Post('confirm')
+  async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
+    await this.authService.confirmEmail(confirmEmailDto.email, confirmEmailDto.code);
+    return { message: 'Email confirmed successfully' };
+  }
+
+  @Post('resend-confirmation')
+  async resendConfirmation(@Body('email') email: string) {
+    await this.authService.resendConfirmation(email);
+    return { message: 'Confirmation email resent' };
   }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { RefreshToken } from '../refresh-tokens/refresh-tokens.entity';
 import { ChatWidget } from '../chat-widgets/chat-widgets.entity';
 
@@ -12,6 +12,12 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ nullable: true })
+  confirmationCode: string;
+
+  @Column({ default: false })
+  isEmailConfirmed: boolean;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
