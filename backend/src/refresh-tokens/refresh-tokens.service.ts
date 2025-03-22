@@ -8,7 +8,7 @@ export class RefreshTokensService {
   constructor(
     @InjectRepository(RefreshToken)
     private refreshTokensRepository: Repository<RefreshToken>,
-  ) {}
+  ) { }
 
   async create(userId: number, refreshToken: string, expiresTime: Date): Promise<RefreshToken> {
     const token = this.refreshTokensRepository.create({

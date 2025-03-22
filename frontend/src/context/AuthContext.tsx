@@ -20,8 +20,16 @@ interface AuthContextType {
   confirmEmail: (email: string, code: string) => Promise<boolean>;
   resendConfirmation: (email: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<boolean>;
-  resetPassword: (email: string, code: string, newPassword: string) => Promise<boolean>;
+  resetPassword: (
+    email: string,
+    code: string,
+    newPassword: string
+  ) => Promise<boolean>;
   logout: () => void;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<boolean>;
   clearError: () => void;
   isAuthenticated: boolean;
 }
@@ -37,25 +45,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const clearError = () => setError(null);
 
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = authService.getAccessToken();
-      if (token) {
-        try {
-          const userData = await authService.getUserProfile();
-          setUser(userData);
-          setIsAuthenticated(true);
-          console.log("Authenticated", userData);
-        } catch (err) {
-          console.log("Failed to authenticate", err);
-          authService.logout();
-          setUser(null);
+    const initAuth = async () => {
+      setLoading(true);
+      try {
+        const token = authService.getAccessToken();
+        if (token) {
+          try {
+            const userProfile = await authService.getUserProfile();
+            setUser(userProfile);
+            setIsAuthenticated(true);
+          } catch (error) {
+            console.error("Failed to get user profile:", error);
+            authService.clearTokens();
+            setIsAuthenticated(false);
+          }
+        } else {
           setIsAuthenticated(false);
         }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    checkAuthStatus();
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -138,7 +153,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const resetPassword = async (email: string, code: string, newPassword: string) => {
+  const resetPassword = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -152,10 +171,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await authService.logout();
+    } catch (err) {
+      console.log("Failed to logout", err);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setLoading(false);
+    }
+  };
+
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to change password"
+      );
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {
@@ -169,6 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     forgotPassword,
     resetPassword,
     logout,
+    changePassword,
     clearError,
     isAuthenticated,
   };

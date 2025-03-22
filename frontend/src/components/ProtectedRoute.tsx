@@ -7,7 +7,11 @@ const ProtectedRoute: React.FC = () => {
   const location = useLocation();
 
   if (loading) {
-    return <div className="loading-container">Loading...</div>;
+    return (
+      <div className="auth-loading">
+        <div className="auth-loading__spinner"></div>
+      </div>
+    );
   }
 
   return isAuthenticated ? (

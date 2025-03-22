@@ -6,6 +6,7 @@ import { SignupDto } from './dto/signup.dto';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -77,6 +78,21 @@ export class AuthController {
     const { email, code, newPassword } = resetPasswordDto;
     await this.authService.resetPassword(email, code, newPassword);
     return { message: 'Password reset successfully' };
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Req() req,
+    @Body() changePasswordDto: ChangePasswordDto
+  ) {
+    await this.authService.changePassword(
+      req.user.email,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
+
+    return { message: 'Password changed successfully' };
   }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {

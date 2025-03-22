@@ -8,9 +8,11 @@ import { useAuth } from "../context/AuthContext";
 const EmailConfirmation: React.FC = () => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { error, confirmEmail, resendConfirmation } = useAuth();
+  const { loading, error, confirmEmail, resendConfirmation, clearError } =
+    useAuth();
 
   useEffect(() => {
     if (location.state?.email) {
@@ -20,12 +22,21 @@ const EmailConfirmation: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
+    setSuccessMessage(null);
 
     try {
       const response = await confirmEmail(email, code);
       if (response) {
-        alert("Email confirmed successfully!");
-        navigate("/login");
+        setSuccessMessage("Email confirmed successfully!");
+
+        // Clear the form
+        setCode("");
+
+        // Redirect to login after a brief delay
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
     } catch (err) {
       console.log(err);
@@ -33,9 +44,12 @@ const EmailConfirmation: React.FC = () => {
   };
 
   const handleResendCode = async () => {
+    clearError();
+    setSuccessMessage(null);
+
     try {
       await resendConfirmation(email);
-      alert("Confirmation code has been resent to your email!");
+      setSuccessMessage("Confirmation code has been resent to your email!");
     } catch (err) {
       console.log(err);
     }
@@ -43,6 +57,11 @@ const EmailConfirmation: React.FC = () => {
 
   return (
     <div className="email-confirmation">
+      {loading && (
+        <div className="auth-loading">
+          <div className="auth-loading__spinner"></div>
+        </div>
+      )}
       <form className="email-confirmation__form" onSubmit={handleSubmit}>
         <h2 className="email-confirmation__title">Email Confirmation</h2>
 
@@ -70,14 +89,18 @@ const EmailConfirmation: React.FC = () => {
           required
         />
 
+        {successMessage && (
+          <div className="email-confirmation__success">{successMessage}</div>
+        )}
+
+        {error && <div className="email-confirmation__error">{error}</div>}
+
         <Button
           label="Verify Code"
           type="submit"
           className="email-confirmation__button"
           variant="primary"
         />
-
-        {error && <div className="email-confirmation__error">{error}</div>}
 
         <div className="email-confirmation__resend">
           <span>Didn't receive a code?</span>

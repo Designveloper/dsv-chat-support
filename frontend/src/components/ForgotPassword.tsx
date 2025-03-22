@@ -43,7 +43,7 @@ const ForgotPassword: React.FC = () => {
 
         setTimeout(() => {
           navigate("/login");
-        }, 1000);
+        }, 2000);
       }
     } catch (err) {
       console.log(err);
@@ -52,6 +52,11 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <div className="forgot-password">
+      {loading && (
+        <div className="auth-loading">
+          <div className="auth-loading__spinner"></div>
+        </div>
+      )}
       {!isCodeSent ? (
         <form className="forgot-password__form" onSubmit={handleRequestCode}>
           <h2 className="forgot-password__title">Forgot Password</h2>
@@ -66,7 +71,7 @@ const ForgotPassword: React.FC = () => {
           />
 
           <Button
-            label={loading ? "Sending code..." : "Send Reset Code"}
+            label="Send Reset Code"
             type="submit"
             className="forgot-password__button"
             variant="primary"
@@ -115,14 +120,13 @@ const ForgotPassword: React.FC = () => {
             <div className="forgot-password__success">{successMessage}</div>
           )}
 
+          {error && <div className="forgot-password__error">{error}</div>}
           <Button
             label="Reset Password"
             type="submit"
             className="forgot-password__button"
             variant="primary"
           />
-
-          {error && <div className="forgot-password__error">{error}</div>}
         </form>
       )}
     </div>

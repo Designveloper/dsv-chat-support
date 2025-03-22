@@ -108,21 +108,6 @@ export const authService = {
         return response.json();
     },
 
-    saveTokens(accessToken: string) {
-        localStorage.setItem('accessToken', accessToken);
-    },
-
-    getAccessToken() {
-        return localStorage.getItem('accessToken');
-    },
-
-    clearTokens() {
-        localStorage.removeItem('accessToken');
-    },
-
-    logout() {
-        localStorage.removeItem('accessToken');
-    },
 
     async refreshAccessToken(): Promise<string> {
         try {
@@ -176,6 +161,61 @@ export const authService = {
             console.error(error);
             throw error;
         }
+    },
+
+    async logout(): Promise<void> {
+        try {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+
+            this.clearTokens();
+        } catch (error) {
+            console.error(error);
+            throw new Error('Failed to logout');
+        }
+    },
+
+    async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+        const accessToken = this.getAccessToken();
+        if (!accessToken) {
+            throw new Error('Access token not found');
+        }
+
+        const response = await fetch(`${API_URL}/auth/change-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ currentPassword, newPassword }),
+        });
+        console.log(response);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (response.status === 401 && !errorData.message.includes('incorrect')) {
+                await this.refreshAccessToken();
+                return this.changePassword(currentPassword, newPassword);
+            }
+            throw new Error(errorData.message || 'Failed to change password');
+        }
+    },
+
+    saveTokens(accessToken: string) {
+        localStorage.setItem('accessToken', accessToken);
+    },
+
+    getAccessToken() {
+        return localStorage.getItem('accessToken');
+    },
+
+    clearTokens() {
+        localStorage.removeItem('accessToken');
     },
 
     isAuthenticated() {

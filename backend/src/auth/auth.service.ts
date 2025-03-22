@@ -152,4 +152,24 @@ export class AuthService {
     user.resetCode = "";
     await this.usersService.save(user);
   }
+
+  async changePassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify current password
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Update to new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await this.usersService.save(user);
+  }
 }

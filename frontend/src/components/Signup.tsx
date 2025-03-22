@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Signup.scss";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "./Button";
 import Input from "./Input";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +9,7 @@ const Signup: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { signup, loading, error } = useAuth();
+  const { signup, loading, error, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +24,18 @@ const Signup: React.FC = () => {
     }
   };
 
+  const goToLogin = () => {
+    clearError();
+    navigate("/login");
+  };
+
   return (
     <div className="signup">
+      {loading && (
+        <div className="auth-loading">
+          <div className="auth-loading__spinner"></div>
+        </div>
+      )}
       <form className="signup__form" onSubmit={handleSubmit}>
         <h2 className="signup__title">Sign up</h2>
 
@@ -46,7 +56,7 @@ const Signup: React.FC = () => {
           required
         />
         <Button
-          label={loading ? "Signing up..." : "Sign up"}
+          label="Sign up"
           type="submit"
           className="signup__button"
           variant="primary"
@@ -54,10 +64,10 @@ const Signup: React.FC = () => {
         {error && <div className="signup__error">{error}</div>}
 
         <div className="signup__login">
-          <span className="signup__login-label">Already have an account?</span>
-          <Link to="/login" className="signup__login-link">
+          <span className="login__signup-label">Already have an account?</span>
+          <span onClick={goToLogin} className="signup__login-link">
             Login
-          </Link>
+          </span>
         </div>
       </form>
     </div>

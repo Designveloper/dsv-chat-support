@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Login.scss";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "./Button";
 import Input from "./Input";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +9,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login, loading, error } = useAuth();
+  const { login, loading, error, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +24,23 @@ const Login: React.FC = () => {
     }
   };
 
+  const goToForgotPassword = () => {
+    clearError();
+    navigate("/forgot-password");
+  };
+
+  const goToSignup = () => {
+    clearError();
+    navigate("/signup");
+  };
+
   return (
     <div className="login">
+      {loading && (
+        <div className="auth-loading">
+          <div className="auth-loading__spinner"></div>
+        </div>
+      )}
       <form className="login__form" onSubmit={handleSubmit}>
         <h2 className="login__title">Login</h2>
 
@@ -46,7 +61,7 @@ const Login: React.FC = () => {
           required
         />
         <Button
-          label={loading ? "Logging in..." : "Login"}
+          label="Login"
           type="submit"
           className="login__button"
           variant="primary"
@@ -55,16 +70,19 @@ const Login: React.FC = () => {
         {error && <div className="login__error">{error}</div>}
 
         <div className="login__forgot-password">
-          <Link to="/forgot-password" className="login__forgot-password-link">
+          <span
+            onClick={goToForgotPassword}
+            className="login__forgot-password-link"
+          >
             Forgot password?
-          </Link>
+          </span>
         </div>
 
         <div className="login__signup">
           <span className="login__signup-label">Don't have an account?</span>
-          <Link to="/signup" className="login__signup-link">
+          <span onClick={goToSignup} className="login__signup-link">
             Signup
-          </Link>
+          </span>
         </div>
       </form>
     </div>
