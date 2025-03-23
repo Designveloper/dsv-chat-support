@@ -9,15 +9,18 @@
   min-height: 100vh;
   padding: 20px;
   background-color: color.adjust(vars.$primary-color, $lightness: 70%);
+
+  @include mix.tablet {
+    padding: 15px;
+  }
+
+  @include mix.mobile {
+    padding: 10px;
+  }
 }
 
 .login__form {
-  width: 100%;
-  max-width: 400px;
-  padding: 40px;
-  background-color: vars.$white;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  @include mix.form-container;
 }
 
 .login__title {
@@ -25,17 +28,57 @@
   color: vars.$primary-color;
   text-align: center;
   margin-bottom: 30px;
+
+  @include mix.desktop-small {
+    font-size: 28px;
+    margin-bottom: 25px;
+  }
+
+  @include mix.tablet {
+    font-size: 26px;
+    margin-bottom: 25px;
+  }
+
+  @include mix.mobile {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+}
+
+.login__button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  font-size: 16px;
+
+  @include mix.tablet {
+    padding: 11px;
+    font-size: 15px;
+  }
+
+  @include mix.mobile {
+    padding: 10px;
+    font-size: 14px;
+  }
 }
 
 .login__forgot-password {
   text-align: right;
   margin-top: 10px;
+
+  @include mix.mobile {
+    margin-top: 8px;
+  }
 }
 
 .login__forgot-password-link {
   color: vars.$primary-color;
   font-size: 14px;
   cursor: pointer;
+
+  @include mix.mobile {
+    font-size: 13px;
+  }
 }
 
 .login__forgot-password-link:hover {
@@ -45,19 +88,31 @@
 .login__signup {
   margin-top: 20px;
   text-align: center;
+
+  @include mix.mobile {
+    margin-top: 16px;
+  }
 }
 
 .login__signup-label {
-  font-size: 12px;
-  color: vars.$primary-color;
+  font-size: 14px;
+  color: #555;
+
+  @include mix.mobile {
+    font-size: 13px;
+  }
 }
 
 .login__signup-link {
   color: vars.$primary-color;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   margin-left: 6px;
   cursor: pointer;
+
+  @include mix.mobile {
+    font-size: 13px;
+  }
 }
 
 .login__signup-link:hover {
@@ -73,22 +128,15 @@
   background-color: rgba(244, 67, 54, 0.1);
   border-radius: 4px;
   text-align: center;
-}
 
-@include mix.mobile {
-  .login__form {
-    padding: 30px 20px;
+  @include mix.tablet {
+    font-size: 13px;
+    padding: 8px;
   }
-  
-  .login__title {
-    font-size: 24px;
-  }
-  
-  .login__input {
-    padding: 10px;
-  }
-  
-  .login__button {
-    padding: 10px;
+
+  @include mix.mobile {
+    font-size: 12px;
+    padding: 8px;
+    margin-top: 12px;
   }
 }

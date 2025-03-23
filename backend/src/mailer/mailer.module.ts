@@ -12,6 +12,6 @@ import { getMailerConfig } from './mailer.config';
             inject: [ConfigService],
         }),
     ],
-    exports: [NestMailerModule], // Export so other modules can use it
+    exports: [NestMailerModule],
 })
 export class MailerModule { }

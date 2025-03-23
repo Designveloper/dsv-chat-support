@@ -1,10 +1,19 @@
 @use "sass:color";
 @use "../styles/variables" as vars;
+@use "../styles/mixins" as mix;
 
 .dashboard {
     padding: 120px 20px 20px;
     max-width: 1200px;
     margin: 0 auto;
+
+    @include mix.tablet {
+        padding: 100px 16px 16px;
+    }
+
+    @include mix.mobile {
+        padding: 90px 12px 12px;
+    }
 }
 
 .dashboard__header {
@@ -16,12 +25,32 @@
     h1 {
         color: vars.$primary-color;
         margin: 0;
+        font-size: 28px;
+
+        @include mix.tablet {
+            font-size: 24px;
+        }
+
+        @include mix.mobile {
+            font-size: 22px;
+        }
+    }
+
+    @include mix.mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
     }
 }
 
 .dashboard__header-buttons {
     display: flex;
     gap: 10px;
+
+    @include mix.mobile {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .dashboard__content {
@@ -29,16 +58,38 @@
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+    @include mix.tablet {
+        padding: 20px;
+    }
+
+    @include mix.mobile {
+        padding: 16px;
+    }
 }
 
 .dashboard__welcome {
     h2 {
         color: vars.$primary-color;
         margin-top: 0;
+        font-size: 22px;
+        word-break: break-word;
+
+        @include mix.tablet {
+            font-size: 20px;
+        }
+
+        @include mix.mobile {
+            font-size: 18px;
+        }
     }
 
     p {
         color: #333;
+
+        @include mix.mobile {
+            font-size: 14px;
+        }
     }
 }
 
@@ -61,6 +112,10 @@
             background-color: color.adjust(#f44336, $lightness: -10%);
             cursor: pointer;
         }
+
+        @include mix.mobile {
+            width: 100%;
+        }
     }
 }
 
@@ -74,6 +129,10 @@
 
     &:hover {
         background-color: #5a6268;
+    }
+
+    @include mix.mobile {
+        width: 100%;
     }
 }
 

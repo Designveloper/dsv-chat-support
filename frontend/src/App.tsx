@@ -4,7 +4,6 @@ import Header from "./components/Header";
 import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
 import Signup from "./components/Signup";
-// import ProtectedRoute from "./components/ProtectedRoute";
 import EmailConfirmation from "./components/EmailConfirmation";
 import Dashboard from "./components/Dashboard";
 import ChangePassword from "./components/ChangePassword";
@@ -22,10 +21,8 @@ const App = () => {
           <Route path="/confirm" element={<EmailConfirmation />} />
 
           {/* Protected routes */}
-          {/* <Route element={<ProtectedRoute />}> */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/change-password" element={<ChangePassword />} />
-          {/* </Route> */}
         </Routes>
       </Router>
     </AuthProvider>
