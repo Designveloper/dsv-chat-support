@@ -97,25 +97,25 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 20px;
+}
 
-    &-button {
-        background-color: #f44336;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
+.dashboard__logout-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: color.adjust(#f44336, $lightness: -10%);
         cursor: pointer;
-        font-weight: 600;
-        transition: background-color 0.2s;
+    }
 
-        &:hover {
-            background-color: color.adjust(#f44336, $lightness: -10%);
-            cursor: pointer;
-        }
-
-        @include mix.mobile {
-            width: 100%;
-        }
+    @include mix.mobile {
+        width: 100%;
     }
 }
 

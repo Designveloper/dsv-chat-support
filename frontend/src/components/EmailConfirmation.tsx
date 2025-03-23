@@ -9,6 +9,8 @@ const EmailConfirmation: React.FC = () => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [canResend, setCanResend] = useState(true);
+  const [countdown, setCountdown] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { loading, error, confirmEmail, resendConfirmation, clearError } =
@@ -19,6 +21,23 @@ const EmailConfirmation: React.FC = () => {
       setEmail(location.state.email);
     }
   }, [location.state]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    if (countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+    } else if (countdown === 0 && !canResend) {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [countdown, canResend]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,12 +63,17 @@ const EmailConfirmation: React.FC = () => {
   };
 
   const handleResendCode = async () => {
+    if (!canResend) return;
+
     clearError();
     setSuccessMessage(null);
 
     try {
       await resendConfirmation(email);
       setSuccessMessage("Confirmation code has been resent to your email!");
+
+      setCanResend(false);
+      setCountdown(60);
     } catch (err) {
       console.log(err);
     }
@@ -108,8 +132,9 @@ const EmailConfirmation: React.FC = () => {
             type="button"
             className="email-confirmation__resend-button"
             onClick={handleResendCode}
+            disabled={!canResend}
           >
-            Resend Code
+            {canResend ? "Resend Code" : `Resend Code (${countdown}s)`}
           </button>
         </div>
       </form>

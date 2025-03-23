@@ -45,10 +45,11 @@ export class AuthService {
   }
 
   private async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
+    const payload = { email: user.email, sub: user.id, created_at: user.created_at, type: 'access' };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-    const refreshToken = this.jwtService.sign({ ...payload }, { expiresIn: '7d' });
+    const refreshTokenPayload = { email: user.email, sub: user.id, created_at: user.created_at, type: 'refresh' };
+    const refreshToken = this.jwtService.sign(refreshTokenPayload, { expiresIn: '7d' });
 
     const expiresTime = new Date();
     expiresTime.setDate(expiresTime.getDate() + 7);
@@ -66,7 +67,7 @@ export class AuthService {
 
       const user = tokenRecord.user;
       const accessToken = this.jwtService.sign(
-        { email: user.email, sub: user.id },
+        { email: user.email, sub: user.id, created_at: user.created_at, type: 'access' },
         { expiresIn: '15m' }
       );
 
