@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
 import { RefreshTokensModule } from '../refresh-tokens/refresh-tokens.module';
-import { ChatWidgetsModule } from '../chat-widgets/chat-widgets.module';
+import { WorkspaceModule } from '../workspace/workspace.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
@@ -14,7 +14,7 @@ dotenv.config();
   imports: [
     UsersModule,
     RefreshTokensModule,
-    ChatWidgetsModule,
+    WorkspaceModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -24,4 +24,4 @@ dotenv.config();
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule { }

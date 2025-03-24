@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { RefreshToken } from '../refresh-tokens/refresh-tokens.entity';
-import { ChatWidget } from '../chat-widgets/chat-widgets.entity';
+import { WorkSpace } from '../workspace/workspace.entity';
 
 @Entity('users')
 export class User {
@@ -31,6 +31,6 @@ export class User {
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshToken: RefreshToken[];
 
-  @OneToMany(() => ChatWidget, (chatWidget) => chatWidget.owner)
-  chatWidgets: ChatWidget[];
+  @OneToMany(() => WorkSpace, (workSpace) => workSpace.owner)
+  workSpaces: WorkSpace[];
 }

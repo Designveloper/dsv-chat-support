@@ -6,7 +6,8 @@ import { getDatabaseConfig } from './config/database.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
-import { ChatWidgetsModule } from './chat-widgets/chat-widgets.module';
+import { WorkspaceModule } from './workspace/workspace.module';
+import { ChatSessionModule } from './chat-session/chat-session.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { ChatWidgetsModule } from './chat-widgets/chat-widgets.module';
     AuthModule,
     UsersModule,
     RefreshTokensModule,
-    ChatWidgetsModule,
+    WorkspaceModule,
+    ChatSessionModule,
   ],
 })
 export class AppModule { }

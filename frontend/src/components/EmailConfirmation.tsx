@@ -9,8 +9,8 @@ const EmailConfirmation: React.FC = () => {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [canResend, setCanResend] = useState(true);
-  const [countdown, setCountdown] = useState(0);
+  const [canResend, setCanResend] = useState(false);
+  const [countdown, setCountdown] = useState(60);
   const location = useLocation();
   const navigate = useNavigate();
   const { loading, error, confirmEmail, resendConfirmation, clearError } =
@@ -134,7 +134,16 @@ const EmailConfirmation: React.FC = () => {
             onClick={handleResendCode}
             disabled={!canResend}
           >
-            {canResend ? "Resend Code" : `Resend Code (${countdown}s)`}
+            {/* {canResend ? "Resend Code" : `Resend Code (${countdown}s)`} */}
+            {canResend ? (
+              "Resend Code"
+            ) : (
+              <>
+                <span className="email-confirmation__countdown">
+                  Resend Code ({countdown}s)
+                </span>
+              </>
+            )}
           </button>
         </div>
       </form>

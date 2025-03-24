@@ -69,6 +69,15 @@
   text-align: center;
 }
 
+.email-confirmation__countdown {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #959292;
+  cursor: not-allowed;
+  user-select: none;
+}
+
 @include mix.mobile {
   .email-confirmation__form {
     padding: 30px 20px;

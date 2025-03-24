@@ -4,7 +4,7 @@ import { User } from '../users/users.entity';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { RefreshTokensService } from '../refresh-tokens/refresh-tokens.service';
-import { ChatWidgetsService } from '../chat-widgets/chat-widgets.service';
+import { WorkspaceService } from '../workspace/workspace.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -13,7 +13,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private refreshTokensService: RefreshTokensService,
-    private chatWidgetsService: ChatWidgetsService,
+    private workspaceService: WorkspaceService,
     private jwtService: JwtService,
     private mailerService: MailerService
   ) { }
@@ -116,7 +116,7 @@ export class AuthService {
     user.isEmailConfirmed = true;
     user.confirmationCode = "";
     await this.usersService.save(user);
-    await this.chatWidgetsService.create(user.id);
+    await this.workspaceService.create(user.id, "Default Workspace");
   }
 
   async resendConfirmation(email: string): Promise<void> {
