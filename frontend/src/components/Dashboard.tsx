@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
+import ChatWidget from "./ChatWidget";
 
 // Define workspace interface
 interface Workspace {
@@ -117,49 +118,49 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
+      <header className="dashboard__header">
         <h1>Chat Support Dashboard</h1>
-        <div className="user-controls">
+        <div className="dashboard__user-controls">
           <span>Welcome, {user?.email}</span>
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={handleLogout} className="dashboard__logout-btn">
             Logout
           </button>
         </div>
       </header>
 
       {error && (
-        <div className="alert alert-danger">
+        <div className="dashboard__alert dashboard__alert--danger">
           Error: {error.replace(/_/g, " ")}
         </div>
       )}
 
       {slackConnected && (
-        <div className="alert alert-success">
+        <div className="dashboard__alert dashboard__alert--success">
           Slack has been successfully connected to your workspace!
         </div>
       )}
 
-      <div className="dashboard-content">
-        <section className="workspaces-section">
-          <div className="section-header">
+      <div className="dashboard__content">
+        <section className="dashboard__workspaces-section">
+          <div className="dashboard__section-header">
             <h2>Your Workspaces</h2>
-            <button onClick={handleCreateWorkspace} className="btn">
+            <button onClick={handleCreateWorkspace} className="dashboard__btn">
               Create Workspace
             </button>
           </div>
 
           {workspaces.length === 0 ? (
-            <div className="no-workspaces">
+            <div className="dashboard__no-workspaces">
               <p>
                 You don't have any workspaces yet. Create one to get started.
               </p>
             </div>
           ) : (
-            <div className="workspaces-list">
+            <div className="dashboard__workspaces-list">
               {workspaces.map((workspace) => (
-                <div key={workspace.id} className="workspace-card">
+                <div key={workspace.id} className="dashboard__workspace-card">
                   <h3>{workspace.name}</h3>
-                  <div className="workspace-details">
+                  <div className="dashboard__workspace-details">
                     <p>
                       Created:{" "}
                       {new Date(workspace.createdAt).toLocaleDateString()}
@@ -167,9 +168,11 @@ const Dashboard = () => {
                     <p>
                       Slack:{" "}
                       {workspace.bot_token_slack ? (
-                        <span className="badge badge-success">Connected</span>
+                        <span className="dashboard__badge dashboard__badge--success">
+                          Connected
+                        </span>
                       ) : (
-                        <span className="badge badge-secondary">
+                        <span className="dashboard__badge dashboard__badge--secondary">
                           Not connected
                         </span>
                       )}
@@ -181,16 +184,20 @@ const Dashboard = () => {
           )}
         </section>
 
-        <section className="integrations-section">
+        <section className="dashboard__integrations-section">
           <h2>Integrations</h2>
 
-          <div className="integration-card">
-            <div className="integration-header">
+          <div className="dashboard__integration-card">
+            <div className="dashboard__integration-header">
               <h3>Slack</h3>
               {slackConnected ? (
-                <span className="badge badge-success">Connected</span>
+                <span className="dashboard__badge dashboard__badge--success">
+                  Connected
+                </span>
               ) : (
-                <span className="badge badge-secondary">Not connected</span>
+                <span className="dashboard__badge dashboard__badge--secondary">
+                  Not connected
+                </span>
               )}
             </div>
 
@@ -203,7 +210,7 @@ const Dashboard = () => {
               <>
                 <button
                   onClick={handleAddToSlack}
-                  className="slack-button"
+                  className="dashboard__slack-button"
                   disabled={isSlackLoading}
                 >
                   {isSlackLoading ? (
@@ -223,6 +230,8 @@ const Dashboard = () => {
           </div>
         </section>
       </div>
+
+      {slackConnected && <ChatWidget workspaces={workspaces} />}
     </div>
   );
 };
