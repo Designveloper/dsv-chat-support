@@ -7,6 +7,8 @@ import Signup from "./components/Signup";
 import EmailConfirmation from "./components/EmailConfirmation";
 import Dashboard from "./components/Dashboard";
 import ChangePassword from "./components/ChangePassword";
+import SlackOAuthCallback from "./components/SlackOauthCallback";
+import SlackChannelSelector from "./components/SlackChannelSelector";
 
 const App = () => {
   return (
@@ -23,6 +25,11 @@ const App = () => {
           {/* Protected routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/slack/callback" element={<SlackOAuthCallback />} />
+          <Route
+            path="/slack/select-channel"
+            element={<SlackChannelSelector />}
+          />
         </Routes>
       </Router>
     </AuthProvider>

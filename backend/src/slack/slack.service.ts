@@ -43,4 +43,35 @@ export class SlackService {
         const web = new WebClient(botToken);
         await web.chat.postMessage({ channel: channelId, text });
     }
+
+    async listChannels(botToken: string): Promise<any[]> {
+        const web = new WebClient(botToken);
+
+        // Get public channels that the bot is in or can join
+        const result = await web.conversations.list({
+            exclude_archived: true,
+            types: 'public_channel'
+        });
+
+        if (!result.ok) {
+            throw new Error(result.error || 'Unknown error listing channels');
+        }
+
+        if (!result.channels) {
+            throw new Error('Failed to list channels: channels are undefined.');
+        }
+
+        return result.channels.map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            is_member: channel.is_member,
+            num_members: channel.num_members
+        }));
+    }
+
+    // Helper method to join a channel if needed
+    async joinChannel(botToken: string, channelId: string): Promise<void> {
+        const web = new WebClient(botToken);
+        await web.conversations.join({ channel: channelId });
+    }
 }

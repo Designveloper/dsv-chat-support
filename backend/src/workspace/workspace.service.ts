@@ -45,4 +45,12 @@ export class WorkspaceService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findById(id: string): Promise<WorkSpace> {
+    const workspace = await this.workspacesRepository.findOne({ where: { id } });
+    if (!workspace) {
+      throw new Error('Workspace not found');
+    }
+    return workspace;
+  }
 }
