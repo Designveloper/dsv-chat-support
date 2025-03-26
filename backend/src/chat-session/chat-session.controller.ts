@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChatSessionService } from './chat-session.service';
 
@@ -18,10 +19,11 @@ export class ChatSessionController {
     }
 
     @Post('message')
-    async sendMessage(@Body() body: { session_id: string; message: string }) {
+    @UseGuards(JwtAuthGuard)
+    async sendMessage(@Body() body: { session_id: string; message: string }, @Req() request: Request) {
         try {
             const { session_id, message } = body;
-            await this.chatSessionService.sendMessage(session_id, message);
+            await this.chatSessionService.sendMessage(session_id, message, request);
             return { success: true };
         } catch (error) {
             console.error('Error sending message:', error);

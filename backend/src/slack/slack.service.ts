@@ -9,7 +9,11 @@ export class SlackService {
     constructor(
         private configService: ConfigService,
         private httpService: HttpService,
-    ) { }
+    ) {
+        this.slackClient = new WebClient();
+    }
+
+    private slackClient: WebClient;
 
     async exchangeCodeForToken(code: string, redirectUri: string): Promise<any> {
         const clientId = this.configService.get('SLACK_CLIENT_ID');
@@ -73,5 +77,23 @@ export class SlackService {
     async joinChannel(botToken: string, channelId: string): Promise<void> {
         const web = new WebClient(botToken);
         await web.conversations.join({ channel: channelId });
+    }
+
+    async postBlockKitMessage(token: string, channelId: string, blocks: any[]): Promise<void> {
+        try {
+            const result = await this.slackClient.chat.postMessage({
+                token: token,
+                channel: channelId,
+                blocks: blocks,
+                text: "New chat session started" // Fallback text for notifications
+            });
+
+            if (!result.ok) {
+                throw new Error(`Failed to send message: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error posting Block Kit message to Slack:', error);
+            throw new Error('Failed to send message to Slack');
+        }
     }
 }
