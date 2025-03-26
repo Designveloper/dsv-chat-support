@@ -27,7 +27,6 @@ export class ChatSessionService {
         const newSession = this.chatSessionRepository.create({
             session_id: sessionId,
             workspace_id: workspaceId,
-            channel_id: workspace.selected_channel_id,
             status: 'active',
         });
 
@@ -55,5 +54,63 @@ export class ChatSessionService {
         }
 
         return newSession;
+    }
+
+    async sendMessage(sessionId: string, message: string): Promise<void> {
+        // Find the chat session
+        const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
+        if (!session) {
+            throw new Error('Chat session not found');
+        }
+
+        // Get the workspace
+        const workspace = await this.workspaceService.findById(session.workspace_id);
+        if (!workspace || !workspace.bot_token_slack) {
+            throw new Error('Workspace not configured for Slack');
+        }
+
+        // If this is the first message, create a new channel for this chat
+        if (!session.channel_id) {
+            try {
+                // Create a unique channel name based on session ID
+                const channelName = `chat-${sessionId.substring(0, 8)}`;
+
+                // Create a new channel in Slack
+                const channelId = await this.slackService.createChannel(
+                    workspace.bot_token_slack,
+                    channelName
+                );
+
+                // Update the chat session with the new channel ID
+                session.channel_id = channelId;
+                await this.chatSessionRepository.save(session);
+
+                // Post welcome message to the new channel
+                await this.slackService.postMessage(
+                    workspace.bot_token_slack,
+                    channelId,
+                    `:wave: New chat session started. Visitor messages will appear here.`
+                );
+
+                // Post notification to the announcement channel that a dedicated channel was created
+                if (workspace.selected_channel_id) {
+                    await this.slackService.postMessage(
+                        workspace.bot_token_slack,
+                        workspace.selected_channel_id,
+                        `:speech_balloon: Chat session ${sessionId} is now active in <#${channelId}>`
+                    );
+                }
+            } catch (error) {
+                console.error('Error creating Slack channel:', error);
+                throw new Error('Failed to create chat channel');
+            }
+        }
+
+        // Post the message to the session's channel
+        await this.slackService.postMessage(
+            workspace.bot_token_slack,
+            session.channel_id,
+            `:speech_balloon: Visitor: ${message}`
+        );
     }
 }

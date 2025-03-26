@@ -4,7 +4,13 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: true, // Allow all origins in development
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    },
+  });
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -12,7 +18,7 @@ async function bootstrap() {
     transform: true,
   }));
   app.enableCors({
-    origin: ['http://localhost:5173'],
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

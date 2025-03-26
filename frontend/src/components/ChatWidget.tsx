@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { io } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import axios from "axios";
 import "./ChatWidget.scss";
 
@@ -16,15 +18,65 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
     []
   );
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check for existing session on mount
   useEffect(() => {
     const existingSessionId = localStorage.getItem("chat_session_id");
     if (existingSessionId) {
       setSessionId(existingSessionId);
-      // You could fetch existing messages here
+      setupWebSocketConnection(existingSessionId);
     }
   }, []);
+
+  // Set up WebSocket connection
+  const setupWebSocketConnection = (sessionId: string) => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    // Connect to WebSocket server
+    const socket = io("http://localhost:3000", {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+    socketRef.current = socket;
+
+    // Handle connection events
+    socket.on("connect", () => {
+      console.log("Connected to chat server");
+
+      // Register for this session
+      socket.emit("register_session", { sessionId });
+    });
+
+    // Listen for staff messages
+    socket.on("staff_message", (data: { text: string }) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: data.text,
+          isUser: false,
+        },
+      ]);
+    });
+
+    // Handle errors and disconnection
+    socket.on("error", (error: unknown) => {
+      console.error("Socket error:", error);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from chat server");
+    });
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Set default workspace if available
   useEffect(() => {
@@ -70,6 +122,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
       setSessionId(session_id);
       localStorage.setItem("chat_session_id", session_id);
 
+      setupWebSocketConnection(session_id);
+
       // Add welcome message
       setMessages([
         {
@@ -89,23 +143,48 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
   const sendMessage = async () => {
     if (!message.trim() || !sessionId) return;
 
-    // Add user message to chat
+    // Add user message to chat (local UI)
     const newMessage = { text: message, isUser: true };
     setMessages([...messages, newMessage]);
-    setMessage("");
 
-    // In a real app, you would send this message to your backend
-    // which would then forward it to Slack
-    // For now, we'll just simulate a response
-    setTimeout(() => {
+    const messageToSend = message;
+    setMessage(""); // Clear input field
+
+    try {
+      if (socketRef.current?.connected) {
+        // Send via socket if connected
+        socketRef.current.emit("send_message", {
+          sessionId,
+          message: messageToSend,
+        });
+      } else {
+        // Fall back to REST API if socket not available
+        const token = localStorage.getItem("accessToken");
+        await axios.post(
+          "http://localhost:3000/chat/message",
+          {
+            session_id: sessionId,
+            message: messageToSend,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+
+      // Show error in chat
       setMessages((prev) => [
         ...prev,
         {
-          text: "Thanks for your message! Our team will respond shortly.",
+          text: "Failed to send message. Please try again.",
           isUser: false,
         },
       ]);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

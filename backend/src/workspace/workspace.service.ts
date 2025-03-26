@@ -53,4 +53,10 @@ export class WorkspaceService {
     }
     return workspace;
   }
+
+  async findBySlackWorkspaceId(slackWorkspaceId: string): Promise<WorkSpace | null> {
+    return this.workspacesRepository.findOne({
+      where: { service_slack_account_id: slackWorkspaceId }
+    });
+  }
 }

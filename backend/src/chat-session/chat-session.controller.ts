@@ -16,4 +16,16 @@ export class ChatSessionController {
 
         return { session_id: session.session_id };
     }
+
+    @Post('message')
+    async sendMessage(@Body() body: { session_id: string; message: string }) {
+        try {
+            const { session_id, message } = body;
+            await this.chatSessionService.sendMessage(session_id, message);
+            return { success: true };
+        } catch (error) {
+            console.error('Error sending message:', error);
+            throw new Error('Failed to send message');
+        }
+    }
 }
