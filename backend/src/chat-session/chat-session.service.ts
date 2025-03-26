@@ -113,4 +113,8 @@ export class ChatSessionService {
             `:speech_balloon: Visitor: ${message}`
         );
     }
+
+    async findSessionByChannelId(channelId: string): Promise<ChatSession | null> {
+        return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
+    }
 }

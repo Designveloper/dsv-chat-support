@@ -26,9 +26,31 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
     const existingSessionId = localStorage.getItem("chat_session_id");
     if (existingSessionId) {
       setSessionId(existingSessionId);
+
+      const savedMessages = localStorage.getItem(
+        `chat_messages_${existingSessionId}`
+      );
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages);
+          setMessages(parsedMessages);
+        } catch (error) {
+          console.error("Error parsing saved messages:", error);
+        }
+      }
+
       setupWebSocketConnection(existingSessionId);
     }
   }, []);
+
+  useEffect(() => {
+    if (sessionId && messages.length > 0) {
+      localStorage.setItem(
+        `chat_messages_${sessionId}`,
+        JSON.stringify(messages)
+      );
+    }
+  }, [messages, sessionId]);
 
   // Set up WebSocket connection
   const setupWebSocketConnection = (sessionId: string) => {
@@ -125,12 +147,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
       setupWebSocketConnection(session_id);
 
       // Add welcome message
-      setMessages([
+      const initialMessages = [
         {
           text: "Welcome to the chat! How can we help you today?",
           isUser: false,
         },
-      ]);
+      ];
+      setMessages(initialMessages);
+      localStorage.setItem(
+        `chat_messages_${session_id}`,
+        JSON.stringify(initialMessages)
+      );
 
       setLoading(false);
     } catch (err) {
@@ -152,6 +179,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
 
     try {
       if (socketRef.current?.connected) {
+        console.log("Sending message via socket:", messageToSend);
         // Send via socket if connected
         socketRef.current.emit("send_message", {
           sessionId,
