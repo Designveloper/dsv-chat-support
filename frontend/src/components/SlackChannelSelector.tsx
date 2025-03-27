@@ -176,12 +176,6 @@ const SlackChannelSelector = () => {
 
             <div className="channel-selector-actions">
               <button
-                className="skip-button"
-                onClick={() => navigate("/dashboard")}
-              >
-                Skip
-              </button>
-              <button
                 className="select-button"
                 onClick={handleChannelSelect}
                 disabled={!selectedChannel}

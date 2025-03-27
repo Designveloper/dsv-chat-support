@@ -22,7 +22,7 @@ export class SlackOAuthController {
 
         const userId = req.user.userId;
         const state = `user-${userId}-${Date.now()}`;
-        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}&team_selection=true`;
+        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}&team=open`;
 
         console.log("Generated Slack URL:", url);
 
@@ -51,28 +51,17 @@ export class SlackOAuthController {
                 const botToken = data.access_token;
                 const slackWorkspaceId = data.team.id;
 
-                // Get user's workspaces
-                const workspaces = await this.workspaceService.findByOwnerId(userId);
-
                 let workspaceId: string;
 
-                if (workspaces.length === 0) {
-                    // Create a new workspace if none exists
-                    const workspace = await this.workspaceService.create(
-                        userId,
-                        `${data.team.name} Workspace`,
-                        'slack'
-                    );
-
-                    workspaceId = workspace.id;
-                } else {
-                    // Use existing workspace
-                    workspaceId = workspaces[0].id;
-                }
+                const workspace = await this.workspaceService.create(
+                    userId,
+                    `${data.team.name} Workspace`,
+                    'slack'
+                );
 
                 // Save initial Slack details without channel
                 await this.workspaceService.updateSlackDetails(
-                    workspaceId,
+                    workspace.id,
                     botToken,
                     '',
                     slackWorkspaceId
@@ -80,7 +69,7 @@ export class SlackOAuthController {
 
                 // Redirect to channel selection page instead of dashboard
                 const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
-                return res.redirect(`${frontendUrl}/slack/select-channel?workspaceId=${workspaceId}`);
+                return res.redirect(`${frontendUrl}/slack/select-channel?workspaceId=${workspace.id}`);
             } else {
                 throw new Error(data.error);
             }
@@ -111,34 +100,21 @@ export class SlackOAuthController {
                 const botToken = data.access_token;
                 const slackWorkspaceId = data.team.id;
 
-                // Get user's workspaces
-                const workspaces = await this.workspaceService.findByOwnerId(userId);
+                const workspace = await this.workspaceService.create(
+                    userId,
+                    `${data.team.name} Workspace`,
+                    'slack'
+                );
 
-                if (workspaces.length === 0) {
-                    // Create workspace if none exists
-                    const workspace = await this.workspaceService.create(
-                        userId,
-                        `${data.team.name} Workspace`,
-                        'slack'
-                    );
+                // Update the new workspace with Slack details
+                await this.workspaceService.updateSlackDetails(
+                    workspace.id,
+                    botToken,
+                    '',
+                    slackWorkspaceId
+                );
 
-                    await this.workspaceService.updateSlackDetails(
-                        workspace.id,
-                        botToken,
-                        '',
-                        slackWorkspaceId
-                    );
-                } else {
-                    // Update existing workspace
-                    await this.workspaceService.updateSlackDetails(
-                        workspaces[0].id,
-                        botToken,
-                        '',
-                        slackWorkspaceId
-                    );
-                }
-
-                return { success: true };
+                return { success: true, workspaceId: workspace.id };
             } else {
                 throw new Error(data.error || 'Unknown error');
             }

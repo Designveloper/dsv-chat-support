@@ -67,6 +67,7 @@ export class ChatSessionService {
         // If this is the first message, create a new channel for this chat
         if (!session.channel_id) {
             try {
+                console.log('Creating new Slack channel for chat session:', sessionId);
                 // Create a unique channel name based on session ID
                 const channelName = `chat-${sessionId.substring(0, 8)}`;
 
@@ -75,6 +76,7 @@ export class ChatSessionService {
                     workspace.bot_token_slack,
                     channelName
                 );
+                console.log('New channel created:', channelId);
 
                 // Update the chat session with the new channel ID
                 session.channel_id = channelId;
@@ -264,6 +266,21 @@ export class ChatSessionService {
                 console.error('Error creating Slack channel:', error);
                 throw new Error('Failed to create chat channel');
             }
+        }
+
+        try {
+            // Make sure bot has joined the channel before posting messages
+            await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
+
+            // Post the message to the session's channel
+            await this.slackService.postMessage(
+                workspace.bot_token_slack,
+                session.channel_id,
+                `:speech_balloon: Visitor: ${message}`
+            );
+        } catch (error) {
+            console.error('Error sending message to Slack channel:', error);
+            throw new Error('Failed to send message to Slack channel');
         }
 
         // Post the message to the session's channel

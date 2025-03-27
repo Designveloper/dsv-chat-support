@@ -116,7 +116,6 @@ export class AuthService {
     user.isEmailConfirmed = true;
     user.confirmationCode = "";
     await this.usersService.save(user);
-    await this.workspaceService.create(user.id, "Default Workspace");
   }
 
   async resendConfirmation(email: string): Promise<void> {

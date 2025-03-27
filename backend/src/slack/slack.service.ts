@@ -33,14 +33,25 @@ export class SlackService {
 
     async createChannel(botToken: string, channelName: string): Promise<string> {
         const web = new WebClient(botToken);
-        const result = await web.conversations.create({ name: channelName });
-        if (!result.channel) {
-            throw new Error('Channel creation failed: channel is undefined.');
+        try {
+            console.log(`Creating channel: ${channelName}`);
+            const result = await web.conversations.create({ name: channelName });
+
+            if (!result.channel || !result.channel.id) {
+                throw new Error('Channel creation failed: channel or ID is undefined.');
+            }
+
+            const channelId = result.channel.id;
+
+            // Explicitly join the newly created channel
+            console.log(`Joining newly created channel: ${channelId}`);
+            await this.joinChannel(botToken, channelId);
+
+            return channelId;
+        } catch (error) {
+            console.error('Error creating Slack channel:', error);
+            throw error;
         }
-        if (!result.channel.id) {
-            throw new Error('Channel creation failed: channel ID is undefined.');
-        }
-        return result.channel.id;
     }
 
     async postMessage(botToken: string, channelId: string, text: string): Promise<void> {
@@ -75,13 +86,39 @@ export class SlackService {
 
     // Helper method to join a channel if needed
     async joinChannel(botToken: string, channelId: string): Promise<void> {
-        const web = new WebClient(botToken);
-        await web.conversations.join({ channel: channelId });
+        if (!channelId) {
+            console.error('Cannot join channel: Invalid channel ID');
+            return;
+        }
+
+        try {
+            console.log(`Bot attempting to join channel: ${channelId}`);
+            const web = new WebClient(botToken);
+            const response = await web.conversations.join({ channel: channelId });
+
+            if (!response.ok) {
+                console.error(`Failed to join channel: ${response.error}`);
+            } else {
+                console.log(`Successfully joined channel: ${channelId}`);
+            }
+        } catch (error) {
+            // Check if error is because we're already in the channel
+            if (error.data?.error === 'already_in_channel') {
+                console.log(`Bot is already in channel: ${channelId}`);
+                return;
+            }
+            console.error('Error joining Slack channel:', error);
+            // Don't throw error, we'll still try to post messages
+        }
     }
 
     async postBlockKitMessage(token: string, channelId: string, blocks: any[]): Promise<void> {
         try {
-            const result = await this.slackClient.chat.postMessage({
+            // Ensure we're in the channel first
+            await this.joinChannel(token, channelId);
+
+            const web = new WebClient(token);
+            const result = await web.chat.postMessage({
                 token: token,
                 channel: channelId,
                 blocks: blocks,
