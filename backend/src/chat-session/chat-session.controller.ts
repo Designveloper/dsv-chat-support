@@ -2,6 +2,7 @@ import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChatSessionService } from './chat-session.service';
+import { userInfo } from 'os';
 
 @Controller('chat')
 export class ChatSessionController {
@@ -20,10 +21,15 @@ export class ChatSessionController {
 
     @Post('message')
     @UseGuards(JwtAuthGuard)
-    async sendMessage(@Body() body: { session_id: string; message: string }, @Req() request: Request) {
+    async sendMessage(@Body() body: { session_id: string; message: string; userInfo?: { email: string }, currentPage?: string }, @Req() request: Request) {
         try {
-            const { session_id, message } = body;
-            await this.chatSessionService.sendMessage(session_id, message, request);
+            const { session_id, message, userInfo, currentPage } = body;
+
+            if (currentPage && request.headers) {
+                request.headers['referer'] = currentPage;
+            }
+
+            await this.chatSessionService.sendMessage(session_id, message, request, userInfo);
             return { success: true };
         } catch (error) {
             console.error('Error sending message:', error);

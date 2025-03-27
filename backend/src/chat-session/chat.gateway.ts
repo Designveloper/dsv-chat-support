@@ -9,8 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatSessionService } from './chat-session.service';
 import { SlackBoltService } from '../slack/slack-bolt.service';
-import { UseGuards, Inject, forwardRef } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Inject, forwardRef } from '@nestjs/common';
 
 @WebSocketGateway({
     cors: {
@@ -55,9 +54,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
 
     @SubscribeMessage('send_message')
-    async handleMessage(client: Socket, payload: { sessionId: string; message: string }): Promise<void> {
+    async handleMessage(client: Socket, payload: { sessionId: string; message: string; userInfo?: { email: string }; currentPage?: string }): Promise<void> {
         try {
-            await this.chatSessionService.sendMessage(payload.sessionId, payload.message);
+            const mockRequest = {
+                headers: {
+                    'referer': payload.currentPage,
+                }
+            };
+
+            await this.chatSessionService.sendMessage(payload.sessionId, payload.message, mockRequest as any, payload.userInfo);
         } catch (error) {
             console.error('Error sending message:', error);
             client.emit('error', { message: 'Failed to send message' });

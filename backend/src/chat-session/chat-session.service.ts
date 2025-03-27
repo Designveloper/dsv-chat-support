@@ -34,35 +34,20 @@ export class ChatSessionService {
 
         await this.chatSessionRepository.save(newSession);
 
-        // If Slack is configured, notify the channel
-        // if (workspace.bot_token_slack && workspace.selected_channel_id) {
-        //     try {
-        //         // Join the channel first before posting messages
-        //         await this.slackService.joinChannel(
-        //             workspace.bot_token_slack,
-        //             workspace.selected_channel_id
-        //         );
-
-        //         // Then post the notification
-        //         await this.slackService.postMessage(
-        //             workspace.bot_token_slack,
-        //             workspace.selected_channel_id,
-        //             `:wave: New chat session started! Session ID: ${sessionId}`
-        //         );
-        //     } catch (error) {
-        //         console.error('Error notifying Slack:', error);
-        //         // Continue since we've already created the session
-        //     }
-        // }
-
         return newSession;
     }
 
-    async sendMessage(sessionId: string, message: string, request?: Request): Promise<void> {
+    async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string }): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
         if (!session) {
             throw new Error('Chat session not found');
+        }
+
+        // Update session with user info if available and not already set
+        if (userInfo?.email && !session.user_email) {
+            session.user_email = userInfo.email;
+            await this.chatSessionRepository.save(session);
         }
 
         // Get the workspace
@@ -87,11 +72,25 @@ export class ChatSessionService {
                 session.channel_id = channelId;
                 await this.chatSessionRepository.save(session);
 
-                const userAgent = request?.headers['user-agent'] || 'Unknown Browser';
                 const referer = request?.headers['referer'] || 'Unknown Page';
-
                 const location = 'Ho Chi Minh City, Vietnam';
                 const localTime = format(new Date(), 'hh:mma (XXX)');
+
+                // Create the user info section
+                const userFields: { type: string; text: string }[] = [];
+
+                // Add user email if available
+                if (userInfo?.email) {
+                    userFields.push({
+                        "type": "mrkdwn",
+                        "text": "*User Email:*\n" + userInfo.email
+                    });
+                } else {
+                    userFields.push({
+                        "type": "mrkdwn",
+                        "text": "*Session ID:*\n" + sessionId
+                    });
+                }
 
                 const welcomeBlocks = [
                     {
@@ -101,6 +100,13 @@ export class ChatSessionService {
                             "text": "New chat session started",
                             "emoji": true
                         }
+                    },
+                    {
+                        "type": "section",
+                        "fields": userFields
+                    },
+                    {
+                        "type": "divider"
                     },
                     {
                         "type": "section",
@@ -146,10 +152,6 @@ export class ChatSessionService {
                         "fields": [
                             {
                                 "type": "mrkdwn",
-                                "text": "*Browser/OS:*\n" + this.parseUserAgent(userAgent)
-                            },
-                            {
-                                "type": "mrkdwn",
                                 "text": "*Session ID:*\n" + sessionId
                             }
                         ]
@@ -188,6 +190,9 @@ export class ChatSessionService {
                 await this.slackService.postBlockKitMessage(workspace.bot_token_slack, channelId, welcomeBlocks);
 
                 if (workspace.selected_channel_id) {
+                    const userInfoText = userInfo?.email
+                        ? `*User:* ${userInfo.email}`
+                        : "*Session ID:* " + sessionId;
                     const notificationBlocks = [
                         {
                             "type": "section",
@@ -195,6 +200,18 @@ export class ChatSessionService {
                                 "type": "mrkdwn",
                                 "text": ":speech_balloon: *New Chat Session*"
                             }
+                        },
+                        {
+                            "type": "section",
+                            "fields": [
+                                {
+                                    "type": "mrkdwn",
+                                    "text": userInfoText
+                                }
+                            ]
+                        },
+                        {
+                            "type": "divider"
                         },
                         {
                             "type": "section",
@@ -251,35 +268,5 @@ export class ChatSessionService {
 
     async findSessionByChannelId(channelId: string): Promise<ChatSession | null> {
         return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
-    }
-
-    private parseUserAgent(userAgent: string): string {
-        // This is a simple implementation - consider using a proper UA parser library
-        let browser = 'Unknown';
-        let os = 'Unknown';
-
-        if (userAgent.includes('Chrome')) {
-            browser = 'Chrome';
-        } else if (userAgent.includes('Firefox')) {
-            browser = 'Firefox';
-        } else if (userAgent.includes('Safari')) {
-            browser = 'Safari';
-        } else if (userAgent.includes('Edge')) {
-            browser = 'Edge';
-        }
-
-        if (userAgent.includes('Windows')) {
-            os = 'Win';
-        } else if (userAgent.includes('Mac')) {
-            os = 'Mac';
-        } else if (userAgent.includes('Linux')) {
-            os = 'Linux';
-        } else if (userAgent.includes('Android')) {
-            os = 'Android';
-        } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-            os = 'iOS';
-        }
-
-        return `${browser}/${os}`;
     }
 }

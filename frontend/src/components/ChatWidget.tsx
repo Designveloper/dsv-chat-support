@@ -3,12 +3,14 @@ import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
 import axios from "axios";
 import "./ChatWidget.scss";
+import { useAuth } from "../context/AuthContext";
 
 interface ChatWidgetProps {
   workspaces: { id: string; bot_token_slack?: string }[];
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,12 +180,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
     setMessage(""); // Clear input field
 
     try {
+      const userInfo = {
+        email: user?.email || "Anonymous User",
+      };
+
+      const currentPage = window.location.href;
+
       if (socketRef.current?.connected) {
         console.log("Sending message via socket:", messageToSend);
         // Send via socket if connected
         socketRef.current.emit("send_message", {
           sessionId,
           message: messageToSend,
+          userInfo,
+          currentPage,
         });
       } else {
         // Fall back to REST API if socket not available
@@ -193,6 +203,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
           {
             session_id: sessionId,
             message: messageToSend,
+            userInfo,
+            currentPage,
           },
           {
             headers: {

@@ -12,6 +12,9 @@ export class ChatSession {
     @Column({ type: 'varchar', nullable: true })
     channel_id: string; // Slack channel ID (e.g., "C1234567890")
 
+    @Column({ nullable: true })
+    user_email?: string;
+
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     started_at: Date;
 

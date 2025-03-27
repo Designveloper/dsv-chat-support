@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useProtectedRoute } from "../hooks/useProtectedRoute";
 import axios from "axios";
 import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +20,7 @@ interface Workspace {
 }
 
 const Dashboard = () => {
+  const isAuthenticated = useProtectedRoute();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +31,10 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     fetchWorkspaces();
     // Check URL parameters
     const params = new URLSearchParams(location.search);
@@ -38,7 +44,7 @@ const Dashboard = () => {
     if (params.get("error")) {
       setError(params.get("error"));
     }
-  }, [location]);
+  }, [isAuthenticated, location]);
 
   const fetchWorkspaces = async () => {
     try {

@@ -23,7 +23,6 @@ export class SlackBoltService implements OnModuleInit {
         this.receiver = new ExpressReceiver({
             signingSecret: this.configService.get<string>('SLACK_SIGNING_SECRET') || (() => { throw new Error('SLACK_SIGNING_SECRET is not defined'); })(),
             // The path is where Slack will send events
-            // This will be added to your base URL
             endpoints: {
                 events: '/slack/events',
                 interactive: '/slack/interactive',
