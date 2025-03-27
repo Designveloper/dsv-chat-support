@@ -18,10 +18,18 @@ export class ChatSessionService {
     ) { }
 
     async startChat(workspaceId: string, userId: number): Promise<ChatSession> {
-        // Verify the workspace exists and belongs to the user
+        // Verify the workspace exists (but don't check ownership for anonymous users)
         const workspace = await this.workspaceService.findById(workspaceId);
-        if (!workspace || workspace.owner_id !== userId) {
-            throw new Error('Invalid workspace or not authorized');
+        if (!workspace) {
+            throw new Error('Invalid workspace');
+        }
+
+        // If userId is provided, verify ownership (authenticated users only)
+        if (userId !== null && userId !== undefined) {
+            // This is an authenticated user - check if they own the workspace
+            if (workspace.owner_id !== userId) {
+                throw new Error('Not authorized to access this workspace');
+            }
         }
 
         // Create a new chat session

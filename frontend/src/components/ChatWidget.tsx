@@ -6,10 +6,11 @@ import "./ChatWidget.scss";
 import { useAuth } from "../context/AuthContext";
 
 interface ChatWidgetProps {
-  workspaces: { id: string; bot_token_slack?: string }[];
+  workspaceId?: string;
+  workspaces?: { id: string; bot_token_slack?: string }[];
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -102,10 +103,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Set default workspace if available
+  // Set workspace based on props
   useEffect(() => {
-    if (workspaces.length > 0 && !activeWorkspace) {
-      // Find a workspace with Slack configured
+    // Direct workspaceId has priority (visitor mode)
+    if (workspaceId) {
+      setActiveWorkspace(workspaceId);
+    }
+    // Otherwise use workspaces array (admin mode)
+    else if (workspaces && workspaces.length > 0 && !activeWorkspace) {
       const slackWorkspace = workspaces.find((w) => w.bot_token_slack);
       if (slackWorkspace) {
         setActiveWorkspace(slackWorkspace.id);
@@ -113,7 +118,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
         setActiveWorkspace(workspaces[0].id);
       }
     }
-  }, [workspaces]);
+  }, [workspaceId, workspaces, activeWorkspace]);
 
   const toggleWidget = () => {
     if (!isOpen && !sessionId) {
@@ -131,14 +136,22 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
 
     try {
       setLoading(true);
+      // Prepare request payload
+      const payload = { workspace_id: activeWorkspace };
+
+      // Get token if available (for admin mode)
       const token = localStorage.getItem("accessToken");
+
+      // Make API call with or without auth token based on visitor/admin mode
       const response = await axios.post(
         "http://localhost:3000/chat/start",
-        { workspace_id: activeWorkspace },
+        payload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {},
         }
       );
 
@@ -183,6 +196,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
       const userInfo = {
         email: user?.email || "Anonymous User",
       };
+      console.log("User info:", userInfo);
 
       const currentPage = window.location.href;
 
@@ -207,9 +221,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaces }) => {
             currentPage,
           },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                }
+              : {},
           }
         );
       }

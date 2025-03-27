@@ -9,9 +9,9 @@ export class ChatSessionController {
     constructor(private chatSessionService: ChatSessionService) { }
 
     @Post('start')
-    @UseGuards(JwtAuthGuard)
+    // @UseGuards(JwtAuthGuard)
     async startChat(@Req() req, @Body() body: { workspace_id: string }) {
-        const userId = req.user.userId;
+        const userId = req.user?.userId || null;
         const { workspace_id } = body;
 
         const session = await this.chatSessionService.startChat(workspace_id, userId);
@@ -20,7 +20,7 @@ export class ChatSessionController {
     }
 
     @Post('message')
-    @UseGuards(JwtAuthGuard)
+    // @UseGuards(JwtAuthGuard)
     async sendMessage(@Body() body: { session_id: string; message: string; userInfo?: { email: string }, currentPage?: string }, @Req() request: Request) {
         try {
             const { session_id, message, userInfo, currentPage } = body;
