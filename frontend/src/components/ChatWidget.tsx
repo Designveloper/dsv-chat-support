@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import axios from "axios";
 import "./ChatWidget.scss";
 import { useAuth } from "../context/AuthContext";
+import WidgetController from "../services/widgetController";
 
 interface ChatWidgetProps {
   workspaceId?: string;
@@ -12,6 +13,7 @@ interface ChatWidgetProps {
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const { user } = useAuth();
+  const controllerRef = useRef(new WidgetController());
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,37 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Connect controller to React's state
+    const controller = controllerRef.current;
+    controller.setUpdateCallback(setIsOpen);
+
+    // Make the controller ready
+    setTimeout(() => {
+      controller.ready();
+      console.log("Chat widget controller ready");
+    }, 100);
+
+    return () => {
+      // Clean up by setting callback to null
+      controller.setUpdateCallback(() => {});
+    };
+  }, []);
+
+  // Toggle function should use controller methods
+  const toggleWidget = () => {
+    const controller = controllerRef.current;
+    if (!isOpen) {
+      if (!sessionId) {
+        // Start a new chat session when opening
+        startChatSession();
+      }
+      controller.open();
+    } else {
+      controller.hide();
+    }
+  };
 
   // Check for existing session on mount
   useEffect(() => {
@@ -120,13 +153,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     }
   }, [workspaceId, workspaces, activeWorkspace]);
 
-  const toggleWidget = () => {
-    if (!isOpen && !sessionId) {
-      // Start a new chat session when opening
-      startChatSession();
-    }
-    setIsOpen(!isOpen);
-  };
+  // const toggleWidget = () => {
+  //   if (!isOpen && !sessionId) {
+  //     // Start a new chat session when opening
+  //     startChatSession();
+  //   }
+  //   setIsOpen(!isOpen);
+  // };
 
   const startChatSession = async () => {
     if (!activeWorkspace) {
@@ -193,10 +226,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     setMessage(""); // Clear input field
 
     try {
-      const userInfo = {
-        email: user?.email || "Anonymous User",
+      const visitorInfo = controllerRef.current.getVisitorInfo();
+      console.log("🚀 ~ sendMessage ~ visitorInfo:", visitorInfo);
+      let userInfo: { email: string; userId?: string } = {
+        email: "Anonymous User",
       };
-      console.log("User info:", userInfo);
+
+      // If visitor was identified, use that information
+      if (visitorInfo.data) {
+        userInfo = {
+          ...userInfo,
+          ...visitorInfo.data,
+          userId: visitorInfo.id || undefined,
+        };
+        console.log("Using identified visitor info:", userInfo);
+      } else if (user?.email) {
+        // Fall back to local user context if available
+        // userInfo.email = user.email;
+        // console.log("Using local user context:", userInfo);
+      }
 
       const currentPage = window.location.href;
 
