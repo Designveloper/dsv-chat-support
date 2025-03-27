@@ -1,15 +1,12 @@
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChatSessionService } from './chat-session.service';
-import { userInfo } from 'os';
 
 @Controller('chat')
 export class ChatSessionController {
     constructor(private chatSessionService: ChatSessionService) { }
 
     @Post('start')
-    // @UseGuards(JwtAuthGuard)
     async startChat(@Req() req, @Body() body: { workspace_id: string }) {
         const userId = req.user?.userId || null;
         const { workspace_id } = body;
@@ -20,7 +17,6 @@ export class ChatSessionController {
     }
 
     @Post('message')
-    // @UseGuards(JwtAuthGuard)
     async sendMessage(@Body() body: { session_id: string; message: string; userInfo?: { email: string }, currentPage?: string }, @Req() request: Request) {
         try {
             const { session_id, message, userInfo, currentPage } = body;

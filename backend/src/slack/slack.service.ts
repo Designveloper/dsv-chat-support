@@ -1,19 +1,169 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WebClient } from '@slack/web-api';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { WorkspaceService } from '../workspace/workspace.service';
 
 @Injectable()
 export class SlackService {
+    private slackClient: WebClient;
+
     constructor(
         private configService: ConfigService,
         private httpService: HttpService,
+        private workspaceService: WorkspaceService,
     ) {
         this.slackClient = new WebClient();
     }
 
-    private slackClient: WebClient;
+    generateAuthUrl(userId: number) {
+        const clientId = this.configService.get('SLACK_CLIENT_ID');
+        const redirectUri = this.configService.get('SLACK_REDIRECT_URI');
+        const scopes = 'channels:manage,channels:history,commands,channels:read,channels:join,chat:write,chat:write.customize,users:read,users:read.email';
+
+        const state = `user-${userId}-${Date.now()}`;
+        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}&team=open`;
+
+        console.log("Generated Slack URL:", url);
+        return { url };
+    }
+
+    async handleOAuthRedirect(code: string, state: string) {
+        const redirectUri = this.configService.get('SLACK_REDIRECT_URI');
+        console.log('Slack OAuth redirect:', code, state);
+
+        try {
+            // Extract user ID from state
+            const userId = this.extractUserIdFromState(state);
+            const data = await this.exchangeCodeForToken(code, redirectUri);
+            console.log('Slack OAuth response:', data);
+
+            if (data.ok) {
+                const botToken = data.access_token;
+                const slackWorkspaceId = data.team.id;
+
+                const workspace = await this.workspaceService.create(
+                    userId,
+                    `${data.team.name} Workspace`,
+                    'slack'
+                );
+
+                // Save initial Slack details without channel
+                await this.workspaceService.updateSlackDetails(
+                    workspace.id,
+                    botToken,
+                    '',
+                    slackWorkspaceId
+                );
+
+                // Redirect to channel selection page
+                const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
+                return {
+                    redirectUrl: `${frontendUrl}/slack/select-channel?workspaceId=${workspace.id}`
+                };
+            } else {
+                throw new Error(data.error || 'Authentication failed');
+            }
+        } catch (error) {
+            console.error('Slack OAuth error:', error);
+            const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
+            return {
+                redirectUrl: `${frontendUrl}/dashboard?error=slack_connection_failed`
+            };
+        }
+    }
+
+    async completeOAuth(code: string, state: string) {
+        const redirectUri = this.configService.get('SLACK_REDIRECT_URI');
+
+        try {
+            const userId = this.extractUserIdFromState(state);
+            const data = await this.exchangeCodeForToken(code, redirectUri);
+
+            if (data.ok) {
+                const botToken = data.access_token;
+                const slackWorkspaceId = data.team.id;
+
+                const workspace = await this.workspaceService.create(
+                    userId,
+                    `${data.team.name} Workspace`,
+                    'slack'
+                );
+
+                // Update workspace with Slack details
+                await this.workspaceService.updateSlackDetails(
+                    workspace.id,
+                    botToken,
+                    '',
+                    slackWorkspaceId
+                );
+
+                return { success: true, workspaceId: workspace.id };
+            } else {
+                throw new BadRequestException(data.error || 'Unknown error');
+            }
+        } catch (error) {
+            console.error('Slack OAuth error:', error);
+            throw new BadRequestException('Failed to complete Slack integration');
+        }
+    }
+
+    private extractUserIdFromState(state: string): number {
+        const stateMatch = state.match(/user-(\d+)-/);
+        if (!stateMatch) {
+            throw new BadRequestException('Invalid state parameter');
+        }
+        return parseInt(stateMatch[1], 10);
+    }
+
+    async getWorkspaceChannels(userId: number, workspaceId: string) {
+        try {
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            if (!workspace) {
+                throw new NotFoundException('Workspace not found');
+            }
+
+            if (!workspace.bot_token_slack) {
+                throw new BadRequestException('Slack not connected to this workspace');
+            }
+
+            const channels = await this.listChannels(workspace.bot_token_slack);
+            return { channels };
+        } catch (error) {
+            console.error('Error fetching channels:', error);
+            throw new BadRequestException('Failed to fetch Slack channels');
+        }
+    }
+
+    async selectChannel(userId: number, workspaceId: string, channelId: string) {
+        try {
+            // Verify the user owns this workspace
+            const workspaces = await this.workspaceService.findByOwnerId(userId);
+            const authorized = workspaces.some(w => w.id === workspaceId);
+
+            if (!authorized) {
+                throw new UnauthorizedException('Not authorized to update this workspace');
+            }
+
+            // Get current workspace details
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            // Update just the channel ID
+            await this.workspaceService.updateSlackDetails(
+                workspaceId,
+                workspace.bot_token_slack,
+                channelId,
+                workspace.service_slack_account_id
+            );
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error selecting channel:', error);
+            throw new BadRequestException('Failed to select Slack channel');
+        }
+    }
 
     async exchangeCodeForToken(code: string, redirectUri: string): Promise<any> {
         const clientId = this.configService.get('SLACK_CLIENT_ID');
@@ -84,7 +234,6 @@ export class SlackService {
         }));
     }
 
-    // Helper method to join a channel if needed
     async joinChannel(botToken: string, channelId: string): Promise<void> {
         if (!channelId) {
             console.error('Cannot join channel: Invalid channel ID');

@@ -2,7 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SlackService } from './slack.service';
 import { SlackBoltService } from './slack-bolt.service';
-import { SlackOAuthController } from './slack.controller';
+import { SlackController } from './slack.controller';
 import { ChatSession } from '../chat-session/chat-session.entity';
 import { WorkspaceModule } from 'src/workspace/workspace.module';
 import { HttpModule } from '@nestjs/axios';
@@ -18,7 +18,7 @@ import { ConfigModule } from '@nestjs/config';
         forwardRef(() => ChatSessionModule),
     ],
     providers: [SlackService, SlackBoltService],
-    controllers: [SlackOAuthController],
+    controllers: [SlackController],
     exports: [SlackService, SlackBoltService],
 })
 export class SlackModule { }
