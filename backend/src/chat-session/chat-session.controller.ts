@@ -32,4 +32,16 @@ export class ChatSessionController {
             throw new Error('Failed to send message');
         }
     }
+
+    @Post('end')
+    async endChat(@Body() body: { session_id: string }) {
+        try {
+            const { session_id } = body;
+            await this.chatSessionService.endChatSession(session_id);
+            return { success: true };
+        } catch (error) {
+            console.error('Error ending chat session:', error);
+            throw new Error('Failed to end chat session');
+        }
+    }
 }

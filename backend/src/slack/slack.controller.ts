@@ -1,13 +1,11 @@
 import { Controller, Get, Post, Req, Res, UseGuards, Body, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SlackService } from './slack.service';
-import { WorkspaceService } from '../workspace/workspace.service';
 
 @Controller('slack')
 export class SlackController {
     constructor(
         private slackService: SlackService,
-        private workspaceService: WorkspaceService,
     ) { }
 
     @Get('auth-url')

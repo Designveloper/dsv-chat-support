@@ -68,4 +68,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             client.emit('error', { message: 'Failed to send message' });
         }
     }
+
+    @SubscribeMessage('end_session')
+    async handleEndSession(client: Socket, payload: { sessionId: string }): Promise<void> {
+        try {
+            await this.chatSessionService.endChatSession(payload.sessionId);
+        } catch (error) {
+            console.error('Error ending session:', error);
+            client.emit('error', { message: 'Failed to end session' });
+        }
+    }
 }

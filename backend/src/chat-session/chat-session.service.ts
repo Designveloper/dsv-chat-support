@@ -45,6 +45,36 @@ export class ChatSessionService {
         return newSession;
     }
 
+    async endChatSession(sessionId: string): Promise<void> {
+        // Find the chat session
+        const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
+        if (!session) {
+            throw new Error('Chat session not found');
+        }
+
+        // Update the session status
+        session.status = 'closed';
+        await this.chatSessionRepository.save(session);
+
+        // Get the workspace
+        const workspace = await this.workspaceService.findById(session.workspace_id);
+        if (!workspace || !workspace.bot_token_slack) {
+            throw new Error('Workspace not configured for Slack');
+        }
+
+        // Post a message to the chat channel that the session has ended
+        try {
+            await this.slackService.postMessage(
+                workspace.bot_token_slack,
+                session.channel_id,
+                `Chat session ended`
+            );
+        } catch (error) {
+            console.error('Error sending message to Slack channel:', error);
+            throw new Error('Failed to send message to Slack channel');
+        }
+    }
+
     async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string }): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
@@ -276,19 +306,12 @@ export class ChatSessionService {
             await this.slackService.postMessage(
                 workspace.bot_token_slack,
                 session.channel_id,
-                `:speech_balloon: Visitor: ${message}`
+                `${message}`
             );
         } catch (error) {
             console.error('Error sending message to Slack channel:', error);
             throw new Error('Failed to send message to Slack channel');
         }
-
-        // Post the message to the session's channel
-        await this.slackService.postMessage(
-            workspace.bot_token_slack,
-            session.channel_id,
-            `:speech_balloon: Visitor: ${message}`
-        );
     }
 
     async findSessionByChannelId(channelId: string): Promise<ChatSession | null> {

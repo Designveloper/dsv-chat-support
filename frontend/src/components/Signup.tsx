@@ -32,8 +32,8 @@ const Signup: React.FC = () => {
   return (
     <div className="signup">
       {loading && (
-        <div className="auth-loading">
-          <div className="auth-loading__spinner"></div>
+        <div className="loading">
+          <div className="loading__spinner"></div>
         </div>
       )}
       <form className="signup__form" onSubmit={handleSubmit}>

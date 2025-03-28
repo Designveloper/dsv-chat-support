@@ -82,8 +82,8 @@ const EmailConfirmation: React.FC = () => {
   return (
     <div className="email-confirmation">
       {loading && (
-        <div className="auth-loading">
-          <div className="auth-loading__spinner"></div>
+        <div className="loading">
+          <div className="loading__spinner"></div>
         </div>
       )}
       <form className="email-confirmation__form" onSubmit={handleSubmit}>

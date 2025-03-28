@@ -1,23 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useProtectedRoute } from "../hooks/useProtectedRoute";
-import axios from "axios";
 import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
 import ChatWidget from "./ChatWidget";
-
-// Define workspace interface
-interface Workspace {
-  id: string;
-  name: string;
-  owner_id: number;
-  createdAt: string;
-  updatedAt?: string;
-  bot_token_slack?: string;
-  selected_channel_id?: string;
-  service_slack_account_id?: string;
-  service_type_slack?: string;
-}
+import { workspaceService, Workspace } from "../services/workspaceService";
 
 const Dashboard = () => {
   const isAuthenticated = useProtectedRoute();
@@ -48,67 +35,37 @@ const Dashboard = () => {
 
   const fetchWorkspaces = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get<Workspace[]>(
-        "http://localhost:3000/workspace",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log("Workspaces:", response.data);
-
-      setWorkspaces(response.data);
-
-      // Check if any workspace has Slack connected
-      const hasSlackIntegration = response.data.some(
-        (workspace: Workspace) => workspace.bot_token_slack
-      );
-
-      setSlackConnected(hasSlackIntegration);
-      setLoading(false);
+      setLoading(true);
+      const data = await workspaceService.fetchWorkspaces();
+      setWorkspaces(data);
+      setSlackConnected(workspaceService.hasSlackIntegration(data));
     } catch (error) {
       console.error("Error fetching workspaces:", error);
+      setError("Failed to fetch workspaces. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateWorkspace = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      await axios.post(
-        "http://localhost:3000/workspace",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Refresh workspaces list
-      await fetchWorkspaces();
-    } catch (error) {
-      console.error("Error creating workspace:", error);
-    }
-  };
+  // const handleCreateWorkspace = async () => {
+  //   try {
+  //     await workspaceService.createWorkspace();
+  //     await fetchWorkspaces();
+  //   } catch (error) {
+  //     console.error("Error creating workspace:", error);
+  //     setError("Failed to create workspace. Please try again.");
+  //   }
+  // };
 
   const handleAddToSlack = async () => {
     try {
       setIsSlackLoading(true);
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://localhost:3000/slack/auth-url", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Redirect to the Slack OAuth URL
-      window.location.href = response.data.url;
+      const { url } = await workspaceService.getSlackAuthUrl();
+      window.location.href = url;
     } catch (error) {
       console.error("Error getting Slack auth URL:", error);
-      setError("Failed to connect to Slack. Please try again.");
+      setError("Failed to connect Slack. Please try again.");
+    } finally {
       setIsSlackLoading(false);
     }
   };
@@ -140,77 +97,51 @@ const Dashboard = () => {
         </div>
       )}
 
-      {slackConnected && (
+      {/* {slackConnected && (
         <div className="dashboard__alert dashboard__alert--success">
           Slack has been successfully connected to your workspace!
         </div>
-      )}
+      )} */}
 
       <div className="dashboard__content">
-        <section className="dashboard__workspaces-section">
-          <div className="dashboard__section-header">
-            <h2>Your Workspaces</h2>
-            <button onClick={handleCreateWorkspace} className="dashboard__btn">
-              Create Workspace
-            </button>
-          </div>
-
-          {workspaces.length === 0 ? (
-            <div className="dashboard__no-workspaces">
-              <p>
-                You don't have any workspaces yet. Create one to get started.
-              </p>
-            </div>
-          ) : (
-            <div className="dashboard__workspaces-list">
-              {workspaces.map((workspace) => (
-                <div key={workspace.id} className="dashboard__workspace-card">
-                  <h3>{workspace.name}</h3>
-                  <div className="dashboard__workspace-details">
-                    <p>
-                      Created:{" "}
-                      {new Date(workspace.createdAt).toLocaleDateString()}
-                    </p>
-                    <p>
-                      Slack:{" "}
-                      {workspace.bot_token_slack ? (
-                        <span className="dashboard__badge dashboard__badge--success">
-                          Connected
-                        </span>
-                      ) : (
-                        <span className="dashboard__badge dashboard__badge--secondary">
-                          Not connected
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         <section className="dashboard__integrations-section">
-          <h2>Integrations</h2>
-
-          <div className="dashboard__integration-card">
-            <div className="dashboard__integration-header">
-              <h3>Slack</h3>
-              {slackConnected ? (
-                <span className="dashboard__badge dashboard__badge--success">
-                  Connected
-                </span>
-              ) : (
-                <span className="dashboard__badge dashboard__badge--secondary">
-                  Not connected
-                </span>
-              )}
-            </div>
-
-            <p>
-              Connect your workspace with Slack to provide chat support through
-              your Slack channels.
-            </p>
+          {slackConnected ? (
+            <h2>Your workspace</h2>
+          ) : (
+            <h2>
+              Click the button below to add Chat Support to your Slack account
+            </h2>
+          )}
+          <div className="">
+            {workspaces.length === 0 ? (
+              ""
+            ) : (
+              <div className="dashboard__workspaces-list">
+                {workspaces.map((workspace) => (
+                  <div key={workspace.id} className="dashboard__workspace-card">
+                    <h3>{workspace.name}</h3>
+                    <div className="dashboard__workspace-details">
+                      <p>
+                        Created:{" "}
+                        {new Date(workspace.createdAt).toLocaleDateString()}
+                      </p>
+                      <p>
+                        Slack:{" "}
+                        {workspace.bot_token_slack ? (
+                          <span className="dashboard__badge dashboard__badge--success">
+                            Connected
+                          </span>
+                        ) : (
+                          <span className="dashboard__badge dashboard__badge--secondary">
+                            Not connected
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {!slackConnected && (
               <>
@@ -220,7 +151,9 @@ const Dashboard = () => {
                   disabled={isSlackLoading}
                 >
                   {isSlackLoading ? (
-                    <span>Loading...</span>
+                    <div className="loading">
+                      <div className="loading__spinner"></div>
+                    </div>
                   ) : (
                     <img
                       alt="Add to Slack"

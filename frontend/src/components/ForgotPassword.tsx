@@ -53,8 +53,8 @@ const ForgotPassword: React.FC = () => {
   return (
     <div className="forgot-password">
       {loading && (
-        <div className="auth-loading">
-          <div className="auth-loading__spinner"></div>
+        <div className="loading">
+          <div className="loading__spinner"></div>
         </div>
       )}
       {!isCodeSent ? (

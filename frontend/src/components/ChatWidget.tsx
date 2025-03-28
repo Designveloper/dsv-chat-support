@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
-import axios from "axios";
 import "./ChatWidget.scss";
-import { useAuth } from "../context/AuthContext";
+import { chatService } from "../services/chatService";
 import WidgetController from "../services/widgetController";
 
 interface ChatWidgetProps {
@@ -12,7 +10,6 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
-  const { user } = useAuth();
   const controllerRef = useRef(new WidgetController());
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,6 +22,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
 
   useEffect(() => {
     // Connect controller to React's state
@@ -52,6 +51,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
         startChatSession();
       }
       controller.open();
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } else {
       controller.hide();
     }
@@ -59,20 +59,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
 
   // Check for existing session on mount
   useEffect(() => {
-    const existingSessionId = localStorage.getItem("chat_session_id");
+    const existingSessionId = chatService.getSavedSession();
     if (existingSessionId) {
       setSessionId(existingSessionId);
 
-      const savedMessages = localStorage.getItem(
-        `chat_messages_${existingSessionId}`
-      );
+      const savedMessages = chatService.getSavedMessages(existingSessionId);
       if (savedMessages) {
-        try {
-          const parsedMessages = JSON.parse(savedMessages);
-          setMessages(parsedMessages);
-        } catch (error) {
-          console.error("Error parsing saved messages:", error);
-        }
+        setMessages(savedMessages);
       }
 
       setupWebSocketConnection(existingSessionId);
@@ -90,45 +83,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
 
   // Set up WebSocket connection
   const setupWebSocketConnection = (sessionId: string) => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
-
-    // Connect to WebSocket server
-    const socket = io("http://localhost:3000", {
-      withCredentials: true,
-      transports: ["websocket", "polling"],
-      reconnection: true,
-    });
-    socketRef.current = socket;
-
-    // Handle connection events
-    socket.on("connect", () => {
-      console.log("Connected to chat server");
-
-      // Register for this session
-      socket.emit("register_session", { sessionId });
-    });
-
-    // Listen for staff messages
-    socket.on("staff_message", (data: { text: string }) => {
+    const socket = chatService.setupWebSocketConnection(sessionId, (text) => {
       setMessages((prev) => [
         ...prev,
         {
-          text: data.text,
+          text,
           isUser: false,
         },
       ]);
     });
 
-    // Handle errors and disconnection
-    socket.on("error", (error: unknown) => {
-      console.error("Socket error:", error);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Disconnected from chat server");
-    });
+    socketRef.current = socket;
   };
 
   // Scroll to bottom when messages change
@@ -153,14 +118,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     }
   }, [workspaceId, workspaces, activeWorkspace]);
 
-  // const toggleWidget = () => {
-  //   if (!isOpen && !sessionId) {
-  //     // Start a new chat session when opening
-  //     startChatSession();
-  //   }
-  //   setIsOpen(!isOpen);
-  // };
-
   const startChatSession = async () => {
     if (!activeWorkspace) {
       setError("No workspace selected");
@@ -169,132 +126,123 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
 
     try {
       setLoading(true);
-      // Prepare request payload
-      const payload = { workspace_id: activeWorkspace };
-
-      // Get token if available (for admin mode)
-      const token = localStorage.getItem("accessToken");
-
-      // Make API call with or without auth token based on visitor/admin mode
-      const response = await axios.post(
-        "http://localhost:3000/chat/start",
-        payload,
-        {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : {},
-        }
+      const { session_id } = await chatService.startChatSession(
+        activeWorkspace
       );
-
-      const { session_id } = response.data;
       setSessionId(session_id);
-      localStorage.setItem("chat_session_id", session_id);
 
       setupWebSocketConnection(session_id);
 
-      // Add welcome message
+      // Welcome message
       const initialMessages = [
         {
-          text: "Welcome to the chat! How can we help you today?",
+          text: "Welcome! How can we help you today?",
           isUser: false,
         },
       ];
       setMessages(initialMessages);
-      localStorage.setItem(
-        `chat_messages_${session_id}`,
-        JSON.stringify(initialMessages)
-      );
+      chatService.saveMessages(session_id, initialMessages);
 
       setLoading(false);
-    } catch (err) {
-      console.error("Error starting chat session:", err);
+    } catch (error) {
+      console.error("Error starting chat session:", error);
       setError("Failed to start chat session");
       setLoading(false);
     }
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || !sessionId) return;
+    if (!message.trim() || !sessionId) {
+      return;
+    }
 
-    // Add user message to chat (local UI)
     const newMessage = { text: message, isUser: true };
-    setMessages([...messages, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
 
     const messageToSend = message;
-    setMessage(""); // Clear input field
+    setMessage("");
 
     try {
       const visitorInfo = controllerRef.current.getVisitorInfo();
-      console.log("🚀 ~ sendMessage ~ visitorInfo:", visitorInfo);
       let userInfo: { email: string; userId?: string } = {
         email: "Anonymous User",
       };
 
-      // If visitor was identified, use that information
       if (visitorInfo.data) {
         userInfo = {
           ...userInfo,
           ...visitorInfo.data,
           userId: visitorInfo.id || undefined,
         };
-        console.log("Using identified visitor info:", userInfo);
-      } else if (user?.email) {
-        // Fall back to local user context if available
-        // userInfo.email = user.email;
-        // console.log("Using local user context:", userInfo);
       }
 
       const currentPage = window.location.href;
 
-      if (socketRef.current?.connected) {
-        console.log("Sending message via socket:", messageToSend);
-        // Send via socket if connected
-        socketRef.current.emit("send_message", {
-          sessionId,
-          message: messageToSend,
-          userInfo,
-          currentPage,
-        });
-      } else {
-        // Fall back to REST API if socket not available
-        const token = localStorage.getItem("accessToken");
-        await axios.post(
-          "http://localhost:3000/chat/message",
-          {
-            session_id: sessionId,
-            message: messageToSend,
-            userInfo,
-            currentPage,
-          },
-          {
-            headers: token
-              ? {
-                  Authorization: `Bearer ${token}`,
-                }
-              : {},
-          }
-        );
-      }
+      await chatService.sendMessage({
+        sessionId,
+        message: messageToSend,
+        userInfo,
+        currentPage,
+      });
     } catch (error) {
       console.error("Error sending message:", error);
-
-      // Show error in chat
+      setError("Failed to send message");
       setMessages((prev) => [
         ...prev,
         {
-          text: "Failed to send message. Please try again.",
+          text: "Failed to send message",
           isUser: false,
         },
       ]);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const showEndChatConfirmation = () => {
+    setIsMenuOpen(false);
+    setIsConfirmingEnd(true);
+  };
+
+  const cancelEndChat = () => {
+    setIsConfirmingEnd(false);
+  };
+
+  const confirmEndChat = async () => {
+    if (!sessionId) return;
+
+    try {
+      setLoading(true);
+      await chatService.endChatSession(sessionId);
+
+      localStorage.removeItem(`chat_messages_${sessionId}`);
+      localStorage.removeItem("chat_session_id");
+
+      setMessages([]);
+      setSessionId(null);
+      setIsConfirmingEnd(false);
+
+      setMessages([
+        {
+          text: "Chat session ended. Thank you for chatting with us!",
+          isUser: false,
+        },
+      ]);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error ending chat session:", error);
+      setError("Failed to end chat session");
+      setLoading(false);
     }
   };
 
@@ -304,13 +252,52 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
         <div className="chat-widget__panel">
           <div className="chat-widget__header">
             <h3 className="chat-widget__title">Live Chat Support</h3>
-            <button
-              className="chat-widget__close-button"
-              onClick={toggleWidget}
-            >
-              ×
-            </button>
+            <div className="chat-widget__header-actions">
+              <button
+                className="chat-widget__menu-button"
+                onClick={toggleMenu}
+                aria-label="Menu"
+              >
+                ⋮
+              </button>
+              <button
+                className="chat-widget__close-button"
+                onClick={toggleWidget}
+              >
+                ×
+              </button>
+              {isMenuOpen && (
+                <div className="chat-widget__menu-dropdown">
+                  <button
+                    className="chat-widget__menu-item"
+                    onClick={showEndChatConfirmation}
+                  >
+                    End chat
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+
+          {isConfirmingEnd && (
+            <div className="chat-widget__confirmation">
+              <p>Are you sure you want to end this chat session?</p>
+              <div className="chat-widget__confirmation-actions">
+                <button
+                  className="chat-widget__confirmation-button chat-widget__confirmation-button--confirm"
+                  onClick={confirmEndChat}
+                >
+                  Yes
+                </button>
+                <button
+                  className="chat-widget__confirmation-button chat-widget__confirmation-button--cancel"
+                  onClick={cancelEndChat}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="chat-widget__loading">Connecting to support...</div>
@@ -331,6 +318,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
                     {msg.text}
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
 
               <div className="chat-widget__input">
@@ -338,7 +326,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
                   className="chat-widget__textarea"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Type your message..."
                   disabled={!sessionId}
                 />
