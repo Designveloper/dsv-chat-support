@@ -35,7 +35,7 @@
     bottom: 70px;
     right: 0;
     width: 320px;
-    height: 400px;
+    min-height: 400px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
@@ -248,5 +248,79 @@
         &:hover {
             background-color: #5a6268;
         }
+    }
+}
+
+.chat-widget__offline-form {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
+    h3 {
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    p {
+        color: #666;
+        margin-bottom: 15px;
+    }
+}
+
+.chat-widget__offline-form-field {
+    display: flex;
+    flex-direction: column;
+
+    label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    input,
+    textarea {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+
+        &:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+    }
+}
+
+.chat-widget__offline-form-submit {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+        background-color: #3a80d2;
+    }
+
+    &:disabled {
+        background-color: #aaa;
+        cursor: not-allowed;
+    }
+}
+
+.chat-widget__offline-thanks {
+    padding: 20px;
+    text-align: center;
+
+    h3 {
+        color: #4a90e2;
+        margin-bottom: 10px;
+    }
+
+    p {
+        color: #666;
     }
 }

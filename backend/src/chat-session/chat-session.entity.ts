@@ -23,7 +23,7 @@ export class ChatSession {
 
     @Column({
         type: 'enum',
-        enum: ['active', 'closed'],
+        enum: ['active', 'closed', "offline"],
         default: 'active',
     })
     status: string;

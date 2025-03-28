@@ -59,4 +59,6 @@ export class WorkspaceService {
       where: { service_slack_account_id: slackWorkspaceId }
     });
   }
+
+
 }

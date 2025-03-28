@@ -24,6 +24,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [offlineFormSubmitted, setOfflineFormSubmitted] =
+    useState<boolean>(false);
+  const [offlineEmail, setOfflineEmail] = useState<string>("");
+  const [offlineMessage, setOfflineMessage] = useState<string>("");
+  const [offlineName, setOfflineName] = useState<string>("");
 
   useEffect(() => {
     // Connect controller to React's state
@@ -46,10 +52,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
   const toggleWidget = () => {
     const controller = controllerRef.current;
     if (!isOpen) {
-      if (!sessionId) {
+      if (activeWorkspace) {
+        checkOnlineStatus();
+      }
+
+      if (isOnline && !sessionId) {
         // Start a new chat session when opening
         startChatSession();
       }
+
       controller.open();
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -117,6 +128,28 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
       }
     }
   }, [workspaceId, workspaces, activeWorkspace]);
+
+  const checkOnlineStatus = async () => {
+    if (!activeWorkspace) return;
+
+    try {
+      const online = await chatService.checkOnlineStatus(activeWorkspace);
+      setIsOnline(online);
+
+      // Check if the user has already submitted an offline form
+      const hasSubmitted = chatService.hasSubmittedOfflineForm();
+      setOfflineFormSubmitted(hasSubmitted);
+    } catch (error) {
+      console.error("Error checking online status:", error);
+      setIsOnline(false); // Default to offline on error
+    }
+  };
+
+  useEffect(() => {
+    if (activeWorkspace) {
+      checkOnlineStatus();
+    }
+  }, [activeWorkspace]);
 
   const startChatSession = async () => {
     if (!activeWorkspace) {
@@ -246,27 +279,165 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     }
   };
 
+  const submitOfflineForm = async () => {
+    if (!activeWorkspace || !offlineEmail.trim() || !offlineMessage.trim()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await chatService.submitOfflineMessage(
+        activeWorkspace,
+        offlineEmail.trim(),
+        offlineMessage.trim(),
+        offlineName.trim() || undefined
+      );
+
+      setOfflineFormSubmitted(true);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error submitting offline form:", error);
+      setError("Failed to submit your message");
+      setLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="chat-widget__loading">Connecting to support...</div>
+      );
+    }
+
+    if (error) {
+      return <div className="chat-widget__error">{error}</div>;
+    }
+
+    if (!isOnline) {
+      if (offlineFormSubmitted) {
+        return (
+          <div className="chat-widget__offline-thanks">
+            <h3>Thanks for your message!</h3>
+            <p>We will be in touch soon.</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="chat-widget__offline-form">
+          <h3>Sorry, we are away</h3>
+          <p>But we would love to hear from you and chat soon!</p>
+
+          <div className="chat-widget__offline-form-field">
+            <label htmlFor="offline-email">Email</label>
+            <input
+              id="offline-email"
+              type="email"
+              value={offlineEmail}
+              onChange={(e) => setOfflineEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="chat-widget__offline-form-field">
+            <label htmlFor="offline-message">Your message here</label>
+            <textarea
+              id="offline-message"
+              value={offlineMessage}
+              onChange={(e) => setOfflineMessage(e.target.value)}
+              rows={4}
+              required
+            />
+          </div>
+
+          <div className="chat-widget__offline-form-field">
+            <label htmlFor="offline-name">Name (optional but helpful)</label>
+            <input
+              id="offline-name"
+              type="text"
+              value={offlineName}
+              onChange={(e) => setOfflineName(e.target.value)}
+            />
+          </div>
+
+          <button
+            className="chat-widget__offline-form-submit"
+            onClick={submitOfflineForm}
+            disabled={!offlineEmail.trim() || !offlineMessage.trim()}
+          >
+            Send
+          </button>
+        </div>
+      );
+    }
+
+    // Normal chat content for online state
+    return (
+      <>
+        <div className="chat-widget__messages">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chat-widget__message ${
+                msg.isUser
+                  ? "chat-widget__message--user"
+                  : "chat-widget__message--support"
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="chat-widget__input">
+          <textarea
+            className="chat-widget__textarea"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            disabled={!sessionId}
+          />
+          <button
+            className="chat-widget__send-button"
+            onClick={sendMessage}
+            disabled={!message.trim() || !sessionId}
+          >
+            Send
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="chat-widget">
       {isOpen && (
         <div className="chat-widget__panel">
           <div className="chat-widget__header">
-            <h3 className="chat-widget__title">Live Chat Support</h3>
+            <h3 className="chat-widget__title">
+              {isOnline ? "Live Chat Support" : "Leave a Message"}
+            </h3>
             <div className="chat-widget__header-actions">
-              <button
-                className="chat-widget__menu-button"
-                onClick={toggleMenu}
-                aria-label="Menu"
-              >
-                ⋮
-              </button>
+              {isOnline && (
+                <button
+                  className="chat-widget__menu-button"
+                  onClick={toggleMenu}
+                  aria-label="Menu"
+                >
+                  ⋮
+                </button>
+              )}
               <button
                 className="chat-widget__close-button"
                 onClick={toggleWidget}
               >
                 ×
               </button>
-              {isMenuOpen && (
+              {isMenuOpen && isOnline && (
                 <div className="chat-widget__menu-dropdown">
                   <button
                     className="chat-widget__menu-item"
@@ -299,47 +470,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
             </div>
           )}
 
-          {loading ? (
-            <div className="chat-widget__loading">Connecting to support...</div>
-          ) : error ? (
-            <div className="chat-widget__error">{error}</div>
-          ) : (
-            <>
-              <div className="chat-widget__messages">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`chat-widget__message ${
-                      msg.isUser
-                        ? "chat-widget__message--user"
-                        : "chat-widget__message--support"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              <div className="chat-widget__input">
-                <textarea
-                  className="chat-widget__textarea"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your message..."
-                  disabled={!sessionId}
-                />
-                <button
-                  className="chat-widget__send-button"
-                  onClick={sendMessage}
-                  disabled={!message.trim() || !sessionId}
-                >
-                  Send
-                </button>
-              </div>
-            </>
-          )}
+          {renderContent()}
         </div>
       )}
 

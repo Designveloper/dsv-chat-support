@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Query } from '@nestjs/common';
 import { Request } from 'express';
 import { ChatSessionService } from './chat-session.service';
 
@@ -42,6 +42,37 @@ export class ChatSessionController {
         } catch (error) {
             console.error('Error ending chat session:', error);
             throw new Error('Failed to end chat session');
+        }
+    }
+
+    @Get('status')
+    async getStatus(@Query('workspace_id') workspaceId: string): Promise<{ online: boolean }> {
+        try {
+            const online = await this.chatSessionService.isWorkspaceOnline(workspaceId);
+            return { online };
+        } catch (error) {
+            console.error('Error checking workspace status:', error);
+            return { online: false };
+        }
+    }
+
+    @Post('offline-message')
+    async submitOfflineMessage(
+        @Body() body: { workspace_id: string; email: string; message: string; name?: string },
+        @Req() request: Request
+    ) {
+        try {
+            await this.chatSessionService.handleOfflineMessage(
+                body.workspace_id,
+                body.email,
+                body.message,
+                body.name,
+                request
+            );
+            return { success: true };
+        } catch (error) {
+            console.error('Error submitting offline message:', error);
+            throw new Error('Failed to submit offline message');
         }
     }
 }

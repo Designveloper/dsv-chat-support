@@ -327,4 +327,182 @@ export class ChatSessionService {
     async findSessionByChannelId(channelId: string): Promise<ChatSession | null> {
         return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
     }
+
+    async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
+        // You can implement different logic here:
+        // 1. Check business hours
+        // 2. Check manual override setting
+        // 3. Check if any staff members are online
+
+        // For now, let's implement a simple business hours check
+        // Monday-Friday, 9am-5pm
+        const now = new Date();
+        const day = now.getDay(); // 0-6, 0 is Sunday
+        const hour = now.getHours(); // 0-23
+
+        // Simple business hours: Monday-Friday, 9am-5pm
+        const isBusinessHours = day >= 1 && day <= 5 && hour >= 9 && hour < 15;
+
+        // Get the workspace to check for manual override
+        const workspace = await this.workspaceService.findById(workspaceId);
+        if (!workspace) {
+            return false;
+        }
+
+        // You would add a field to your workspace entity like "chat_availability_override"
+        // that could be 'online', 'offline', or null (use default business hours)
+        // For now, we'll just check business hours
+        return isBusinessHours;
+    }
+
+    async handleOfflineMessage(
+        workspaceId: string,
+        email: string,
+        message: string,
+        name?: string,
+        request?: Request | null
+    ): Promise<void> {
+        // Create a dummy session for this message
+        const sessionId = uuidv4();
+        const newSession = this.chatSessionRepository.create({
+            session_id: sessionId,
+            workspace_id: workspaceId,
+            status: 'offline',
+            user_email: email,
+        });
+
+        await this.chatSessionRepository.save(newSession);
+
+        // Get the workspace
+        const workspace = await this.workspaceService.findById(workspaceId);
+        if (!workspace || !workspace.bot_token_slack || !workspace.selected_channel_id) {
+            throw new Error('Workspace not configured for Slack');
+        }
+
+        // Get additional context information
+        const referer = request?.headers['referer'] || 'Unknown Page';
+        const location = 'Ho Chi Minh City, Vietnam';
+        const localTime = format(new Date(), 'hh:mma (XXX)');
+
+        // Build the message blocks for Slack
+        const messageBlocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Live-chat offline message",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `:email: *Offline message from ${email}*`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": ":memo: *Message:*"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `>${message.split('\n').join('\n>')}`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Email:* ${email}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": name ? `*Name:* ${name}` : "*Name:* Not provided"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Location:* :flag-VN: ${location}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Local Time:* ${localTime}`
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Current Page:* ${referer}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Session ID:* ${sessionId}`
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Reply via Email",
+                            "emoji": true
+                        },
+                        "value": `reply_email:${email}`,
+                        "action_id": "reply_email"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Mark as Handled",
+                            "emoji": true
+                        },
+                        "value": `mark_handled:${sessionId}`,
+                        "action_id": "mark_handled",
+                        "style": "primary"
+                    }
+                ]
+            }
+        ];
+
+        try {
+            // Post to the Slack channel
+            await this.slackService.postBlockKitMessage(
+                workspace.bot_token_slack,
+                workspace.selected_channel_id,
+                messageBlocks
+            );
+        } catch (error) {
+            console.error('Error posting Block Kit message to Slack:', error);
+            throw new Error('Failed to send message to Slack');
+        }
+    }
 }

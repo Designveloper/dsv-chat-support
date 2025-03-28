@@ -123,6 +123,44 @@ export const chatService = {
         }
     },
 
+    // Check slack online status
+    async checkOnlineStatus(workspaceId: string): Promise<boolean> {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await axios.get(
+                `${API_URL}/chat/status?workspace_id=${workspaceId}`,
+                {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }
+            );
+            return response.data.online;
+        } catch (error) {
+            console.error('Error checking online status:', error);
+            return false; // Default to offline if there's an error
+        }
+    },
+
+    // Add form submission for offline messages
+    async submitOfflineMessage(workspaceId: string, email: string, message: string, name?: string): Promise<void> {
+        await axios.post(
+            `${API_URL}/chat/offline-message`,
+            {
+                workspace_id: workspaceId,
+                email,
+                message,
+                name
+            }
+        );
+
+        // Save submission status to local storage
+        localStorage.setItem('chat_offline_submitted', 'true');
+    },
+
+    // Check if user has already submitted offline form
+    hasSubmittedOfflineForm(): boolean {
+        return localStorage.getItem('chat_offline_submitted') === 'true';
+    },
+
     // Get saved session from local storage
     getSavedSession(): string | null {
         return localStorage.getItem('chat_session_id');
