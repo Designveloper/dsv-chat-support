@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatSession } from './chat-session.entity';
 import { WorkspaceService } from '../workspace/workspace.service';
 import { SlackService } from '../slack/slack.service';
+import { SlackBoltService } from '../slack/slack-bolt.service';
+import { WorkSpace } from '../workspace/workspace.entity';
 import { Request } from 'express';
 import { format } from 'date-fns';
 
@@ -13,6 +15,8 @@ export class ChatSessionService {
     constructor(
         private workspaceService: WorkspaceService,
         private slackService: SlackService,
+        @Inject(forwardRef(() => SlackBoltService)) // Add forwardRef for circular dependency
+        private slackBoltService: SlackBoltService,
         @InjectRepository(ChatSession)
         private chatSessionRepository: Repository<ChatSession>
     ) { }
@@ -328,31 +332,24 @@ export class ChatSessionService {
         return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
     }
 
+    /** Updated method to use SlackBoltService for real-time status */
     async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
-        // You can implement different logic here:
-        // 1. Check business hours
-        // 2. Check manual override setting
-        // 3. Check if any staff members are online
+        return this.slackBoltService.isWorkspaceOnline(workspaceId);
+    }
 
-        // For now, let's implement a simple business hours check
-        // Monday-Friday, 9am-5pm
-        const now = new Date();
-        const day = now.getDay(); // 0-6, 0 is Sunday
-        const hour = now.getHours(); // 0-23
+    /** New method to find workspace by ID */
+    async findWorkspaceById(workspaceId: string): Promise<WorkSpace> {
+        return this.workspaceService.findById(workspaceId);
+    }
 
-        // Simple business hours: Monday-Friday, 9am-5pm
-        const isBusinessHours = day >= 1 && day <= 5 && hour >= 9 && hour < 15;
+    /** New method to find all workspaces */
+    async findAllWorkspaces(): Promise<WorkSpace[]> {
+        return this.workspaceService.findAll(); // We'll add this to WorkspaceService
+    }
 
-        // Get the workspace to check for manual override
-        const workspace = await this.workspaceService.findById(workspaceId);
-        if (!workspace) {
-            return false;
-        }
-
-        // You would add a field to your workspace entity like "chat_availability_override"
-        // that could be 'online', 'offline', or null (use default business hours)
-        // For now, we'll just check business hours
-        return isBusinessHours;
+    /** New method to find sessions by workspace ID */
+    async findSessionsByWorkspaceId(workspaceId: string): Promise<ChatSession[]> {
+        return this.chatSessionRepository.find({ where: { workspace_id: workspaceId } });
     }
 
     async handleOfflineMessage(

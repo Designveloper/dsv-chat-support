@@ -60,5 +60,8 @@ export class WorkspaceService {
     });
   }
 
+  async findAll(): Promise<WorkSpace[]> {
+    return this.workspacesRepository.find();
+  }
 
 }

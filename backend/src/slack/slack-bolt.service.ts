@@ -5,6 +5,11 @@ import { WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { ChatSessionService } from '../chat-session/chat-session.service';
 import { INestApplication } from '@nestjs/common';
+interface PresenceChangeEvent {
+    type: 'presence_change';
+    user: string;
+    presence: 'active' | 'away';
+}
 
 @Injectable()
 export class SlackBoltService implements OnModuleInit {
@@ -80,6 +85,9 @@ export class SlackBoltService implements OnModuleInit {
     async onModuleInit() {
         // Set up message event listener
         await this.setupMessageListener();
+
+        // Set up presence change listener
+        await this.setupPresenceListener();
 
         // No need to call start() since the receiver is attached to NestJS
         console.log('⚡️ Slack Bolt integration initialized!');
@@ -168,6 +176,74 @@ export class SlackBoltService implements OnModuleInit {
                 }
             } catch (error) {
                 console.error('Error processing app mention:', error);
+            }
+        });
+    }
+
+    async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
+        try {
+            const workspace = await this.chatSessionService.findWorkspaceById(workspaceId);
+            if (!workspace || !workspace.selected_channel_id) {
+                throw new Error('Workspace not found or channel not selected');
+            }
+
+            const membersResponse = await this.boltApp.client.conversations.members({
+                token: this.configService.get('SLACK_BOT_TOKEN'),
+                channel: workspace.selected_channel_id,
+            });
+
+            const memberIds = membersResponse.members ?? [];
+            for (const memberId of memberIds) {
+                console.log(`Checking presence for user ${memberId}`);
+                const presenceResponse = await this.boltApp.client.users.getPresence({
+                    token: this.configService.get('SLACK_BOT_TOKEN'),
+                    user: memberId,
+                });
+                console.log(`User ${memberId} is ${presenceResponse.presence}`);
+                if (presenceResponse.presence === 'active') {
+                    return true; // At least one staff member is active
+                }
+            }
+            return false; // All staff members are away or offline
+        } catch (error) {
+            console.error('Error checking workspace online status:', error);
+            return false; // Default to offline on error
+        }
+    }
+
+    private async setupPresenceListener() {
+        this.boltApp.event('presence_change', async ({ event }) => {
+            try {
+                const presenceEvent = event as unknown as PresenceChangeEvent;
+                const userId = presenceEvent.user;
+                const presence = presenceEvent.presence;
+                console.log(`User ${userId} is now ${presence}`);
+
+                // Find all workspaces to check if this user affects their status
+                const workspaces = await this.chatSessionService.findAllWorkspaces();
+                for (const workspace of workspaces) {
+                    if (!workspace.selected_channel_id) continue;
+
+                    const membersResponse = await this.boltApp.client.conversations.members({
+                        token: this.configService.get('SLACK_BOT_TOKEN'),
+                        channel: workspace.selected_channel_id,
+                    });
+                    if (membersResponse.members?.includes(userId)) {
+                        const isOnline = await this.isWorkspaceOnline(workspace.id);
+                        // Notify all connected clients in this workspace's sessions
+                        const sessions = await this.chatSessionService.findSessionsByWorkspaceId(workspace.id);
+                        for (const session of sessions) {
+                            const socketIds = this.sessionToSocketMap.get(session.session_id);
+                            if (socketIds) {
+                                socketIds.forEach(socketId => {
+                                    this.server?.to(socketId).emit('status', { isOnline });
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing presence change:', error);
             }
         });
     }

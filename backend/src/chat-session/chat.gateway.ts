@@ -31,8 +31,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         this.slackBoltService.registerSocketServer(server);
     }
 
-    handleConnection(client: Socket): void {
-        console.log(`Client connected: ${client.id}`);
+    async handleConnection(client: Socket) {
+        const sessionId = client.handshake.query.sessionId as string;
+        const session = await this.chatSessionService.findSessionByChannelId(sessionId); // Adjust based on your method
+        if (session) {
+            const isOnline = await this.chatSessionService.isWorkspaceOnline(session.workspace_id);
+            client.emit('status', { isOnline });
+            // Register socket with SlackBoltService
+            this.slackBoltService.registerSessionSocket(session.session_id, client.id);
+        }
     }
 
     handleDisconnect(client: Socket): void {
