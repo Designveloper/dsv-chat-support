@@ -98,8 +98,10 @@ export class ChatSessionService {
         if (!session.channel_id) {
             try {
                 console.log('Creating new Slack channel for chat session:', sessionId);
-                // Create a unique channel name based on session ID
-                const channelName = `chat-${sessionId.substring(0, 8)}`;
+                // Create a unique channel name based on user email or session ID
+                const channelName = userInfo?.email
+                    ? `chat-${userInfo.email.split('@')[0]}`
+                    : `chat-${sessionId.substring(0, 8)}`;
 
                 // Create a new channel in Slack
                 const channelId = await this.slackService.createChannel(
@@ -302,11 +304,19 @@ export class ChatSessionService {
             // Make sure bot has joined the channel before posting messages
             await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
 
+            const location = 'Ho Chi Minh City, Vietnam';
+            let username = userInfo?.email;
+
+            if (!username) {
+                username = `${location}`
+            }
+
             // Post the message to the session's channel
             await this.slackService.postMessage(
                 workspace.bot_token_slack,
                 session.channel_id,
-                `${message}`
+                `${message}`,
+                username
             );
         } catch (error) {
             console.error('Error sending message to Slack channel:', error);

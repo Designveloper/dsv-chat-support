@@ -165,7 +165,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     try {
       const visitorInfo = controllerRef.current.getVisitorInfo();
       let userInfo: { email: string; userId?: string } = {
-        email: "Anonymous User",
+        email: "",
       };
 
       if (visitorInfo.data) {

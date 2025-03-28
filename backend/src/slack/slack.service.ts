@@ -204,9 +204,18 @@ export class SlackService {
         }
     }
 
-    async postMessage(botToken: string, channelId: string, text: string): Promise<void> {
+    async postMessage(botToken: string, channelId: string, text: string, username?: string): Promise<void> {
         const web = new WebClient(botToken);
-        await web.chat.postMessage({ channel: channelId, text });
+        const messageOptions: any = {
+            channel: channelId,
+            text,
+        };
+
+        if (username) {
+            messageOptions.username = username;
+        }
+
+        await web.chat.postMessage(messageOptions);
     }
 
     async listChannels(botToken: string): Promise<any[]> {
