@@ -35,7 +35,7 @@
     bottom: 70px;
     right: 0;
     width: 320px;
-    min-height: 400px;
+    height: 400px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
@@ -251,15 +251,22 @@
     }
 }
 
+.chat-widget__panel--offline {
+    height: auto; 
+    max-height: 80vh;
+}
+
 .chat-widget__offline-form {
     padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    
+    overflow-y: auto;
+    height: auto;
+
     h3 {
         color: #333;
-        margin-bottom: 5px;
+        margin: 0;
     }
 
     p {
@@ -289,6 +296,11 @@
             border-color: #4a90e2;
             outline: none;
         }
+    }
+
+    textarea {
+        resize: none; // Prevents user resizing
+        height: 70px; // Fixed height
     }
 }
 

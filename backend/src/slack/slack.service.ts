@@ -266,7 +266,6 @@ export class SlackService {
                 return;
             }
             console.error('Error joining Slack channel:', error);
-            // Don't throw error, we'll still try to post messages
         }
     }
 

@@ -66,7 +66,7 @@ export class ChatSessionService {
                 console.log('Creating new Slack channel for chat session:', sessionId);
                 // Create a unique channel name based on user email or session ID
                 const channelName = userInfo?.email
-                    ? `chat-${userInfo.email.split('@')[0]}`
+                    ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
                     : `chat-${sessionId.substring(0, 8)}`;
 
                 // Create a new channel in Slack
@@ -324,22 +324,18 @@ export class ChatSessionService {
         return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
     }
 
-    /** Updated method to use SlackBoltService for real-time status */
     async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
         return this.slackBoltService.isWorkspaceOnline(workspaceId);
     }
 
-    /** Find workspace by ID */
     async findWorkspaceById(workspaceId: string): Promise<WorkSpace> {
         return this.workspaceService.findById(workspaceId);
     }
 
-    /** Find all workspaces */
     async findAllWorkspaces(): Promise<WorkSpace[]> {
-        return this.workspaceService.findAll(); // We'll add this to WorkspaceService
+        return this.workspaceService.findAll();
     }
 
-    /** Find sessions by workspace ID */
     async findSessionsByWorkspaceId(workspaceId: string): Promise<ChatSession[]> {
         return this.chatSessionRepository.find({ where: { workspace_id: workspaceId } });
     }
