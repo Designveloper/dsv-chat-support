@@ -205,7 +205,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
         userInfo = {
           ...userInfo,
           ...visitorInfo.data,
-          userId: visitorInfo.id || undefined,
         };
       }
 

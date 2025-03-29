@@ -21,19 +21,11 @@ export class ChatSessionService {
         private chatSessionRepository: Repository<ChatSession>
     ) { }
 
-    async startChat(workspaceId: string, userId: number): Promise<ChatSession> {
-        // Verify the workspace exists (but don't check ownership for anonymous users)
+    async startChat(workspaceId: string): Promise<ChatSession> {
+        // Verify the workspace exists
         const workspace = await this.workspaceService.findById(workspaceId);
         if (!workspace) {
             throw new Error('Invalid workspace');
-        }
-
-        // If userId is provided, verify ownership (authenticated users only)
-        if (userId !== null && userId !== undefined) {
-            // This is an authenticated user - check if they own the workspace
-            if (workspace.owner_id !== userId) {
-                throw new Error('Not authorized to access this workspace');
-            }
         }
 
         // Create a new chat session
@@ -47,36 +39,6 @@ export class ChatSessionService {
         await this.chatSessionRepository.save(newSession);
 
         return newSession;
-    }
-
-    async endChatSession(sessionId: string): Promise<void> {
-        // Find the chat session
-        const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
-        if (!session) {
-            throw new Error('Chat session not found');
-        }
-
-        // Update the session status
-        session.status = 'closed';
-        await this.chatSessionRepository.save(session);
-
-        // Get the workspace
-        const workspace = await this.workspaceService.findById(session.workspace_id);
-        if (!workspace || !workspace.bot_token_slack) {
-            throw new Error('Workspace not configured for Slack');
-        }
-
-        // Post a message to the chat channel that the session has ended
-        try {
-            await this.slackService.postMessage(
-                workspace.bot_token_slack,
-                session.channel_id,
-                `Chat session ended`
-            );
-        } catch (error) {
-            console.error('Error sending message to Slack channel:', error);
-            throw new Error('Failed to send message to Slack channel');
-        }
     }
 
     async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string }): Promise<void> {
@@ -328,6 +290,36 @@ export class ChatSessionService {
         }
     }
 
+    async endChatSession(sessionId: string): Promise<void> {
+        // Find the chat session
+        const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
+        if (!session) {
+            throw new Error('Chat session not found');
+        }
+
+        // Update the session status
+        session.status = 'closed';
+        await this.chatSessionRepository.save(session);
+
+        // Get the workspace
+        const workspace = await this.workspaceService.findById(session.workspace_id);
+        if (!workspace || !workspace.bot_token_slack) {
+            throw new Error('Workspace not configured for Slack');
+        }
+
+        // Post a message to the chat channel that the session has ended
+        try {
+            await this.slackService.postMessage(
+                workspace.bot_token_slack,
+                session.channel_id,
+                `Chat session ended`
+            );
+        } catch (error) {
+            console.error('Error sending message to Slack channel:', error);
+            throw new Error('Failed to send message to Slack channel');
+        }
+    }
+
     async findSessionByChannelId(channelId: string): Promise<ChatSession | null> {
         return this.chatSessionRepository.findOne({ where: { channel_id: channelId } });
     }
@@ -337,17 +329,17 @@ export class ChatSessionService {
         return this.slackBoltService.isWorkspaceOnline(workspaceId);
     }
 
-    /** New method to find workspace by ID */
+    /** Find workspace by ID */
     async findWorkspaceById(workspaceId: string): Promise<WorkSpace> {
         return this.workspaceService.findById(workspaceId);
     }
 
-    /** New method to find all workspaces */
+    /** Find all workspaces */
     async findAllWorkspaces(): Promise<WorkSpace[]> {
         return this.workspaceService.findAll(); // We'll add this to WorkspaceService
     }
 
-    /** New method to find sessions by workspace ID */
+    /** Find sessions by workspace ID */
     async findSessionsByWorkspaceId(workspaceId: string): Promise<ChatSession[]> {
         return this.chatSessionRepository.find({ where: { workspace_id: workspaceId } });
     }

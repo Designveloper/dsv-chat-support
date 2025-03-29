@@ -7,11 +7,10 @@ export class ChatSessionController {
     constructor(private chatSessionService: ChatSessionService) { }
 
     @Post('start')
-    async startChat(@Req() req, @Body() body: { workspace_id: string }) {
-        const userId = req.user?.userId || null;
+    async startChat(@Body() body: { workspace_id: string }) {
         const { workspace_id } = body;
 
-        const session = await this.chatSessionService.startChat(workspace_id, userId);
+        const session = await this.chatSessionService.startChat(workspace_id);
 
         return { session_id: session.session_id };
     }

@@ -20,14 +20,10 @@ export const chatService = {
     // Start a new chat session
     async startChatSession(workspaceId: string): Promise<{ session_id: string }> {
         const payload = { workspace_id: workspaceId };
-        const token = localStorage.getItem('accessToken');
 
         const response = await axios.post(
             `${API_URL}/chat/start`,
             payload,
-            {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            }
         );
 
         const { session_id } = response.data;
@@ -38,7 +34,6 @@ export const chatService = {
 
     // End a chat session
     async endChatSession(sessionId: string): Promise<void> {
-        const token = localStorage.getItem('accessToken');
 
         if (this.socket?.connected) {
             this.socket.emit('end_session', { sessionId });
@@ -46,9 +41,6 @@ export const chatService = {
             await axios.post(
                 `${API_URL}/chat/end`,
                 { session_id: sessionId },
-                {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }
             );
         }
         this.disconnect();
@@ -107,7 +99,6 @@ export const chatService = {
             });
         } else {
             // Fall back to REST API if socket not available
-            const token = localStorage.getItem('accessToken');
             await axios.post(
                 `${API_URL}/chat/message`,
                 {
@@ -116,9 +107,6 @@ export const chatService = {
                     userInfo,
                     currentPage,
                 },
-                {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }
             );
         }
     },
@@ -126,12 +114,9 @@ export const chatService = {
     // Check slack online status
     async checkOnlineStatus(workspaceId: string): Promise<boolean> {
         try {
-            const token = localStorage.getItem('accessToken');
+
             const response = await axios.get(
                 `${API_URL}/chat/status?workspace_id=${workspaceId}`,
-                {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }
             );
             return response.data.online;
         } catch (error) {
