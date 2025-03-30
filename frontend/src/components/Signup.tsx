@@ -60,6 +60,7 @@ const Signup: React.FC = () => {
           type="submit"
           className="signup__button"
           variant="primary"
+          fullWidth
         />
         {error && <div className="signup__error">{error}</div>}
 

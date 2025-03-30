@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.scss";
 import { useAuth } from "../context/AuthContext";
+import Button from "./Button";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,12 +55,13 @@ const Header: React.FC = () => {
         <div className="header__auth">
           {isAuthenticated ? (
             <>
-              <button
-                className="header__auth-dashboard"
+              <Button
+                label="Open Dashboard"
                 onClick={handleDashboardClick}
-              >
-                Open Dashboard
-              </button>
+                variant="secondary"
+                size="small"
+                className="header__auth-dashboard"
+              />
             </>
           ) : (
             <>

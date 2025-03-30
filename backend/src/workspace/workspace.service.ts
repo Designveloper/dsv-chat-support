@@ -17,7 +17,7 @@ export class WorkspaceService {
       id,
       name,
       owner_id: ownerId,
-      service_type_slack: serviceType, // Optional, e.g., "slack"
+      service_type_slack: serviceType,
     });
     return this.workspacesRepository.save(workspace);
   }

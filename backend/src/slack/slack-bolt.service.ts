@@ -29,9 +29,7 @@ export class SlackBoltService implements OnModuleInit {
             signingSecret: this.configService.get<string>('SLACK_SIGNING_SECRET') || (() => { throw new Error('SLACK_SIGNING_SECRET is not defined'); })(),
             // The path is where Slack will send events
             endpoints: {
-                events: '/slack/events',
-                interactive: '/slack/interactive',
-                commands: '/slack/commands',
+                events: '/slack/events'
             }
         });
 
@@ -86,9 +84,6 @@ export class SlackBoltService implements OnModuleInit {
         // Set up message event listener
         await this.setupMessageListener();
 
-        // Set up presence change listener
-        await this.setupPresenceListener();
-
         // No need to call start() since the receiver is attached to NestJS
         console.log('⚡️ Slack Bolt integration initialized!');
     }
@@ -133,51 +128,6 @@ export class SlackBoltService implements OnModuleInit {
                 console.error('Error processing Slack message:', error);
             }
         });
-
-        // Listen for reaction events to provide additional functionality
-        this.boltApp.event('reaction_added', async ({ event, client }) => {
-            try {
-                // Get the message that was reacted to
-                const { item } = event;
-                if (item.type === 'message') {
-                    const channelId = item.channel;
-                    const session = await this.chatSessionService.findSessionByChannelId(channelId);
-
-                    if (session && event.reaction === 'white_check_mark') {
-                        // Example: Send acknowledgment when someone reacts with a checkmark
-                        const socketIds = this.sessionToSocketMap.get(session.session_id);
-                        if (socketIds && socketIds.length > 0) {
-                            socketIds.forEach(socketId => {
-                                this.server?.to(socketId).emit('staff_message', {
-                                    text: 'Your request has been marked as resolved. Is there anything else we can help with?',
-                                    user: 'system'
-                                });
-                            });
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error processing reaction:', error);
-            }
-        });
-
-        // Listen for app_mention events
-        this.boltApp.event('app_mention', async ({ event, say }) => {
-            try {
-                const channelId = event.channel;
-                const session = await this.chatSessionService.findSessionByChannelId(channelId);
-
-                if (session) {
-                    // Respond in the channel
-                    await say({
-                        text: `I'm tracking this conversation for chat session ${session.session_id}`,
-                        thread_ts: event.ts
-                    });
-                }
-            } catch (error) {
-                console.error('Error processing app mention:', error);
-            }
-        });
     }
 
     async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
@@ -209,42 +159,5 @@ export class SlackBoltService implements OnModuleInit {
             console.error('Error checking workspace online status:', error);
             return false; // Default to offline on error
         }
-    }
-
-    private async setupPresenceListener() {
-        this.boltApp.event('presence_change', async ({ event }) => {
-            try {
-                const presenceEvent = event as unknown as PresenceChangeEvent;
-                const userId = presenceEvent.user;
-                const presence = presenceEvent.presence;
-                console.log(`User ${userId} is now ${presence}`);
-
-                // Find all workspaces to check if this user affects their status
-                const workspaces = await this.chatSessionService.findAllWorkspaces();
-                for (const workspace of workspaces) {
-                    if (!workspace.selected_channel_id) continue;
-
-                    const membersResponse = await this.boltApp.client.conversations.members({
-                        token: this.configService.get('SLACK_BOT_TOKEN'),
-                        channel: workspace.selected_channel_id,
-                    });
-                    if (membersResponse.members?.includes(userId)) {
-                        const isOnline = await this.isWorkspaceOnline(workspace.id);
-                        // Notify all connected clients in this workspace's sessions
-                        const sessions = await this.chatSessionService.findSessionsByWorkspaceId(workspace.id);
-                        for (const session of sessions) {
-                            const socketIds = this.sessionToSocketMap.get(session.session_id);
-                            if (socketIds) {
-                                socketIds.forEach(socketId => {
-                                    this.server?.to(socketId).emit('status', { isOnline });
-                                });
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error processing presence change:', error);
-            }
-        });
     }
 }

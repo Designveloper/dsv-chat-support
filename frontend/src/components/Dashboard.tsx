@@ -5,6 +5,7 @@ import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
 import ChatWidget from "./ChatWidget";
 import { workspaceService, Workspace } from "../services/workspaceService";
+import Button from "./Button";
 
 const Dashboard = () => {
   const isAuthenticated = useProtectedRoute();
@@ -47,16 +48,6 @@ const Dashboard = () => {
     }
   };
 
-  // const handleCreateWorkspace = async () => {
-  //   try {
-  //     await workspaceService.createWorkspace();
-  //     await fetchWorkspaces();
-  //   } catch (error) {
-  //     console.error("Error creating workspace:", error);
-  //     setError("Failed to create workspace. Please try again.");
-  //   }
-  // };
-
   const handleAddToSlack = async () => {
     try {
       setIsSlackLoading(true);
@@ -85,23 +76,19 @@ const Dashboard = () => {
         <h1>Chat Support Dashboard</h1>
         <div className="dashboard__user-controls">
           <span>Welcome, {user?.email}</span>
-          <button onClick={handleLogout} className="dashboard__logout-btn">
-            Logout
-          </button>
+          <Button
+            label="Logout"
+            onClick={handleLogout}
+            className="dashboard__logout-btn"
+          />
         </div>
       </header>
 
       {error && (
         <div className="dashboard__alert dashboard__alert--danger">
-          Error: {error.replace(/_/g, " ")}
+          Error: {error}
         </div>
       )}
-
-      {/* {slackConnected && (
-        <div className="dashboard__alert dashboard__alert--success">
-          Slack has been successfully connected to your workspace!
-        </div>
-      )} */}
 
       <div className="dashboard__content">
         <section className="dashboard__integrations-section">
@@ -170,7 +157,9 @@ const Dashboard = () => {
         </section>
       </div>
 
-      {slackConnected && <ChatWidget workspaces={workspaces} />}
+      {slackConnected && workspaces.length > 0 && (
+        <ChatWidget workspaceId={workspaces[0].id} />
+      )}
     </div>
   );
 };

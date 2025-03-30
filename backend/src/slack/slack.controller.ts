@@ -22,17 +22,10 @@ export class SlackController {
         return res.redirect(redirectResult.redirectUrl);
     }
 
-    @Post('complete-oauth')
-    @UseGuards(JwtAuthGuard)
-    async completeOAuth(@Body() body: { code: string, state: string }) {
-        return this.slackService.completeOAuth(body.code, body.state);
-    }
-
     @Get('channels')
     @UseGuards(JwtAuthGuard)
-    async getChannels(@Req() req, @Query('workspaceId') workspaceId: string) {
-        const userId = req.user.userId;
-        return this.slackService.getWorkspaceChannels(userId, workspaceId);
+    async getChannels(@Query('workspaceId') workspaceId: string) {
+        return this.slackService.getWorkspaceChannels(workspaceId);
     }
 
     @Post('select-channel')

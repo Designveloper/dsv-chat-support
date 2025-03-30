@@ -1,6 +1,5 @@
 class WidgetController {
   private isOpen: boolean;
-  private isHidden: boolean;
   private eventTarget: EventTarget;
   private updateCallback: ((isOpen: boolean) => void) | null;
 
@@ -10,7 +9,6 @@ class WidgetController {
 
   constructor() {
     this.isOpen = false;
-    this.isHidden = false;
     this.eventTarget = new EventTarget();
     this.updateCallback = null;
     this.visitorId = null;
@@ -24,7 +22,6 @@ class WidgetController {
 
   // Open the widget
   open() {
-    this.isHidden = false;
     this.isOpen = true;
 
     // Update React state if callback exists
@@ -38,7 +35,6 @@ class WidgetController {
 
   // Hide the widget
   hide() {
-    this.isHidden = true;
     this.isOpen = false;
 
     // Update React state if callback exists
@@ -91,11 +87,6 @@ class WidgetController {
         detail: { controller: this }
       })
     );
-  }
-
-  // Getter for widget visibility
-  get isWidgetVisible() {
-    return !this.isHidden;
   }
 
   // Getter for widget open state

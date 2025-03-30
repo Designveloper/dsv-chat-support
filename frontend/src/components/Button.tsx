@@ -9,6 +9,7 @@ export interface ButtonProps {
   disabled?: boolean;
   variant?: "primary" | "secondary" | "outline" | "text";
   size?: "small" | "medium" | "large";
+  fullWidth?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -19,12 +20,13 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   variant = "primary",
   size = "medium",
+  fullWidth = false,
 }) => {
   const buttonClasses = [
     "btn",
     `btn--${variant}`,
     `btn--${size}`,
-    "btn--full",
+    `${fullWidth ? "btn--full" : ""}`,
     className,
   ]
     .filter(Boolean)

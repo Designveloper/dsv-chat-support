@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 import { chatService } from '../services/chatService';
 
-export function useChatMessages(sessionId: string | null) {
+export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void) {
     const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
     const [messageText, setMessageText] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
@@ -22,10 +22,15 @@ export function useChatMessages(sessionId: string | null) {
                 }]);
             }
 
-            // Set up WebSocket connection
-            const socket = chatService.setupWebSocketConnection(sessionId, (text) => {
-                setMessages((prev) => [...prev, { text, isUser: false }]);
-            });
+            const socket = chatService.setupWebSocketConnection(
+                sessionId,
+                (text) => {
+                    setMessages((prev) => [...prev, { text, isUser: false }]);
+                },
+                (online) => {
+                    setIsOnline(online); // Update online status from WebSocket
+                }
+            );
 
             socketRef.current = socket;
 
@@ -37,7 +42,7 @@ export function useChatMessages(sessionId: string | null) {
             // Clear messages if no session
             setMessages([]);
         }
-    }, [sessionId]);
+    }, [sessionId, setIsOnline]);
 
     // Save messages to local storage when they change
     useEffect(() => {

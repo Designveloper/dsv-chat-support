@@ -75,6 +75,7 @@ const ForgotPassword: React.FC = () => {
             type="submit"
             className="forgot-password__button"
             variant="primary"
+            fullWidth
           />
 
           {successMessage && (

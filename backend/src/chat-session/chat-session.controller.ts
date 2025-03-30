@@ -45,13 +45,13 @@ export class ChatSessionController {
     }
 
     @Get('status')
-    async getStatus(@Query('workspace_id') workspaceId: string): Promise<{ online: boolean }> {
+    async getStatus(@Query('workspace_id') workspaceId: string): Promise<{ isOnline: boolean }> {
         try {
-            const online = await this.chatSessionService.isWorkspaceOnline(workspaceId);
-            return { online };
+            const isOnline = await this.chatSessionService.isWorkspaceOnline(workspaceId);
+            return { isOnline };
         } catch (error) {
             console.error('Error checking workspace status:', error);
-            return { online: false };
+            return { isOnline: false };
         }
     }
 

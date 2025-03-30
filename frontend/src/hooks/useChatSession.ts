@@ -1,24 +1,18 @@
 import { useState, useEffect } from 'react';
 import { chatService } from '../services/chatService';
 
-export function useChatSession(workspaceId?: string, workspaces?: { id: string }[]) {
+export function useChatSession(workspaceId?: string) {
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
     const [isOnline, setIsOnline] = useState<boolean>(true);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Set workspace based on props
     useEffect(() => {
-        // Direct workspaceId has priority (visitor mode)
         if (workspaceId) {
             setActiveWorkspace(workspaceId);
         }
-        // Otherwise use workspaces array
-        else if (workspaces && workspaces.length > 0 && !activeWorkspace) {
-            setActiveWorkspace(workspaces[0].id);
-        }
-    }, [workspaceId, workspaces, activeWorkspace]);
+    }, [workspaceId]);
 
     // Check for existing session on mount
     useEffect(() => {
@@ -28,7 +22,7 @@ export function useChatSession(workspaceId?: string, workspaces?: { id: string }
         }
     }, []);
 
-    // Check online status
+    // Initial check for online status
     const checkOnlineStatus = async () => {
         if (!activeWorkspace) return;
 
@@ -98,6 +92,7 @@ export function useChatSession(workspaceId?: string, workspaces?: { id: string }
         sessionId,
         activeWorkspace,
         isOnline,
+        setIsOnline,
         loading,
         error,
         checkOnlineStatus,

@@ -20,13 +20,37 @@ export class SlackService {
     generateAuthUrl(userId: number) {
         const clientId = this.configService.get('SLACK_CLIENT_ID');
         const redirectUri = this.configService.get('SLACK_REDIRECT_URI');
-        const scopes = 'channels:manage,channels:history,commands,channels:read,channels:join,chat:write,chat:write.customize,users:read,users:read.email';
+        const scopes = 'channels:manage,channels:history,commands,channels:read,channels:join,chat:write,chat:write.customize,users:read,users:read.email,users:write';
 
         const state = `user-${userId}-${Date.now()}`;
-        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}&team=open`;
+        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}&state=${state}`;
 
         console.log("Generated Slack URL:", url);
         return { url };
+    }
+
+    private extractUserIdFromState(state: string): number {
+        const stateMatch = state.match(/user-(\d+)-/);
+        if (!stateMatch) {
+            throw new BadRequestException('Invalid state parameter');
+        }
+        return parseInt(stateMatch[1], 10);
+    }
+
+    async exchangeCodeForToken(code: string, redirectUri: string): Promise<any> {
+        const clientId = this.configService.get('SLACK_CLIENT_ID');
+        const clientSecret = this.configService.get('SLACK_CLIENT_SECRET');
+        const response = await firstValueFrom(
+            this.httpService.post('https://slack.com/api/oauth.v2.access', null, {
+                params: {
+                    code,
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    redirect_uri: redirectUri,
+                },
+            }),
+        );
+        return response.data;
     }
 
     async handleOAuthRedirect(code: string, state: string) {
@@ -74,50 +98,32 @@ export class SlackService {
         }
     }
 
-    async completeOAuth(code: string, state: string) {
-        const redirectUri = this.configService.get('SLACK_REDIRECT_URI');
+    async listChannels(botToken: string): Promise<any[]> {
+        const web = new WebClient(botToken);
 
-        try {
-            const userId = this.extractUserIdFromState(state);
-            const data = await this.exchangeCodeForToken(code, redirectUri);
+        // Get public channels that the bot is in or can join
+        const result = await web.conversations.list({
+            exclude_archived: true,
+            types: 'public_channel'
+        });
 
-            if (data.ok) {
-                const botToken = data.access_token;
-                const slackWorkspaceId = data.team.id;
-
-                const workspace = await this.workspaceService.create(
-                    userId,
-                    `${data.team.name} Workspace`,
-                    'slack'
-                );
-
-                // Update workspace with Slack details
-                await this.workspaceService.updateSlackDetails(
-                    workspace.id,
-                    botToken,
-                    '',
-                    slackWorkspaceId
-                );
-
-                return { success: true, workspaceId: workspace.id };
-            } else {
-                throw new BadRequestException(data.error || 'Unknown error');
-            }
-        } catch (error) {
-            console.error('Slack OAuth error:', error);
-            throw new BadRequestException('Failed to complete Slack integration');
+        if (!result.ok) {
+            throw new Error(result.error || 'Unknown error listing channels');
         }
+
+        if (!result.channels) {
+            throw new Error('Failed to list channels: channels are undefined.');
+        }
+
+        return result.channels.map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            is_member: channel.is_member,
+            num_members: channel.num_members
+        }));
     }
 
-    private extractUserIdFromState(state: string): number {
-        const stateMatch = state.match(/user-(\d+)-/);
-        if (!stateMatch) {
-            throw new BadRequestException('Invalid state parameter');
-        }
-        return parseInt(stateMatch[1], 10);
-    }
-
-    async getWorkspaceChannels(userId: number, workspaceId: string) {
+    async getWorkspaceChannels(workspaceId: string) {
         try {
             const workspace = await this.workspaceService.findById(workspaceId);
 
@@ -165,22 +171,6 @@ export class SlackService {
         }
     }
 
-    async exchangeCodeForToken(code: string, redirectUri: string): Promise<any> {
-        const clientId = this.configService.get('SLACK_CLIENT_ID');
-        const clientSecret = this.configService.get('SLACK_CLIENT_SECRET');
-        const response = await firstValueFrom(
-            this.httpService.post('https://slack.com/api/oauth.v2.access', null, {
-                params: {
-                    code,
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    redirect_uri: redirectUri,
-                },
-            }),
-        );
-        return response.data;
-    }
-
     async createChannel(botToken: string, channelName: string): Promise<string> {
         const web = new WebClient(botToken);
         try {
@@ -216,31 +206,6 @@ export class SlackService {
         }
 
         await web.chat.postMessage(messageOptions);
-    }
-
-    async listChannels(botToken: string): Promise<any[]> {
-        const web = new WebClient(botToken);
-
-        // Get public channels that the bot is in or can join
-        const result = await web.conversations.list({
-            exclude_archived: true,
-            types: 'public_channel'
-        });
-
-        if (!result.ok) {
-            throw new Error(result.error || 'Unknown error listing channels');
-        }
-
-        if (!result.channels) {
-            throw new Error('Failed to list channels: channels are undefined.');
-        }
-
-        return result.channels.map(channel => ({
-            id: channel.id,
-            name: channel.name,
-            is_member: channel.is_member,
-            num_members: channel.num_members
-        }));
     }
 
     async joinChannel(botToken: string, channelId: string): Promise<void> {

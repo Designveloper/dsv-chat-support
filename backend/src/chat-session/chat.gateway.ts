@@ -32,9 +32,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
 
     async handleConnection(client: Socket) {
+        console.log(`Client connected: ${client.id}`);
         const sessionId = client.handshake.query.sessionId as string;
         const session = await this.chatSessionService.findSessionByChannelId(sessionId); // Adjust based on your method
         if (session) {
+            console.log(`Client ${client.id} is connected to session ${session.session_id}`);
             const isOnline = await this.chatSessionService.isWorkspaceOnline(session.workspace_id);
             client.emit('status', { isOnline });
             // Register socket with SlackBoltService
@@ -83,6 +85,26 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         } catch (error) {
             console.error('Error ending session:', error);
             client.emit('error', { message: 'Failed to end session' });
+        }
+    }
+
+    @SubscribeMessage('check_status')
+    async handleCheckStatus(client: Socket, payload: { workspaceId: string }): Promise<{ isOnline: boolean }> {
+        try {
+            const { workspaceId } = payload;
+            console.log(`Client ${client.id} checking status for workspace ${workspaceId}`);
+
+            // Check the workspace online status
+            const isOnline = await this.chatSessionService.isWorkspaceOnline(workspaceId);
+            console.log(`Returning status for workspace ${workspaceId}: ${isOnline}`);
+
+            // Return value is automatically sent as acknowledgement
+            return { isOnline };
+
+        } catch (error) {
+            console.error('Error checking workspace status:', error);
+            // Return offline status in case of error
+            return { isOnline: false };
         }
     }
 }

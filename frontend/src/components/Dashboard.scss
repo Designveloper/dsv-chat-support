@@ -36,13 +36,15 @@
     background-color: transparent;
     border: 1px solid #dc3545;
     color: #dc3545;
+    font-weight: 400;
+    font-size: 14px;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.dashboard__logout-btn:hover {
+.btn.dashboard__logout-btn:hover {
     background-color: #dc3545;
     color: white;
 }

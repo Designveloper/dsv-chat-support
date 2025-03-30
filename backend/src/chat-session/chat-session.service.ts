@@ -340,6 +340,10 @@ export class ChatSessionService {
         return this.chatSessionRepository.find({ where: { workspace_id: workspaceId } });
     }
 
+    async findSessionBySessionId(sessionId: string): Promise<ChatSession | null> {
+        return this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
+    }
+
     async handleOfflineMessage(
         workspaceId: string,
         email: string,

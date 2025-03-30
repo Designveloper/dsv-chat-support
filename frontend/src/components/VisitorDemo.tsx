@@ -1,7 +1,7 @@
 import ChatWidget from "./ChatWidget";
 
 const VisitorDemo = () => {
-  const workspaceId = "7f71a9c6-d0a6-4058-a65f-967025449850";
+  const workspaceId = "f4391dc7-2637-4b83-baf8-7ac9fa2fa82b";
 
   return (
     <div className="visitor-demo">

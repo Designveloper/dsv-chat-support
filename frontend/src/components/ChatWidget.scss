@@ -22,12 +22,12 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     transition: all 0.3s ease;
+}
 
-    &:hover {
-        background-color: color.adjust(#4A154B, $lightness: -5%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+.btn.chat-widget__toggle:hover {
+    background-color: color.adjust(#4A154B, $lightness: -5%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .chat-widget__panel {
@@ -64,6 +64,7 @@
     border: none;
     color: white;
     font-size: 20px;
+    padding: 0 4px;
     cursor: pointer;
 }
 
@@ -129,15 +130,15 @@
     border-radius: 4px;
     font-weight: 500;
     cursor: pointer;
+}
 
-    &:hover {
-        background-color: color.adjust(#4A154B, $lightness: -5%);
-    }
+.btn.chat-widget__send-button:hover {
+    background-color: color.adjust(#4A154B, $lightness: -5%);
+}
 
-    &:disabled {
-        background-color: #CCCCCC;
-        cursor: not-allowed;
-    }
+.btn.chat-widget__send-button:disabled {
+    background-color: #CCCCCC;
+    cursor: not-allowed;
 }
 
 .chat-widget__loading {
@@ -252,7 +253,7 @@
 }
 
 .chat-widget__panel--offline {
-    height: auto; 
+    height: auto;
     max-height: 80vh;
 }
 
@@ -312,15 +313,15 @@
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
+}
 
-    &:hover {
-        background-color: #3a80d2;
-    }
+.btn.chat-widget__offline-form-submit:hover {
+    background-color: color.adjust(#4a90e2, $lightness: -10%);
+}
 
-    &:disabled {
-        background-color: #aaa;
-        cursor: not-allowed;
-    }
+.btn.chat-widget__offline-form-submit:disabled {
+    background-color: #CCCCCC;
+    cursor: not-allowed;
 }
 
 .chat-widget__offline-thanks {

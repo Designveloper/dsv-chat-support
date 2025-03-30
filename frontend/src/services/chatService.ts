@@ -47,7 +47,7 @@ export const chatService = {
     },
 
     // Set up WebSocket connection
-    setupWebSocketConnection(sessionId: string, onStaffMessage: (message: string) => void): Socket {
+    setupWebSocketConnection(sessionId: string, onStaffMessage: (message: string) => void, onStatusChange: (isOnline: boolean) => void): Socket {
         if (this.socket) {
             this.socket.disconnect();
         }
@@ -70,6 +70,12 @@ export const chatService = {
         // Listen for staff messages
         socket.on('staff_message', (data: { text: string }) => {
             onStaffMessage(data.text);
+        });
+
+        // Listen for status updates
+        socket.on('status', (data: { isOnline: boolean }) => {
+            console.log('Received staff status update:', data);
+            onStatusChange(data.isOnline);
         });
 
         // Handle errors and disconnection
@@ -113,15 +119,30 @@ export const chatService = {
 
     // Check slack online status
     async checkOnlineStatus(workspaceId: string): Promise<boolean> {
-        try {
-
-            const response = await axios.get(
-                `${API_URL}/chat/status?workspace_id=${workspaceId}`,
-            );
-            return response.data.online;
-        } catch (error) {
-            console.error('Error checking online status:', error);
-            return false; // Default to offline if there's an error
+        if (this.socket?.connected) {
+            console.log('Checking status via socket:', workspaceId);
+            // Send request via socket if connected
+            return new Promise((resolve) => {
+                this.socket?.emit('check_status', { workspaceId }, (data: { isOnline: boolean }) => {
+                    console.log('Received status response:', data);
+                    resolve(data.isOnline);
+                });
+            });
+        } else {
+            // Fall back to REST API if socket not available
+            try {
+                console.log('Checking status via REST:', workspaceId);
+                const response = await axios.get(
+                    `${API_URL}/chat/status?workspace_id=${workspaceId}`,
+                );
+                // If API returns 'online', rename to 'isOnline' for consistency
+                return response.data.isOnline !== undefined ?
+                    response.data.isOnline :
+                    response.data.online;
+            } catch (error) {
+                console.error('Error checking online status:', error);
+                return false; // Default to offline if there's an error
+            }
         }
     },
 

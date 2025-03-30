@@ -13,7 +13,6 @@ export interface InputProps {
   disabled?: boolean;
   error?: string;
   helperText?: string;
-  fullWidth?: boolean;
   size?: "small" | "medium" | "large";
 }
 
@@ -29,7 +28,6 @@ const Input: React.FC<InputProps> = ({
   disabled = false,
   error,
   helperText,
-  fullWidth = false,
   size = "medium",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -37,7 +35,6 @@ const Input: React.FC<InputProps> = ({
   const inputClasses = [
     "input__field",
     `input__field--${size}`,
-    fullWidth ? "input__field--full-width" : "",
     isFocused ? "input__field--focused" : "",
     error ? "input__field--error" : "",
     disabled ? "input__field--disabled" : "",
@@ -46,7 +43,7 @@ const Input: React.FC<InputProps> = ({
     .filter(Boolean)
     .join(" ");
 
-  const containerClasses = ["input", fullWidth ? "input--full-width" : ""]
+  const containerClasses = ["input", "input--full-width", className]
     .filter(Boolean)
     .join(" ");
 

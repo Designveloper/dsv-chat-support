@@ -4,25 +4,27 @@ import { useChatSession } from "../hooks/useChatSession";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useWidgetController } from "../hooks/useWidgetController";
 import { useOfflineForm } from "../hooks/useOfflineForm";
+import Button from "./Button";
+import Input from "./Input";
 
 interface ChatWidgetProps {
   workspaceId?: string;
-  workspaces?: { id: string; bot_token_slack?: string }[];
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   // State hooks with proper initialization
   const { isOpen, toggleWidget, controllerRef } = useWidgetController();
   const {
     sessionId,
     activeWorkspace,
     isOnline,
+    setIsOnline,
     loading,
     error,
     checkOnlineStatus,
     startChatSession,
     endChatSession,
-  } = useChatSession(workspaceId, workspaces);
+  } = useChatSession(workspaceId);
   const {
     messages,
     messageText,
@@ -30,7 +32,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     sendMessage,
     messagesEndRef,
     setEndChatMessage,
-  } = useChatMessages(sessionId);
+  } = useChatMessages(sessionId, setIsOnline);
   const {
     offlineEmail,
     setOfflineEmail,
@@ -43,7 +45,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
     submitOfflineForm,
   } = useOfflineForm(activeWorkspace);
 
-  // Local UI state
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
 
@@ -82,7 +83,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
 
   // Message handlers
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter") {
+      console.log("Enter pressed");
       e.preventDefault();
       if (messageText.trim()) {
         const visitorInfo = controllerRef.current.getVisitorInfo();
@@ -131,10 +133,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
           <p>But we would love to hear from you and chat soon!</p>
 
           <div className="chat-widget__offline-form-field">
-            <label htmlFor="offline-email">Email</label>
-            <input
+            <Input
               id="offline-email"
               type="email"
+              label="Email"
               value={offlineEmail}
               onChange={(e) => setOfflineEmail(e.target.value)}
               required
@@ -153,22 +155,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
           </div>
 
           <div className="chat-widget__offline-form-field">
-            <label htmlFor="offline-name">Name (optional but helpful)</label>
-            <input
+            <Input
               id="offline-name"
               type="text"
+              label="Name (optional but helpful)"
               value={offlineName}
               onChange={(e) => setOfflineName(e.target.value)}
             />
           </div>
-
-          <button
-            className="chat-widget__offline-form-submit"
+          <Button
+            label="Send"
             onClick={submitOfflineForm}
             disabled={!offlineEmail.trim() || !offlineMessage.trim()}
-          >
-            Send
-          </button>
+            className="chat-widget__offline-form-submit"
+          />
         </div>
       );
     }
@@ -178,18 +178,18 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
         <div className="chat-widget__confirmation">
           <p>Are you sure you want to end this chat session?</p>
           <div className="chat-widget__confirmation-actions">
-            <button
-              className="chat-widget__confirmation-button chat-widget__confirmation-button--confirm"
+            <Button
+              label="Yes"
               onClick={confirmEndChat}
-            >
-              Yes
-            </button>
-            <button
-              className="chat-widget__confirmation-button chat-widget__confirmation-button--cancel"
+              variant="primary"
+              size="small"
+            />
+            <Button
+              label="No"
               onClick={cancelEndChat}
-            >
-              No
-            </button>
+              variant="secondary"
+              size="small"
+            />
           </div>
         </div>
       );
@@ -223,13 +223,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
             placeholder="Type your message..."
             disabled={!sessionId}
           />
-          <button
-            className="chat-widget__send-button"
+          <Button
+            label="Send"
             onClick={handleSendMessage}
             disabled={!messageText.trim() || !sessionId}
-          >
-            Send
-          </button>
+            className="chat-widget__send-button"
+          />
         </div>
       </>
     );
@@ -241,7 +240,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
       {isOpen && (
         <div
           className={`chat-widget__panel ${
-            // Only add the --offline modifier when offline AND not showing thank you message AND not loading
             !isOnline && !offlineFormSubmitted && !offlineFormLoading
               ? "chat-widget__panel--offline"
               : ""
@@ -253,28 +251,27 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
             </h3>
             <div className="chat-widget__header-actions">
               {isOnline && (
-                <button
-                  className="chat-widget__menu-button"
+                <Button
+                  label="⋮"
                   onClick={toggleMenu}
-                  aria-label="Menu"
-                >
-                  ⋮
-                </button>
+                  variant="text"
+                  className="chat-widget__menu-button"
+                />
               )}
-              <button
-                className="chat-widget__close-button"
+              <Button
+                label="×"
                 onClick={toggleWidget}
-              >
-                ×
-              </button>
+                variant="text"
+                className="chat-widget__close-button"
+              />
               {isMenuOpen && isOnline && (
                 <div className="chat-widget__menu-dropdown">
-                  <button
-                    className="chat-widget__menu-item"
+                  <Button
+                    label="End chat"
                     onClick={showEndChatConfirmation}
-                  >
-                    End chat
-                  </button>
+                    variant="text"
+                    className="chat-widget__menu-item"
+                  />
                 </div>
               )}
             </div>
@@ -285,9 +282,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId, workspaces }) => {
       )}
 
       {!isOpen && (
-        <button className="chat-widget__toggle" onClick={handleOpenWidget}>
-          Chat Support
-        </button>
+        <Button
+          label="Chat Support"
+          onClick={handleOpenWidget}
+          className="chat-widget__toggle"
+        />
       )}
     </div>
   );

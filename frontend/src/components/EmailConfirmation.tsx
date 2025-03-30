@@ -124,6 +124,7 @@ const EmailConfirmation: React.FC = () => {
           type="submit"
           className="email-confirmation__button"
           variant="primary"
+          fullWidth
         />
 
         <div className="email-confirmation__resend">
@@ -134,7 +135,6 @@ const EmailConfirmation: React.FC = () => {
             onClick={handleResendCode}
             disabled={!canResend}
           >
-            {/* {canResend ? "Resend Code" : `Resend Code (${countdown}s)`} */}
             {canResend ? (
               "Resend Code"
             ) : (
