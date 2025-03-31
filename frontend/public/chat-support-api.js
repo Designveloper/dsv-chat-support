@@ -66,12 +66,17 @@
 
   window._chatSupport = new Proxy(methods, {
     get(target, prop) {
-      if ((controller && isReady) || prop === "isShown") {
-        return target[prop].apply(null, args);
-      } else {
-        queue.push({ method: prop, args });
-        return false;
+      if (typeof target[prop] === "function") {
+        return function (...args) {
+          if ((controller && isReady) || prop === "isShown") {
+            return target[prop].apply(null, args);
+          } else {
+            queue.push({ method: prop, args });
+            return false;
+          }
+        };
       }
+      return undefined;
     },
   });
 

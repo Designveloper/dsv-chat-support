@@ -230,25 +230,25 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9rem;
+}
 
-    &--confirm {
-        background-color: #dc3545;
-        color: white;
-        border: none;
+.chat-widget__confirmation-button--confirm {
+    background-color: #dc3545;
+    color: white;
+    border: none;
 
-        &:hover {
-            background-color: #c82333;
-        }
+    &:hover {
+        background-color: #c82333;
     }
+}
 
-    &--cancel {
-        background-color: #6c757d;
-        color: white;
-        border: none;
+.chat-widget__confirmation-button--cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
 
-        &:hover {
-            background-color: #5a6268;
-        }
+    &:hover {
+        background-color: #5a6268;
     }
 }
 

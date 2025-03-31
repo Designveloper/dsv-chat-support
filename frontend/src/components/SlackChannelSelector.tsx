@@ -115,7 +115,7 @@ const SlackChannelSelector = () => {
 
   if (loading) {
     return (
-      <div className="channel-selector-loading">
+      <div className="channel-selector__loading">
         Loading available channels...
       </div>
     );
@@ -123,20 +123,20 @@ const SlackChannelSelector = () => {
 
   return (
     <div className="channel-selector">
-      <div className="channel-selector-container">
+      <div className="channel-selector__container">
         <h1>Select a Slack Channel</h1>
         <p>Choose a channel where visitor chat notifications will be sent:</p>
 
-        {error && <div className="channel-selector-error">{error}</div>}
+        {error && <div className="channel-selector__error">{error}</div>}
 
         {channels.length === 0 ? (
-          <div className="no-channels">
+          <div className="channel-selector__no-channels">
             <p>
               No channels found. Please create a channel in your Slack workspace
               first.
             </p>
             <button
-              className="back-button"
+              className="channel-selector__back-button"
               onClick={() => navigate("/dashboard")}
             >
               Back to Dashboard
@@ -144,16 +144,18 @@ const SlackChannelSelector = () => {
           </div>
         ) : (
           <>
-            <div className="channels-list">
+            <div className="channel-selector__list">
               {channels.map((channel) => (
                 <div
                   key={channel.id}
-                  className={`channel-item ${
-                    selectedChannel === channel.id ? "selected" : ""
+                  className={`channel-selector__item ${
+                    selectedChannel === channel.id
+                      ? "channel-selector__item--selected"
+                      : ""
                   }`}
                   onClick={() => setSelectedChannel(channel.id)}
                 >
-                  <div className="channel-radio">
+                  <div className="channel-selector__radio">
                     <input
                       type="radio"
                       name="channel"
@@ -162,7 +164,7 @@ const SlackChannelSelector = () => {
                       id={`channel-${channel.id}`}
                     />
                   </div>
-                  <div className="channel-details">
+                  <div className="channel-selector__details">
                     <label htmlFor={`channel-${channel.id}`}>
                       <span className="channel-name">#{channel.name}</span>
                       <span className="channel-members">
@@ -174,9 +176,9 @@ const SlackChannelSelector = () => {
               ))}
             </div>
 
-            <div className="channel-selector-actions">
+            <div className="channel-selector__actions">
               <button
-                className="select-button"
+                className="channel-selector__select-button"
                 onClick={handleChannelSelect}
                 disabled={!selectedChannel}
               >

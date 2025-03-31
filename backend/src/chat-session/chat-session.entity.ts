@@ -10,7 +10,7 @@ export class ChatSession {
     workspace_id: string;
 
     @Column({ type: 'varchar', nullable: true })
-    channel_id: string; // Slack channel ID (e.g., "C1234567890")
+    channel_id: string;
 
     @Column({ nullable: true })
     user_email?: string;
