@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
+import { authService } from "../services/authService";
 import "./SlackChannelSelector.scss";
 
 // Define types for better type safety
@@ -39,27 +40,53 @@ const SlackChannelSelector = () => {
     fetchChannels(id);
   }, [location]);
 
+  const executeWithTokenRefresh = async <T,>(
+    apiCall: () => Promise<T>
+  ): Promise<T> => {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        try {
+          await authService.refreshAccessToken();
+          // Retry the original request with new token
+          return await apiCall();
+        } catch (refreshError) {
+          console.error("Failed to refresh token:", refreshError);
+          setError("Session expired. Please login again.");
+          navigate("/login");
+          throw new Error("Session expired");
+        }
+      }
+      // If error is not related to authentication, rethrow it
+      throw error;
+    }
+  };
+
   const fetchChannels = async (id: string) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
-
-      const response = await axios.get<ChannelsResponse>(
-        `http://localhost:3000/slack/channels?workspaceId=${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      await executeWithTokenRefresh(async () => {
+        const token = authService.getAccessToken();
+        if (!token) {
+          throw new Error("Authentication token not found");
         }
-      );
 
-      if (response.data && response.data.channels) {
-        setChannels(response.data.channels);
-      } else {
-        setChannels([]);
-      }
+        const response = await axios.get<ChannelsResponse>(
+          `http://localhost:3000/slack/channels?workspaceId=${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data && response.data.channels) {
+          setChannels(response.data.channels);
+        } else {
+          setChannels([]);
+        }
+        return response;
+      });
       setLoading(false);
     } catch (err) {
       console.error("Error fetching channels:", err);
@@ -81,23 +108,25 @@ const SlackChannelSelector = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
-
-      await axios.post(
-        "http://localhost:3000/slack/select-channel",
-        {
-          workspaceId,
-          channelId: selectedChannel,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      await executeWithTokenRefresh(async () => {
+        const token = authService.getAccessToken();
+        if (!token) {
+          throw new Error("Authentication token not found");
         }
-      );
+
+        return axios.post(
+          "http://localhost:3000/slack/select-channel",
+          {
+            workspaceId,
+            channelId: selectedChannel,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      });
 
       // Redirect back to dashboard with success message
       navigate("/dashboard?slackConnected=true");
@@ -112,7 +141,6 @@ const SlackChannelSelector = () => {
       setLoading(false);
     }
   };
-
   if (loading) {
     return (
       <div className="channel-selector__loading">
