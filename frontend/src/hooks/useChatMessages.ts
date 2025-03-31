@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 import { chatService } from '../services/chatService';
+import { useChatStore } from '../stores/useChatStore';
 
 export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void) {
     const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
     const [messageText, setMessageText] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { visitorData } = useChatStore((state) => state);
 
     // Load saved messages when session ID changes
     useEffect(() => {
@@ -57,9 +59,8 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
     }, [messages]);
 
     // Send a message
-    const sendMessage = async (userInfo: { email: string }) => {
-        console.log("Sending message:", messageText);
-        console.log("User info:", userInfo);
+    const sendMessage = async () => {
+        const userInfo = { email: String(visitorData?.email || "") };
         if (!messageText.trim() || !sessionId) return;
 
         const newMessage = { text: messageText, isUser: true };

@@ -1,48 +1,36 @@
-(function () {
-  const queue = [];
-  let isReady = false;
-  let controller = null;
+(function() {
+  // Define a function to safely access the store
+  function getStore() {
+    return window.useChatStore || null;
+  }
 
-  document.addEventListener("chatSupport.ready", function (event) {
-    if (event.detail && event.detail.controller) {
-      controller = event.detail.controller;
-      isReady = true;
-      console.log("Chat support API ready, processing queue:", queue);
-      processQueue();
-    }
-  });
-
-  const methods = {
+  window._chatSupport = {
     open: function () {
-      if (controller) {
-        console.log("Opening chat widget via API");
-        controller.open();
-        return true;
-      } else {
-        console.log("Queueing open command");
-        queue.push({ method: "open" });
+      const store = getStore();
+      if (!store) {
+        console.error('Chat support store not initialized');
         return false;
       }
+
+      console.log('Opening chat widget via API');
+      store.getState().open();
+      return true;
     },
 
     hide: function () {
-      if (controller) {
-        console.log("Hiding chat widget via API");
-        controller.hide();
-        return true;
-      } else {
-        console.log("Queueing hide command");
-        queue.push({ method: "hide" });
+      const store = getStore();
+      if (!store) {
+        console.error('Chat support store not initialized');
         return false;
       }
+
+      console.log('Hiding chat widget via API');
+      store.getState().hide();
+      return true;
     },
 
-    isShown: function () {
-      return controller ? controller.isWidgetOpen : false;
-    },
-
-    // Add identify method
     identify: function (userId, userData) {
+      // Input validation
       if (!userId || typeof userId !== "string") {
         console.error("Invalid userId provided to identify()");
         return false;
@@ -53,39 +41,19 @@
         return false;
       }
 
-      if (controller) {
-        console.log("Identifying visitor via API:", userId, userData);
-        return controller.identify(userId, userData);
-      } else {
-        console.log("Queueing identify command");
-        queue.push({ method: "identify", args: [userId, userData] });
+      const store = getStore();
+      if (!store) {
+        console.error('Chat support store not initialized');
         return false;
       }
+
+      console.log('Identifying visitor via API:', userId, userData);
+      return store.getState().identify(userId, userData);
+    },
+
+    isShown: function () {
+      const store = getStore();
+      return store ? store.getState().isOpen : false;
     },
   };
-
-  window._chatSupport = new Proxy(methods, {
-    get(target, prop) {
-      if (typeof target[prop] === "function") {
-        return function (...args) {
-          if ((controller && isReady) || prop === "isShown") {
-            return target[prop].apply(null, args);
-          } else {
-            queue.push({ method: prop, args });
-            return false;
-          }
-        };
-      }
-      return undefined;
-    },
-  });
-
-  function processQueue() {
-    queue.forEach(({ method, args = [] }) => {
-      if (typeof methods[method] === "function") {
-        methods[method].apply(null, args);
-      }
-    });
-    queue.length = 0;
-  }
 })();

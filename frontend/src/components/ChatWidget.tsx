@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./ChatWidget.scss";
 import { useChatSession } from "../hooks/useChatSession";
 import { useChatMessages } from "../hooks/useChatMessages";
-import { useWidgetController } from "../hooks/useWidgetController";
+// import { useWidgetController } from "../hooks/useWidgetController";
+import { useChatStore } from "../stores/useChatStore";
 import { useOfflineForm } from "../hooks/useOfflineForm";
 import Button from "./Button";
 import Input from "./Input";
@@ -13,7 +14,9 @@ interface ChatWidgetProps {
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   // State hooks with proper initialization
-  const { isOpen, toggleWidget, controllerRef } = useWidgetController();
+  const isOpen = useChatStore((state) => state.isOpen);
+  const open = useChatStore((state) => state.open);
+  const hide = useChatStore((state) => state.hide);
   const {
     sessionId,
     activeWorkspace,
@@ -48,20 +51,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
 
-  // Handle opening the widget
+  useEffect(() => {
+    useChatStore.getState().initialize();
+  }, []);
+
   const handleOpenWidget = async () => {
     console.log("Opening widget");
-
     if (activeWorkspace) {
       checkOnlineStatus();
     }
-
-    // Only start chat session if we're online and don't have a session yet
     if (isOnline && !sessionId) {
       await startChatSession();
     }
-
-    toggleWidget();
+    open();
   };
 
   // Menu handlers
@@ -87,22 +89,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       console.log("Enter pressed");
       e.preventDefault();
       if (messageText.trim()) {
-        const visitorInfo = controllerRef.current.getVisitorInfo();
-        sendMessage({
-          email: (visitorInfo?.data?.email as string) || "",
-        });
+        sendMessage();
       }
     }
   };
 
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
-
-    const visitorInfo = controllerRef.current.getVisitorInfo();
-    console.log("visitorInfo", visitorInfo);
-    sendMessage({
-      email: (visitorInfo?.data?.email as string) || "",
-    });
+    sendMessage();
   };
 
   // Content renderer
@@ -260,7 +254,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
               )}
               <Button
                 label="×"
-                onClick={toggleWidget}
+                onClick={() => hide()}
                 variant="text"
                 className="chat-widget__close-button"
               />
