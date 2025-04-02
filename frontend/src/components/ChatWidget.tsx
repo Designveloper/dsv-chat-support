@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import "./ChatWidget.scss";
 import { useChatSession } from "../hooks/useChatSession";
 import { useChatMessages } from "../hooks/useChatMessages";
-// import { useWidgetController } from "../hooks/useWidgetController";
 import { useChatStore } from "../stores/useChatStore";
 import { useOfflineForm } from "../hooks/useOfflineForm";
 import Button from "./Button";
@@ -230,58 +229,60 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
 
   // Main render
   return (
-    <div className="chat-widget">
-      {isOpen && (
-        <div
-          className={`chat-widget__panel ${
-            !isOnline && !offlineFormSubmitted && !offlineFormLoading
-              ? "chat-widget__panel--offline"
-              : ""
-          }`}
-        >
-          <div className="chat-widget__header">
-            <h3 className="chat-widget__title">
-              {isOnline ? "Live Chat Support" : "Leave a Message"}
-            </h3>
-            <div className="chat-widget__header-actions">
-              {isOnline && (
-                <Button
-                  label="⋮"
-                  onClick={toggleMenu}
-                  variant="text"
-                  className="chat-widget__menu-button"
-                />
-              )}
-              <Button
-                label="×"
-                onClick={() => hide()}
-                variant="text"
-                className="chat-widget__close-button"
-              />
-              {isMenuOpen && isOnline && (
-                <div className="chat-widget__menu-dropdown">
+    <div id="chat-widget-root">
+      <div className="chat-widget">
+        {isOpen && (
+          <div
+            className={`chat-widget__panel ${
+              !isOnline && !offlineFormSubmitted && !offlineFormLoading
+                ? "chat-widget__panel--offline"
+                : ""
+            }`}
+          >
+            <div className="chat-widget__header">
+              <h3 className="chat-widget__title">
+                {isOnline ? "Live Chat Support" : "Leave a Message"}
+              </h3>
+              <div className="chat-widget__header-actions">
+                {isOnline && (
                   <Button
-                    label="End chat"
-                    onClick={showEndChatConfirmation}
+                    label="⋮"
+                    onClick={toggleMenu}
                     variant="text"
-                    className="chat-widget__menu-item"
+                    className="chat-widget__menu-button"
                   />
-                </div>
-              )}
+                )}
+                <Button
+                  label="×"
+                  onClick={() => hide()}
+                  variant="text"
+                  className="chat-widget__close-button"
+                />
+                {isMenuOpen && isOnline && (
+                  <div className="chat-widget__menu-dropdown">
+                    <Button
+                      label="End chat"
+                      onClick={showEndChatConfirmation}
+                      variant="text"
+                      className="chat-widget__menu-item"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+
+            {renderContent()}
           </div>
+        )}
 
-          {renderContent()}
-        </div>
-      )}
-
-      {!isOpen && (
-        <Button
-          label="Chat Support"
-          onClick={handleOpenWidget}
-          className="chat-widget__toggle"
-        />
-      )}
+        {!isOpen && (
+          <Button
+            label="Chat Support"
+            onClick={handleOpenWidget}
+            className="chat-widget__toggle"
+          />
+        )}
+      </div>
     </div>
   );
 };

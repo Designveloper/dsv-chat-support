@@ -6,14 +6,13 @@ build({
   bundle: true,
   outfile: "dist/chat-widget.js",
   minify: false,
-  sourcemap: true,
+  sourcemap: false,
   target: ["es2015"],
   format: "iife",
   globalName: "ChatWidgetApp",
   external: [],
   plugins: [sassPlugin({
-    type: "css",
-    outfile: "dist/chat-widget.css"
+    type: "style",
   })],
   loader: {
     ".tsx": "tsx",

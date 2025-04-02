@@ -48,9 +48,13 @@ export class ChatSessionService {
             throw new Error('Chat session not found');
         }
 
+        const effectiveUserInfo = userInfo?.email
+            ? userInfo
+            : (session.user_email ? { email: session.user_email } : undefined);
+
         // Update session with user info if available and not already set
-        if (userInfo?.email && !session.user_email) {
-            session.user_email = userInfo.email;
+        if (effectiveUserInfo?.email && !session.user_email) {
+            session.user_email = effectiveUserInfo.email;
             await this.chatSessionRepository.save(session);
         }
 
@@ -271,7 +275,7 @@ export class ChatSessionService {
             await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
 
             const location = 'Ho Chi Minh City, Vietnam';
-            let username = userInfo?.email;
+            let username = effectiveUserInfo?.email;
 
             if (!username) {
                 username = `${location}`

@@ -1,3 +1,4 @@
+import React from "react";
 import { createRoot, Root } from "react-dom/client";
 import ChatWidget from "./components/ChatWidget";
 import { useChatStore } from "./stores/useChatStore";
@@ -21,20 +22,6 @@ declare global {
 
 // Assign the store to the window object
 window.useChatStore = useChatStore;
-
-// Define the chat widget initialization function (keep for backward compatibility)
-window.initChatWidget = function (container: HTMLElement, workspaceId: string) {
-  if (!(container instanceof HTMLElement)) {
-    console.error("Invalid container provided to initChatWidget");
-    return;
-  }
-  if (!workspaceId || typeof workspaceId !== "string") {
-    console.error("Invalid workspaceId provided to initChatWidget");
-    return;
-  }
-  const root = createRoot(container);
-  root.render(<ChatWidget workspaceId={workspaceId} />);
-};
 
 // Define the chat support API
 window._chatSupport = {
@@ -80,7 +67,6 @@ window._chatSupport = {
       console.error("Chat support store not initialized");
       return false;
     }
-    console.log("Identifying user via API", { userId, userData });
     store.getState().identify(userId, userData);
 
     return true;
@@ -100,8 +86,6 @@ class ChatSupportWidget extends HTMLElement {
 
   constructor() {
     super();
-    console.log("Chat support widget constructor called");
-
     // Use a div without shadow DOM for better React compatibility
     this.mountPoint = document.createElement("div");
     this.appendChild(this.mountPoint);
@@ -111,7 +95,6 @@ class ChatSupportWidget extends HTMLElement {
 
     // Initialize the store
     if (!this.initialized) {
-      console.log("Initializing chat store");
       useChatStore.getState().initialize();
       this.initialized = true;
     }
@@ -119,18 +102,12 @@ class ChatSupportWidget extends HTMLElement {
 
   connectedCallback() {
     // Get the workspace ID from the attribute
-    console.log("ChatSupportWidget connectedCallback called");
     this.workspaceId = this.getAttribute("widgetid");
 
     if (!this.workspaceId) {
       console.error("No widgetid attribute provided to chat-support-widget");
       return;
     }
-
-    console.log(
-      "Initializing chat widget with workspace ID:",
-      this.workspaceId
-    );
     this.renderWidget();
 
     // Set up event listeners for API interactions
@@ -154,7 +131,6 @@ class ChatSupportWidget extends HTMLElement {
   handleStateChange() {
     // Force re-render when state changes
     if (this.root && this.workspaceId) {
-      console.log("State changed, re-rendering widget");
       this.renderWidget();
     }
   }
@@ -165,7 +141,6 @@ class ChatSupportWidget extends HTMLElement {
       if (!this.root) {
         this.root = createRoot(this.mountPoint);
       }
-      console.log("Rendering ChatWidget into mountPoint");
       this.root.render(<ChatWidget workspaceId={this.workspaceId} />);
     } catch (error) {
       console.error("Error rendering chat widget:", error);
