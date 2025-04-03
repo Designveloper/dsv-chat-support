@@ -13,7 +13,7 @@ import { Inject, forwardRef } from '@nestjs/common';
 
 @WebSocketGateway({
     cors: {
-        origin: ['http://localhost:5173'],
+        origin: ['http://localhost:5173', 'https://chat-support-7j2g.onrender.com'],
         credentials: true,
     },
 })
