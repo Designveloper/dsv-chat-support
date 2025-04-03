@@ -38,6 +38,7 @@ export class SlackBoltService implements OnModuleInit {
             token: this.configService.get('SLACK_BOT_TOKEN'),
             receiver: this.receiver,
         });
+        console.log("🚀 ~ SlackBoltService ~ this.boltApp:", this.boltApp)
     }
 
     // Method to integrate with NestJS app
@@ -138,6 +139,8 @@ export class SlackBoltService implements OnModuleInit {
             }
 
             console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ this.configService.get('SLACK_BOT_TOKEN'):", this.configService.get('SLACK_BOT_TOKEN'))
+            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ workspace.selected_channel_id:", workspace.selected_channel_id)
+            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ boltApp.client:", this.boltApp.client)
             const membersResponse = await this.boltApp.client.conversations.members({
                 token: this.configService.get('SLACK_BOT_TOKEN'),
                 channel: workspace.selected_channel_id,
