@@ -84,7 +84,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
 
   // Message handlers
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.keyCode === 13) {
       console.log("Enter pressed");
       e.preventDefault();
       if (messageText.trim()) {

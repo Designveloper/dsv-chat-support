@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { chatService } from '../services/chatService';
 
 export function useOfflineForm(workspaceId: string | null) {
@@ -9,6 +9,11 @@ export function useOfflineForm(workspaceId: string | null) {
         chatService.hasSubmittedOfflineForm()
     );
     const [offlineFormLoading, setOfflineFormLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        localStorage.removeItem("chat_offline_submitted");
+        setOfflineFormSubmitted(false);
+    }, [])
 
     const submitOfflineForm = async () => {
         if (!workspaceId || !offlineEmail.trim() || !offlineMessage.trim()) return;

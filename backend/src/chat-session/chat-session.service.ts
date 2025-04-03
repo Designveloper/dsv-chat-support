@@ -58,6 +58,7 @@ export class ChatSessionService {
             await this.chatSessionRepository.save(session);
         }
 
+
         // Get the workspace
         const workspace = await this.workspaceService.findById(session.workspace_id);
         if (!workspace || !workspace.bot_token_slack) {

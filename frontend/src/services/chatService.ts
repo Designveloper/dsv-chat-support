@@ -11,6 +11,8 @@ interface MessagePayload {
         userId?: string;
     };
     currentPage: string;
+    location?: string;
+    countryCode?: string;
 }
 
 export const chatService = {
