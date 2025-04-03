@@ -134,31 +134,15 @@ export class SlackBoltService implements OnModuleInit {
         try {
             const workspace = await this.chatSessionService.findWorkspaceById(workspaceId);
             if (!workspace || !workspace.selected_channel_id) {
-                console.log(`Workspace ${workspaceId} not found or channel not selected`);
-                return false;
+                throw new Error('Workspace not found or channel not selected');
             }
 
-            // First check if channel exists and is accessible
-            try {
-                const channelInfo = await this.boltApp.client.conversations.info({
-                    token: this.configService.get('SLACK_BOT_TOKEN'),
-                    channel: workspace.selected_channel_id,
-                });
-
-                if (!channelInfo.ok) {
-                    console.log(`Channel ${workspace.selected_channel_id} not found or not accessible`);
-                    return false;
-                }
-            } catch (channelError) {
-                console.error('Error checking channel existence:', channelError);
-                return false;
-            }
-
-            // Now try to get members
+            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ this.configService.get('SLACK_BOT_TOKEN'):", this.configService.get('SLACK_BOT_TOKEN'))
             const membersResponse = await this.boltApp.client.conversations.members({
                 token: this.configService.get('SLACK_BOT_TOKEN'),
                 channel: workspace.selected_channel_id,
             });
+            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ membersResponse:", membersResponse)
 
             const memberIds = membersResponse.members ?? [];
             for (const memberId of memberIds) {
