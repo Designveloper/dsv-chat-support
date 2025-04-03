@@ -4,7 +4,7 @@ import { sassPlugin } from "esbuild-sass-plugin";
 build({
   entryPoints: ["./src/embed.tsx"],
   bundle: true,
-  outfile: "dist/chat-widget.js",
+  outfile: "public/chat-widget.js",
   minify: false,
   sourcemap: false,
   target: ["es2015"],
