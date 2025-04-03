@@ -38,7 +38,6 @@ export class SlackBoltService implements OnModuleInit {
             token: this.configService.get('SLACK_BOT_TOKEN'),
             receiver: this.receiver,
         });
-        console.log("🚀 ~ SlackBoltService ~ this.boltApp:", this.boltApp)
     }
 
     // Method to integrate with NestJS app
@@ -135,17 +134,27 @@ export class SlackBoltService implements OnModuleInit {
         try {
             const workspace = await this.chatSessionService.findWorkspaceById(workspaceId);
             if (!workspace || !workspace.selected_channel_id) {
-                throw new Error('Workspace not found or channel not selected');
+                console.log(`Workspace ${workspaceId} not found or channel not selected`);
+                return false;
             }
 
-            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ this.configService.get('SLACK_BOT_TOKEN'):", this.configService.get('SLACK_BOT_TOKEN'))
-            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ workspace.selected_channel_id:", workspace.selected_channel_id)
-            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ boltApp.client:", this.boltApp.client)
+            // Try to join the channel first
+            try {
+                console.log(`Joining channel ${workspace.selected_channel_id}`);
+                await this.boltApp.client.conversations.join({
+                    token: this.configService.get('SLACK_BOT_TOKEN'),
+                    channel: workspace.selected_channel_id
+                });
+            } catch (joinError) {
+                console.log(`Error joining channel: ${joinError.message}`);
+                // Continue anyway - might be already in channel or public channel
+            }
+
+            // Now try to get members
             const membersResponse = await this.boltApp.client.conversations.members({
                 token: this.configService.get('SLACK_BOT_TOKEN'),
                 channel: workspace.selected_channel_id,
             });
-            console.log("🚀 ~ SlackBoltService ~ isWorkspaceOnline ~ membersResponse:", membersResponse)
 
             const memberIds = membersResponse.members ?? [];
             for (const memberId of memberIds) {
