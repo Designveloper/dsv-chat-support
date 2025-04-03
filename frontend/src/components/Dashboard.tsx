@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useProtectedRoute } from "../hooks/useProtectedRoute";
 import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
-import ChatWidget from "./ChatWidget";
 import { workspaceService, Workspace } from "../services/workspaceService";
 import Button from "./Button";
 
@@ -156,10 +155,6 @@ const Dashboard = () => {
           </div>
         </section>
       </div>
-
-      {slackConnected && workspaces.length > 0 && (
-        <ChatWidget workspaceId={workspaces[0].id} />
-      )}
     </div>
   );
 };
