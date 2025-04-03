@@ -4,6 +4,8 @@ import axios, { AxiosError } from "axios";
 import { authService } from "../services/authService";
 import "./SlackChannelSelector.scss";
 
+const API_URL = process.env.API_URL || "http://localhost:3000";
+
 // Define types for better type safety
 interface SlackChannel {
   id: string;
@@ -72,7 +74,7 @@ const SlackChannelSelector = () => {
         }
 
         const response = await axios.get<ChannelsResponse>(
-          `http://localhost:3000/slack/channels?workspaceId=${id}`,
+          `${API_URL}/slack/channels?workspaceId=${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -115,7 +117,7 @@ const SlackChannelSelector = () => {
         }
 
         return axios.post(
-          "http://localhost:3000/slack/select-channel",
+          `${API_URL}/slack/select-channel`,
           {
             workspaceId,
             channelId: selectedChannel,
