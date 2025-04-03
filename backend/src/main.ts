@@ -28,6 +28,6 @@ async function bootstrap() {
   const slackBoltService = app.get(SlackBoltService);
   slackBoltService.attachToNestApp(app);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
