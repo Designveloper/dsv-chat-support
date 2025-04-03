@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 import { authService } from "../services/authService";
 import "./SlackChannelSelector.scss";
 
-const API_URL = process.env.API_URL || "http://localhost:3000";
+const API_URL = "https://chat-support-server.onrender.com";
 
 // Define types for better type safety
 interface SlackChannel {
