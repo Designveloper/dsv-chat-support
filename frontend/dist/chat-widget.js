@@ -29838,7 +29838,7 @@ var ChatWidgetApp = (() => {
   });
 
   // src/services/chatService.ts
-  var API_URL = "http://localhost:3000";
+  var API_URL = "https://chat-support-server.onrender.com";
   var chatService = {
     // Socket reference
     socket: null,

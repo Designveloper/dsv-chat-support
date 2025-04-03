@@ -147,7 +147,6 @@ export class SlackBoltService implements OnModuleInit {
                 });
             } catch (joinError) {
                 console.log(`Error joining channel: ${joinError.message}`);
-                // Continue anyway - might be already in channel or public channel
             }
 
             // Now try to get members
