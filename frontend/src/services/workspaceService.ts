@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authService } from './authService';
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = "https://chat-support-server.onrender.com";
 
 export interface Workspace {
     id: string;

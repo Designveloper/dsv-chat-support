@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = "https://chat-support-server.onrender.com";
 
 interface MessagePayload {
     sessionId: string;
