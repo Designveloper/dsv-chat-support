@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "https://chat-support-server.onrender.com";
-
+const API_URL = process.env.API_URL || "http://localhost:3000";
 interface AuthResponse {
     accessToken: string;
     refreshToken?: string;
