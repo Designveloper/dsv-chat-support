@@ -1,0 +1,203 @@
+import type React from "react";
+import { useState } from "react";
+import "./Settings.scss";
+import Layout from "./Layout";
+
+const Settings: React.FC = () => {
+  const [activeContent, setActiveContent] = useState("behavior"); // Track active content tab
+
+  // Handle content tab clicks
+  const handleContentTabClick = (tab: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveContent(tab);
+  };
+
+  // Render settings content
+  const settingsContent = (
+    <>
+      <div className="settings__header">
+        <h1 className="settings__title">#test-chatlio - Behavior</h1>
+        <div className="settings__tabs">
+          <ul className="settings__tabs-list">
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "behavior"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("behavior")}
+              >
+                Behavior
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "appearance"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("appearance")}
+              >
+                Appearance
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "operating-hours"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("operating-hours")}
+              >
+                Operating Hours
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "widget-install"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("widget-install")}
+              >
+                Widget Install
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "triggers"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("triggers")}
+              >
+                Triggers
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "saved-replies"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("saved-replies")}
+              >
+                Saved Replies
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "integrations"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("integrations")}
+              >
+                Integrations
+              </a>
+            </li>
+            <li
+              className={`settings__tabs-item ${
+                activeContent === "question-groups"
+                  ? "settings__tabs-item--active"
+                  : ""
+              }`}
+            >
+              <a
+                href="#"
+                className="settings__tabs-link"
+                onClick={handleContentTabClick("question-groups")}
+              >
+                Question Groups
+                <span className="settings__tabs-badge">BASIC</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="settings__body">
+        {/* Content for the selected tab would go here */}
+        {activeContent === "behavior" && (
+          <div className="settings__content-section">
+            <h2>Behavior Settings</h2>
+            <p>Configure how your chat widget behaves.</p>
+          </div>
+        )}
+        {activeContent === "appearance" && (
+          <div className="settings__content-section">
+            <h2>Appearance Settings</h2>
+            <p>Customize the look and feel of your chat widget.</p>
+          </div>
+        )}
+        {activeContent === "operating-hours" && (
+          <div className="settings__content-section">
+            <h2>Operating Hours</h2>
+            <p>Set when your chat service is available.</p>
+          </div>
+        )}
+        {activeContent === "widget-install" && (
+          <div className="settings__content-section">
+            <h2>Widget Installation</h2>
+            <p>Get the code to install your chat widget on your website.</p>
+          </div>
+        )}
+        {activeContent === "triggers" && (
+          <div className="settings__content-section">
+            <h2>Triggers</h2>
+            <p>Set up automated messages for specific scenarios.</p>
+          </div>
+        )}
+        {activeContent === "saved-replies" && (
+          <div className="settings__content-section">
+            <h2>Saved Replies</h2>
+            <p>Create templates for common responses.</p>
+          </div>
+        )}
+        {activeContent === "integrations" && (
+          <div className="settings__content-section">
+            <h2>Integrations</h2>
+            <p>Connect with other services and tools.</p>
+          </div>
+        )}
+        {activeContent === "question-groups" && (
+          <div className="settings__content-section">
+            <h2>Question Groups</h2>
+            <p>Organize pre-chat questions for better data collection.</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return <Layout>{settingsContent}</Layout>;
+};
+
+export default Settings;

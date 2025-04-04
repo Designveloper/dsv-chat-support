@@ -1,0 +1,167 @@
+// Settings.scss - Using BEM naming convention
+
+// Variables
+$color-primary: #333;
+$color-secondary: #666;
+$color-border: #e0e0e0;
+$color-active: #0066cc;
+$color-notification-bg: #fff9e6;
+$color-notification-border: #ffe7a3;
+$color-badge-bg: #4caf50;
+$color-badge-text: #fff;
+
+// Main container
+.settings {
+    display: flex;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: $color-primary;
+
+    // Sidebar
+    &__sidebar {
+        width: 160px;
+        background-color: #f5f5f5;
+        border-right: 1px solid $color-border;
+        flex-shrink: 0;
+    }
+
+    &__nav {
+        padding: 20px 0;
+    }
+
+    &__nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    &__nav-item {
+        margin-bottom: 5px;
+
+        &--active {
+            .settings__nav-link {
+                color: $color-active;
+                background-color: rgba($color-active, 0.05);
+            }
+        }
+    }
+
+    &__nav-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        color: $color-secondary;
+        text-decoration: none;
+        transition: background-color 0.2s;
+
+        &:hover {
+            background-color: rgba($color-active, 0.05);
+        }
+    }
+
+    &__nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+
+    &__icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    &__nav-text {
+        font-size: 14px;
+    }
+
+    // Content area
+    &__content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__header {
+        padding: 20px 20px 0;
+        border-bottom: 1px solid $color-border;
+    }
+
+    &__title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 15px;
+    }
+
+    // Tabs
+    &__tabs {
+        margin-bottom: -1px;
+    }
+
+    &__tabs-list {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        overflow-x: auto;
+    }
+
+    &__tabs-item {
+        margin-right: 5px;
+
+        &--active {
+            .settings__tabs-link {
+                color: $color-active;
+                border-bottom-color: $color-active;
+            }
+        }
+    }
+
+    &__tabs-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        color: $color-secondary;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        transition: color 0.2s, border-color 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+            color: $color-active;
+        }
+    }
+
+    &__tabs-badge {
+        display: inline-block;
+        margin-left: 5px;
+        padding: 2px 5px;
+        font-size: 10px;
+        font-weight: bold;
+        color: $color-badge-text;
+        background-color: $color-badge-bg;
+        border-radius: 3px;
+        text-transform: uppercase;
+    }
+
+    // Notification
+    &__notification {
+        margin: 20px;
+        padding: 15px;
+        background-color: $color-notification-bg;
+        border: 1px solid $color-notification-border;
+        border-radius: 4px;
+    }
+
+    &__notification-text {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    // Body content
+    &__body {
+        flex: 1;
+        padding: 20px;
+    }
+}

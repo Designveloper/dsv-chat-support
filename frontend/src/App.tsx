@@ -9,6 +9,7 @@ import Dashboard from "./components/Dashboard";
 import ChangePassword from "./components/ChangePassword";
 import SlackChannelSelector from "./components/SlackChannelSelector";
 import VisitorDemo from "./components/VisitorDemo";
+import Settings from "./components/Settings";
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route
             path="/slack/select-channel"

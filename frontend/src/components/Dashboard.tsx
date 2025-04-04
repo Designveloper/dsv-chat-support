@@ -5,6 +5,7 @@ import "./Dashboard.scss";
 import { useAuth } from "../context/AuthContext";
 import { workspaceService, Workspace } from "../services/workspaceService";
 import Button from "./Button";
+import Layout from "./Layout";
 
 const Dashboard = () => {
   const isAuthenticated = useProtectedRoute();
@@ -66,13 +67,48 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <Layout>
+        <div className="loading">Loading...</div>
+      </Layout>
+    );
   }
 
-  return (
-    <div className="dashboard">
-      <header className="dashboard__header">
-        <h1>Chat Support Dashboard</h1>
+  // Dashboard content with the same layout structure as Settings
+  const dashboardContent = (
+    <>
+      <div className="settings__header">
+        <h1 className="settings__title">Chat Support Dashboard</h1>
+        <div className="settings__tabs">
+          <ul className="settings__tabs-list">
+            <li className="settings__tabs-item settings__tabs-item--active">
+              <a href="#" className="settings__tabs-link">
+                Overview
+              </a>
+            </li>
+            <li className="settings__tabs-item">
+              <a href="#" className="settings__tabs-link">
+                Analytics
+              </a>
+            </li>
+            <li className="settings__tabs-item">
+              <a href="#" className="settings__tabs-link">
+                Activity
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {error && (
+        <div className="settings__notification">
+          <p className="settings__notification-text">
+            <strong>Error:</strong> {error}
+          </p>
+        </div>
+      )}
+
+      <div className="settings__body">
         <div className="dashboard__user-controls">
           <span>Welcome, {user?.email}</span>
           <Button
@@ -81,15 +117,7 @@ const Dashboard = () => {
             className="dashboard__logout-btn"
           />
         </div>
-      </header>
 
-      {error && (
-        <div className="dashboard__alert dashboard__alert--danger">
-          Error: {error}
-        </div>
-      )}
-
-      <div className="dashboard__content">
         <section className="dashboard__integrations-section">
           {slackConnected ? (
             <h2>Your workspace</h2>
@@ -98,10 +126,9 @@ const Dashboard = () => {
               Click the button below to add Chat Support to your Slack account
             </h2>
           )}
+
           <div className="">
-            {workspaces.length === 0 ? (
-              ""
-            ) : (
+            {workspaces.length > 0 && (
               <div className="dashboard__workspaces-list">
                 {workspaces.map((workspace) => (
                   <div key={workspace.id} className="dashboard__workspace-card">
@@ -130,33 +157,33 @@ const Dashboard = () => {
             )}
 
             {!slackConnected && (
-              <>
-                <button
-                  onClick={handleAddToSlack}
-                  className="dashboard__slack-button"
-                  disabled={isSlackLoading}
-                >
-                  {isSlackLoading ? (
-                    <div className="loading">
-                      <div className="loading__spinner"></div>
-                    </div>
-                  ) : (
-                    <img
-                      alt="Add to Slack"
-                      height="40"
-                      width="139"
-                      src="https://platform.slack-edge.com/img/add_to_slack.png"
-                      srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                    />
-                  )}
-                </button>
-              </>
+              <button
+                onClick={handleAddToSlack}
+                className="dashboard__slack-button"
+                disabled={isSlackLoading}
+              >
+                {isSlackLoading ? (
+                  <div className="loading">
+                    <div className="loading__spinner"></div>
+                  </div>
+                ) : (
+                  <img
+                    alt="Add to Slack"
+                    height="40"
+                    width="139"
+                    src="https://platform.slack-edge.com/img/add_to_slack.png"
+                    srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                  />
+                )}
+              </button>
             )}
           </div>
         </section>
       </div>
-    </div>
+    </>
   );
+
+  return <Layout>{dashboardContent}</Layout>;
 };
 
 export default Dashboard;
