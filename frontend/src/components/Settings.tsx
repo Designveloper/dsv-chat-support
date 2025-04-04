@@ -2,6 +2,7 @@ import type React from "react";
 import { useState } from "react";
 import "./Settings.scss";
 import Layout from "./Layout";
+import WidgetInstall from "./WidgetInstall";
 
 const Settings: React.FC = () => {
   const [activeContent, setActiveContent] = useState("behavior"); // Track active content tab
@@ -12,11 +13,20 @@ const Settings: React.FC = () => {
     setActiveContent(tab);
   };
 
+  // Update the title based on active content
+  const getTabTitle = () => {
+    // Convert kebab-case to Title Case
+    return activeContent
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // Render settings content
   const settingsContent = (
     <>
       <div className="settings__header">
-        <h1 className="settings__title">#test-chatlio - Behavior</h1>
+        <h1 className="settings__title">#test-chatlio - {getTabTitle()}</h1>
         <div className="settings__tabs">
           <ul className="settings__tabs-list">
             <li
@@ -144,7 +154,6 @@ const Settings: React.FC = () => {
         </div>
       </div>
       <div className="settings__body">
-        {/* Content for the selected tab would go here */}
         {activeContent === "behavior" && (
           <div className="settings__content-section">
             <h2>Behavior Settings</h2>
@@ -165,8 +174,7 @@ const Settings: React.FC = () => {
         )}
         {activeContent === "widget-install" && (
           <div className="settings__content-section">
-            <h2>Widget Installation</h2>
-            <p>Get the code to install your chat widget on your website.</p>
+            <WidgetInstall />
           </div>
         )}
         {activeContent === "triggers" && (
