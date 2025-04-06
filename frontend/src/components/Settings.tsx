@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./Settings.scss";
 import Layout from "./Layout";
 import WidgetInstall from "./WidgetInstall";
+import BehaviorSettings from "./BehaviorSettings";
 
 const Settings: React.FC = () => {
   const [activeContent, setActiveContent] = useState("behavior"); // Track active content tab
@@ -14,19 +15,19 @@ const Settings: React.FC = () => {
   };
 
   // Update the title based on active content
-  const getTabTitle = () => {
-    // Convert kebab-case to Title Case
-    return activeContent
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
+  //   const getTabTitle = () => {
+  //     // Convert kebab-case to Title Case
+  //     return activeContent
+  //       .split("-")
+  //       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  //       .join(" ");
+  //   };
 
   // Render settings content
   const settingsContent = (
     <>
       <div className="settings__header">
-        <h1 className="settings__title">#test-chatlio - {getTabTitle()}</h1>
+        {/* <h1 className="settings__title">#test-chatlio - {getTabTitle()}</h1> */}
         <div className="settings__tabs">
           <ul className="settings__tabs-list">
             <li
@@ -91,21 +92,6 @@ const Settings: React.FC = () => {
             </li>
             <li
               className={`settings__tabs-item ${
-                activeContent === "triggers"
-                  ? "settings__tabs-item--active"
-                  : ""
-              }`}
-            >
-              <a
-                href="#"
-                className="settings__tabs-link"
-                onClick={handleContentTabClick("triggers")}
-              >
-                Triggers
-              </a>
-            </li>
-            <li
-              className={`settings__tabs-item ${
                 activeContent === "saved-replies"
                   ? "settings__tabs-item--active"
                   : ""
@@ -119,45 +105,13 @@ const Settings: React.FC = () => {
                 Saved Replies
               </a>
             </li>
-            <li
-              className={`settings__tabs-item ${
-                activeContent === "integrations"
-                  ? "settings__tabs-item--active"
-                  : ""
-              }`}
-            >
-              <a
-                href="#"
-                className="settings__tabs-link"
-                onClick={handleContentTabClick("integrations")}
-              >
-                Integrations
-              </a>
-            </li>
-            <li
-              className={`settings__tabs-item ${
-                activeContent === "question-groups"
-                  ? "settings__tabs-item--active"
-                  : ""
-              }`}
-            >
-              <a
-                href="#"
-                className="settings__tabs-link"
-                onClick={handleContentTabClick("question-groups")}
-              >
-                Question Groups
-                <span className="settings__tabs-badge">BASIC</span>
-              </a>
-            </li>
           </ul>
         </div>
       </div>
       <div className="settings__body">
         {activeContent === "behavior" && (
           <div className="settings__content-section">
-            <h2>Behavior Settings</h2>
-            <p>Configure how your chat widget behaves.</p>
+            <BehaviorSettings />
           </div>
         )}
         {activeContent === "appearance" && (
@@ -177,28 +131,10 @@ const Settings: React.FC = () => {
             <WidgetInstall />
           </div>
         )}
-        {activeContent === "triggers" && (
-          <div className="settings__content-section">
-            <h2>Triggers</h2>
-            <p>Set up automated messages for specific scenarios.</p>
-          </div>
-        )}
         {activeContent === "saved-replies" && (
           <div className="settings__content-section">
             <h2>Saved Replies</h2>
             <p>Create templates for common responses.</p>
-          </div>
-        )}
-        {activeContent === "integrations" && (
-          <div className="settings__content-section">
-            <h2>Integrations</h2>
-            <p>Connect with other services and tools.</p>
-          </div>
-        )}
-        {activeContent === "question-groups" && (
-          <div className="settings__content-section">
-            <h2>Question Groups</h2>
-            <p>Organize pre-chat questions for better data collection.</p>
           </div>
         )}
       </div>

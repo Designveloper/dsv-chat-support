@@ -1,4 +1,4 @@
-// Settings.scss - Using BEM naming convention
+@use "../styles/mixins" as mix;
 
 // Variables
 $color-primary: #333;
@@ -17,151 +17,216 @@ $color-badge-text: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: $color-primary;
 
-    // Sidebar
-    &__sidebar {
-        width: 160px;
-        background-color: #f5f5f5;
-        border-right: 1px solid $color-border;
-        flex-shrink: 0;
-    }
-
-    &__nav {
-        padding: 20px 0;
-    }
-
-    &__nav-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    &__nav-item {
-        margin-bottom: 5px;
-
-        &--active {
-            .settings__nav-link {
-                color: $color-active;
-                background-color: rgba($color-active, 0.05);
-            }
-        }
-    }
-
-    &__nav-link {
-        display: flex;
-        align-items: center;
-        padding: 10px 15px;
-        color: $color-secondary;
-        text-decoration: none;
-        transition: background-color 0.2s;
-
-        &:hover {
-            background-color: rgba($color-active, 0.05);
-        }
-    }
-
-    &__nav-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 10px;
-    }
-
-    &__icon {
-        width: 18px;
-        height: 18px;
-    }
-
-    &__nav-text {
-        font-size: 14px;
-    }
-
-    // Content area
-    &__content {
-        flex: 1;
-        display: flex;
+    @include mix.tablet {
         flex-direction: column;
     }
+}
 
-    &__header {
-        padding: 20px 20px 0;
+.settings__sidebar {
+    width: 160px;
+    background-color: #f5f5f5;
+    border-right: 1px solid $color-border;
+    flex-shrink: 0;
+
+    @include mix.tablet {
+        width: 100%;
+        border-right: none;
         border-bottom: 1px solid $color-border;
     }
+}
 
-    &__title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 15px;
+.settings__nav {
+    padding: 20px 0;
+
+    @include mix.tablet {
+        padding: 10px 0;
     }
+}
 
-    // Tabs
-    &__tabs {
-        margin-bottom: -1px;
-    }
+.settings__nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
-    &__tabs-list {
+    @include mix.tablet {
         display: flex;
-        list-style: none;
-        padding: 0;
-        margin: 0;
         overflow-x: auto;
+        padding: 0 15px;
     }
+}
 
-    &__tabs-item {
-        margin-right: 5px;
+.settings__nav-item {
+    margin-bottom: 5px;
 
-        &--active {
-            .settings__tabs-link {
-                color: $color-active;
-                border-bottom-color: $color-active;
-            }
-        }
+    @include mix.tablet {
+        margin-bottom: 0;
+        margin-right: 10px;
     }
+}
 
-    &__tabs-link {
-        display: flex;
+.settings__nav-item--active .settings__nav-link {
+    color: $color-active;
+    background-color: rgba($color-active, 0.05);
+}
+
+.settings__nav-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: $color-secondary;
+    text-decoration: none;
+    transition: background-color 0.2s;
+
+    @include mix.tablet {
+        padding: 8px 12px;
+    }
+}
+
+.settings__nav-link:hover {
+    background-color: rgba($color-active, 0.05);
+}
+
+.settings__nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.settings__icon {
+    width: 18px;
+    height: 18px;
+}
+
+.settings__nav-text {
+    font-size: 14px;
+}
+
+.settings__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings__header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid $color-border;
+
+    @include mix.mobile {
+        padding: 15px 15px 0;
+    }
+}
+
+.settings__header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+
+    @include mix.mobile {
+        flex-direction: row;
+        justify-content: space-between;
         align-items: center;
-        padding: 10px 15px;
-        color: $color-secondary;
-        text-decoration: none;
-        border-bottom: 2px solid transparent;
-        transition: color 0.2s, border-color 0.2s;
-        white-space: nowrap;
-
-        &:hover {
-            color: $color-active;
-        }
     }
+}
 
-    &__tabs-badge {
-        display: inline-block;
-        margin-left: 5px;
-        padding: 2px 5px;
-        font-size: 10px;
-        font-weight: bold;
-        color: $color-badge-text;
-        background-color: $color-badge-bg;
-        border-radius: 3px;
-        text-transform: uppercase;
+.settings__title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+
+    @include mix.mobile {
+        font-size: 18px;
+        margin-bottom: 10px;
     }
+}
 
-    // Notification
-    &__notification {
-        margin: 20px;
-        padding: 15px;
-        background-color: $color-notification-bg;
-        border: 1px solid $color-notification-border;
-        border-radius: 4px;
-    }
+.settings__tabs {
+    margin-bottom: -1px;
+}
 
-    &__notification-text {
-        margin: 0;
+.settings__tabs-list {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-x: auto;
+}
+
+.settings__tabs-item {
+    margin-right: 5px;
+}
+
+.settings__tabs-item--active .settings__tabs-link {
+    color: $color-active;
+    border-bottom-color: $color-active;
+}
+
+.settings__tabs-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: $color-secondary;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+
+    @include mix.mobile {
+        padding: 8px 10px;
         font-size: 14px;
-        line-height: 1.5;
     }
+}
 
-    // Body content
-    &__body {
-        flex: 1;
-        padding: 20px;
+.settings__tabs-link:hover {
+    color: $color-active;
+}
+
+.settings__tabs-badge {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: bold;
+    color: $color-badge-text;
+    background-color: $color-badge-bg;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.settings__notification {
+    margin: 20px;
+    padding: 15px;
+    background-color: $color-notification-bg;
+    border: 1px solid $color-notification-border;
+    border-radius: 4px;
+
+    @include mix.mobile {
+        margin: 15px;
+        padding: 10px;
+    }
+}
+
+.settings__notification-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.settings__body {
+    flex: 1;
+    padding: 20px;
+
+    @include mix.mobile {
+        padding: 15px;
+    }
+}
+
+.settings__content-section {
+    margin-bottom: 30px;
+
+    @include mix.mobile {
+        margin-bottom: 20px;
     }
 }

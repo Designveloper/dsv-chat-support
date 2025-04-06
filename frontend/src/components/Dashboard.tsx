@@ -78,7 +78,19 @@ const Dashboard = () => {
   const dashboardContent = (
     <>
       <div className="settings__header">
-        <h1 className="settings__title">Chat Support Dashboard</h1>
+        <div className="settings__header-top">
+          <h1 className="settings__title">Chat Support Dashboard</h1>
+          <div className="dashboard__user-controls">
+            <span className="dashboard__welcome-text">
+              Welcome, {user?.email}
+            </span>
+            <Button
+              label="Logout"
+              onClick={handleLogout}
+              className="dashboard__logout-btn"
+            />
+          </div>
+        </div>
         <div className="settings__tabs">
           <ul className="settings__tabs-list">
             <li className="settings__tabs-item settings__tabs-item--active">
@@ -109,15 +121,6 @@ const Dashboard = () => {
       )}
 
       <div className="settings__body">
-        <div className="dashboard__user-controls">
-          <span>Welcome, {user?.email}</span>
-          <Button
-            label="Logout"
-            onClick={handleLogout}
-            className="dashboard__logout-btn"
-          />
-        </div>
-
         <section className="dashboard__integrations-section">
           {slackConnected ? (
             <h2>Your workspace</h2>

@@ -6,6 +6,10 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+
+    @include mix.mobile {
+        padding: 15px;
+    }
 }
 
 .dashboard__header {
@@ -15,6 +19,12 @@
     margin-bottom: 30px;
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
+
+    @include mix.mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
 }
 
 .dashboard__header h1 {
@@ -22,10 +32,26 @@
     color: #333;
 }
 
+.dashboard__welcome-text {
+    color: #666;
+    margin-right: 10px;
+    white-space: nowrap;
+
+    @include mix.mobile {
+        display: none; // Hide on mobile to save space
+    }
+}
+
 .dashboard__user-controls {
     display: flex;
     align-items: center;
     gap: 15px;
+    margin-left: auto;
+
+    @include mix.mobile {
+        flex-direction: row;
+        align-items: center;
+    }
 }
 
 .dashboard__user-controls span {
@@ -42,6 +68,10 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+
+    // @include mix.mobile {
+    //     width: 100%;
+    // }
 }
 
 .btn.dashboard__logout-btn:hover {
@@ -72,6 +102,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+
+    @include mix.mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 }
 
 .dashboard__section-header h2 {
@@ -112,6 +148,10 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
+
+    @include mix.mobile {
+        grid-template-columns: 1fr;
+    }
 }
 
 .dashboard__workspace-card {
@@ -156,6 +196,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+
+    @include mix.mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 }
 
 .dashboard__integration-header h3 {
