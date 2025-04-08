@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { workspaceService, Workspace } from "../services/workspaceService";
-import { useParams } from "react-router-dom";
+import { Workspace } from "../services/workspaceService";
+import { useOutletContext } from "react-router-dom";
 import "./BehaviorSettings.scss";
 
-interface BehaviorSettingsProps {
-  workspace?: Workspace;
-}
+type ContextType = { workspace: Workspace | null };
 
-const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ workspace }) => {
-  const [loading, setLoading] = useState(false);
+const BehaviorSettings = () => {
+  const { workspace } = useOutletContext<ContextType>();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     null
   );
-  const { id: workspaceId } = useParams<{ id: string }>();
 
   // Form state
   const [autoUpdateStatus, setAutoUpdateStatus] = useState(true);
@@ -27,38 +24,14 @@ const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ workspace }) => {
   useEffect(() => {
     if (workspace) {
       setCurrentWorkspace(workspace);
-      return;
     }
-
-    const fetchWorkspace = async () => {
-      if (!workspaceId) return;
-
-      try {
-        setLoading(true);
-        const data = await workspaceService.getWorkspace(workspaceId);
-        setCurrentWorkspace(data);
-      } catch (error) {
-        console.error("Error fetching workspace:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWorkspace();
-  }, [workspace, workspaceId]);
+  }, [workspace]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save settings to API (implementation would depend on your API structure)
     console.log("Saving behavior settings...");
   };
-
-  if (loading) {
-    return (
-      <div className="behavior-settings__loading">Loading settings...</div>
-    );
-  }
 
   return (
     <div className="behavior-settings">

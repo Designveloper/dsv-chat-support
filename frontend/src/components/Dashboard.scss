@@ -232,6 +232,15 @@
     color: #6c757d;
 }
 
+.dashboard__link {
+    color: #3453f2;
+    margin-top: 6px;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
 .dashboard__slack-button {
     background: none;
     border: none;

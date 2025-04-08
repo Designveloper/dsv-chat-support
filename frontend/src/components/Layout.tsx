@@ -12,16 +12,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Determine active tab based on current route
   const getActiveTab = () => {
-    if (location.pathname.includes("/dashboard")) return "dashboard";
-    if (location.pathname.includes("/settings")) return "settings";
-    if (location.pathname.includes("/account")) return "account";
-    if (location.pathname.includes("/reports")) return "reports";
+    const path = location.pathname;
+    if (path.includes("/dashboard")) return "dashboard";
+    if (path.includes("/settings")) return "settings";
+    if (path.includes("/account")) return "account";
+    if (path.includes("/reports")) return "reports";
     return "dashboard"; // Default
   };
 
   const handleNavClick = (tab: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate(`/${tab}`);
+    if (tab === "settings") {
+      navigate("/settings/behavior"); // Default settings tab
+    } else {
+      navigate(`/${tab}`);
+    }
   };
 
   return (
@@ -100,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </ul>
         </nav>
       </div>
-      <div className="settings__content">{children}</div>
+      {children}
     </div>
   );
 };

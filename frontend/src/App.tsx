@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
 import Login from "./components/Login";
@@ -10,6 +15,10 @@ import ChangePassword from "./components/ChangePassword";
 import SlackChannelSelector from "./components/SlackChannelSelector";
 import VisitorDemo from "./components/VisitorDemo";
 import Settings from "./components/Settings";
+import BehaviorSettings from "./components/BehaviorSettings";
+import AppearanceSettings from "./components/AppearanceSettings";
+import WidgetInstall from "./components/WidgetInstall";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   return (
@@ -25,12 +34,66 @@ const App = () => {
           <Route path="/demo" element={<VisitorDemo />} />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/change-password" element={<ChangePassword />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Settings routes */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              index
+              element={<Navigate to="/settings/behavior" replace />}
+            />
+            <Route path="behavior" element={<BehaviorSettings />} />
+            <Route path="appearance" element={<AppearanceSettings />} />
+            <Route
+              path="operating-hours"
+              element={
+                <div>
+                  <h2>Operating Hours</h2>
+                  <p>Set when your chat service is available.</p>
+                </div>
+              }
+            />
+            <Route path="widget-install" element={<WidgetInstall />} />
+            <Route
+              path="saved-replies"
+              element={
+                <div>
+                  <h2>Saved Replies</h2>
+                  <p>Create templates for common responses.</p>
+                </div>
+              }
+            />
+          </Route>
+
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/slack/select-channel"
-            element={<SlackChannelSelector />}
+            element={
+              <ProtectedRoute>
+                <SlackChannelSelector />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </Router>
