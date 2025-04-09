@@ -9,6 +9,7 @@ import { SlackBoltService } from '../slack/slack-bolt.service';
 import { WorkSpace } from '../workspace/workspace.entity';
 import { Request } from 'express';
 import { format } from 'date-fns';
+import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-settings.service';
 
 @Injectable()
 export class ChatSessionService {
@@ -18,7 +19,8 @@ export class ChatSessionService {
         @Inject(forwardRef(() => SlackBoltService)) // Add forwardRef for circular dependency
         private slackBoltService: SlackBoltService,
         @InjectRepository(ChatSession)
-        private chatSessionRepository: Repository<ChatSession>
+        private chatSessionRepository: Repository<ChatSession>,
+        private workspaceSettingsService: WorkspaceSettingsService
     ) { }
 
     async startChat(workspaceId: string): Promise<ChatSession> {
@@ -330,7 +332,33 @@ export class ChatSessionService {
     }
 
     async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
-        return this.slackBoltService.isWorkspaceOnline(workspaceId);
+        try {
+            console.log(`Checking if workspace ${workspaceId} is online`);
+
+            // Get presence detection setting
+            const presenceDetection = await this.workspaceSettingsService.getStringSetting(
+                workspaceId,
+                WORKSPACE_SETTINGS.PRESENCE_DETECTION,
+                'auto' // Default to auto if setting doesn't exist
+            );
+
+            console.log(`Workspace ${workspaceId} settings - presenceDetection: ${presenceDetection}`);
+
+            // If auto-update is disabled or presence detection is manual, 
+            // always return true (assume online)
+            if (presenceDetection === 'manual') {
+                console.log(`Workspace ${workspaceId} has manual presence detection, returning online`);
+                return true;
+            }
+
+            // Use Slack bolt service to check actual online status
+            const isOnline = await this.slackBoltService.isWorkspaceOnline(workspaceId);
+            console.log(`Workspace ${workspaceId} actual online status: ${isOnline}`);
+            return isOnline;
+        } catch (error) {
+            console.error(`Error checking workspace ${workspaceId} online status: ${error.message}`, error.stack);
+            return false; // Default to offline if there's an error
+        }
     }
 
     async findWorkspaceById(workspaceId: string): Promise<WorkSpace> {

@@ -4,6 +4,7 @@ import { WebClient } from '@slack/web-api';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { WorkspaceService } from '../workspace/workspace.service';
+import { EavService } from 'src/eav/eav.service';
 
 @Injectable()
 export class SlackService {
@@ -13,6 +14,7 @@ export class SlackService {
         private configService: ConfigService,
         private httpService: HttpService,
         private workspaceService: WorkspaceService,
+        private eavService: EavService,
     ) {
         this.slackClient = new WebClient();
     }
@@ -67,10 +69,26 @@ export class SlackService {
                 const botToken = data.access_token;
                 const slackWorkspaceId = data.team.id;
 
+                console.log('==DEBUG== About to call getOrCreateEntityType');
+                console.log('==DEBUG== EavService instance exists:', !!this.eavService);
+
+                let entityType;
+                try {
+                    entityType = await this.eavService.getOrCreateEntityType(
+                        'workspace',
+                        'Default workspace entity type'
+                    );
+                    console.log("🚀 ~ SlackService ~ handleOAuthRedirect ~ entityType:", entityType);
+                } catch (err) {
+                    console.error('==DEBUG== Error calling getOrCreateEntityType:', err);
+                    throw err;
+                }
+
                 const workspace = await this.workspaceService.create(
                     userId,
                     `${data.team.name} Workspace`,
-                    'slack'
+                    'slack',
+                    entityType.type_id
                 );
 
                 // Save initial Slack details without channel

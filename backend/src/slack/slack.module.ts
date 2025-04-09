@@ -8,11 +8,13 @@ import { WorkspaceModule } from 'src/workspace/workspace.module';
 import { HttpModule } from '@nestjs/axios';
 import { ChatSessionModule } from '../chat-session/chat-session.module';
 import { ConfigModule } from '@nestjs/config';
+import { EavModule } from 'src/eav/eav.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([ChatSession]),
         WorkspaceModule,
+        EavModule,
         HttpModule,
         ConfigModule,
         forwardRef(() => ChatSessionModule),

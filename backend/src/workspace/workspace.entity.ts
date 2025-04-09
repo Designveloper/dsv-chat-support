@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../users/users.entity';
+import { EavEntityType } from '../eav/entities/eav-entity-type.entity';
 
 @Entity('workspace')
 export class WorkSpace {
@@ -11,6 +12,9 @@ export class WorkSpace {
 
   @Column({ type: 'integer' })
   owner_id: number;
+
+  @Column({ type: 'integer', nullable: false })
+  entity_type_id: number;
 
   @Column({ type: 'varchar', nullable: true })
   selected_channel_id: string;
@@ -30,5 +34,10 @@ export class WorkSpace {
   @ManyToOne(() => User, (user) => user.workSpaces)
   @JoinColumn({ name: 'owner_id' })
   owner: User;
+
+  @ManyToOne(() => EavEntityType, (entityType) => entityType.workSpaces)
+  @JoinColumn({ name: 'entity_type_id' })
+  entityType: EavEntityType;
+
   chatSessions: any;
 }

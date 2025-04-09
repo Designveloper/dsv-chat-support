@@ -9,6 +9,7 @@ import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { SlackModule } from './slack/slack.module';
 import { ChatSessionModule } from './chat-session/chat-session.module';
+import { EavModule } from './eav/eav.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { ChatSessionModule } from './chat-session/chat-session.module';
     RefreshTokensModule,
     WorkspaceModule,
     SlackModule,
-    ChatSessionModule
+    ChatSessionModule,
+    EavModule
   ],
 })
 export class AppModule { }

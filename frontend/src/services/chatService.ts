@@ -121,30 +121,48 @@ export const chatService = {
 
     // Check slack online status
     async checkOnlineStatus(workspaceId: string): Promise<boolean> {
-        if (this.socket?.connected) {
-            console.log('Checking status via socket:', workspaceId);
-            // Send request via socket if connected
-            return new Promise((resolve) => {
-                this.socket?.emit('check_status', { workspaceId }, (data: { isOnline: boolean }) => {
-                    console.log('Received status response:', data);
-                    resolve(data.isOnline);
-                });
-            });
-        } else {
-            // Fall back to REST API if socket not available
+        // Try to use the socket if it exists
+        if (this.socket && this.socket.connected) {
             try {
-                console.log('Checking status via REST:', workspaceId);
-                const response = await axios.get(
-                    `${API_URL}/chat/status?workspace_id=${workspaceId}`,
-                );
-                // If API returns 'online', rename to 'isOnline' for consistency
-                return response.data.isOnline !== undefined ?
-                    response.data.isOnline :
-                    response.data.online;
-            } catch (error) {
-                console.error('Error checking online status:', error);
-                return false; // Default to offline if there's an error
+                // Using socket.io emit-with-ack pattern
+                const response = await new Promise<{ isOnline: boolean }>((resolve, reject) => {
+                    this.socket?.emit('check_status', { workspaceId }, (response: any) => {
+                        if (response && typeof response.isOnline === 'boolean') {
+                            resolve(response);
+                        } else {
+                            reject(new Error('Invalid response from status check'));
+                        }
+                    });
+
+                    // Add a timeout
+                    setTimeout(() => reject(new Error('Status check timed out')), 5000);
+                });
+
+                return response.isOnline;
+            } catch (socketError) {
+                console.warn('Socket status check failed, fallback to REST API', socketError);
+                // Fall back to REST API if socket fails
             }
+        }
+
+        // Fallback to REST API
+        try {
+            const response = await fetch(`${API_URL}/chat/status/workspace_id=${workspaceId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to check online status');
+            }
+
+            const data = await response.json();
+            return data.isOnline;
+        } catch (error) {
+            console.error('Error checking online status:', error);
+            return false; // Default to offline if error
         }
     },
 

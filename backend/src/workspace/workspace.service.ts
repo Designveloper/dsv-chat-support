@@ -11,13 +11,14 @@ export class WorkspaceService {
     private workspacesRepository: Repository<WorkSpace>,
   ) { }
 
-  async create(ownerId: number, name: string, serviceType?: string): Promise<WorkSpace> {
+  async create(ownerId: number, name: string, serviceType?: string, entityTypeId: number = 1): Promise<WorkSpace> {
     const id = uuidv4();
     const workspace = this.workspacesRepository.create({
       id,
       name,
       owner_id: ownerId,
       service_type_slack: serviceType,
+      entity_type_id: entityTypeId,
     });
     return this.workspacesRepository.save(workspace);
   }

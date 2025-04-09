@@ -1,21 +1,22 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ChatSessionService } from './chat-session.service';
 import { ChatSessionController } from './chat-session.controller';
-import { ChatGateway } from './chat.gateway';
+import { ChatSessionService } from './chat-session.service';
 import { ChatSession } from './chat-session.entity';
-import { WorkSpace } from '../workspace/workspace.entity';
+import { WorkspaceModule } from '../workspace/workspace.module';
 import { SlackModule } from '../slack/slack.module';
-import { WorkspaceModule } from 'src/workspace/workspace.module';
+import { ChatGateway } from './chat.gateway';
+import { EavModule } from '../eav/eav.module'; // Import EavModule to access WorkspaceSettingsService
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([ChatSession, WorkSpace]),
-        WorkspaceModule,
+        TypeOrmModule.forFeature([ChatSession]),
+        forwardRef(() => WorkspaceModule),
         forwardRef(() => SlackModule),
+        EavModule,
     ],
-    providers: [ChatSessionService, ChatGateway],
     controllers: [ChatSessionController],
+    providers: [ChatSessionService, ChatGateway],
     exports: [ChatSessionService],
 })
 export class ChatSessionModule { }

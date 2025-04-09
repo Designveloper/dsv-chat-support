@@ -29929,27 +29929,39 @@ var ChatWidgetApp = (() => {
     // Check slack online status
     checkOnlineStatus(workspaceId) {
       return __async(this, null, function* () {
-        var _a;
-        if ((_a = this.socket) == null ? void 0 : _a.connected) {
-          console.log("Checking status via socket:", workspaceId);
-          return new Promise((resolve) => {
-            var _a2;
-            (_a2 = this.socket) == null ? void 0 : _a2.emit("check_status", { workspaceId }, (data) => {
-              console.log("Received status response:", data);
-              resolve(data.isOnline);
-            });
-          });
-        } else {
+        if (this.socket && this.socket.connected) {
           try {
-            console.log("Checking status via REST:", workspaceId);
-            const response = yield axios_default.get(
-              `${API_URL}/chat/status?workspace_id=${workspaceId}`
-            );
-            return response.data.isOnline !== void 0 ? response.data.isOnline : response.data.online;
-          } catch (error) {
-            console.error("Error checking online status:", error);
-            return false;
+            const response = yield new Promise((resolve, reject) => {
+              var _a;
+              (_a = this.socket) == null ? void 0 : _a.emit("check_status", { workspaceId }, (response2) => {
+                if (response2 && typeof response2.isOnline === "boolean") {
+                  resolve(response2);
+                } else {
+                  reject(new Error("Invalid response from status check"));
+                }
+              });
+              setTimeout(() => reject(new Error("Status check timed out")), 5e3);
+            });
+            return response.isOnline;
+          } catch (socketError) {
+            console.warn("Socket status check failed, fallback to REST API", socketError);
           }
+        }
+        try {
+          const response = yield fetch(`${API_URL}/chat/status/workspace_id=${workspaceId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+          if (!response.ok) {
+            throw new Error("Failed to check online status");
+          }
+          const data = yield response.json();
+          return data.isOnline;
+        } catch (error) {
+          console.error("Error checking online status:", error);
+          return false;
         }
       });
     },

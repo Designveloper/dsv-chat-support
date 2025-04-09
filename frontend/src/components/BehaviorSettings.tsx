@@ -1,51 +1,237 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Workspace } from "../services/workspaceService";
 import { useOutletContext } from "react-router-dom";
+import { workspaceSettingsService } from "../services/workspaceSettingsService";
+// import { chatService } from "../services/chatService";
 import "./BehaviorSettings.scss";
 
 type ContextType = { workspace: Workspace | null };
+
+// Define a type for the settings state
+interface SettingsState {
+  presenceDetection: string;
+  visitorIdentification: string;
+  autoResponseEnabled: boolean;
+  autoResponseMessage: string;
+  offlineTransition: string;
+  showUnreadCount: boolean;
+}
 
 const BehaviorSettings = () => {
   const { workspace } = useOutletContext<ContextType>();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     null
   );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // const [isOnline, setIsOnline] = useState<boolean>(false);
 
   // Form state
-  const [autoUpdateStatus, setAutoUpdateStatus] = useState(true);
-  const [presenceDetection, setPresenceDetection] = useState("auto");
-  const [visitorIdentification, setVisitorIdentification] = useState("prompt");
-  const [autoResponseEnabled, setAutoResponseEnabled] = useState(true);
-  const [autoResponseMessage, setAutoResponseMessage] =
-    useState("One moment please.");
-  const [offlineTransition, setOfflineTransition] = useState("3min");
-  const [showUnreadCount, setShowUnreadCount] = useState(true);
+  const [settings, setSettings] = useState<SettingsState>({
+    // autoUpdateStatus: true,
+    presenceDetection: "auto",
+    visitorIdentification: "prompt",
+    autoResponseEnabled: true,
+    autoResponseMessage: "One moment please.",
+    offlineTransition: "3min",
+    showUnreadCount: true,
+  });
 
+  // Reference to the original settings for change tracking
+  const originalSettingsRef = useRef<SettingsState | null>(null);
+
+  // Load workspace and settings
   useEffect(() => {
     if (workspace) {
       setCurrentWorkspace(workspace);
+      loadWorkspaceSettings(workspace.id);
+      // checkOnlineStatus(workspace.id);
     }
   }, [workspace]);
+
+  // const checkOnlineStatus = async (workspaceId: string) => {
+  //   try {
+  //     const online = await chatService.checkOnlineStatus(workspaceId);
+  //     setIsOnline(online);
+  //   } catch (error) {
+  //     console.error("Error checking online status:", error);
+  //     setIsOnline(false);
+  //   }
+  // };
+
+  const loadWorkspaceSettings = async (workspaceId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // First check if settings already exist
+      // const settingsInitialized =
+      //   await workspaceSettingsService.checkIfSettingsInitialized(workspaceId);
+
+      // Only initialize if needed
+      // if (!settingsInitialized) {
+      //   console.log("Settings not initialized, initializing now...");
+      //   await workspaceSettingsService.initializeSettings(workspaceId);
+      // }
+
+      const fetchedSettings = await workspaceSettingsService.getSettings(
+        workspaceId
+      );
+
+      // Map backend settings to frontend state
+      const mappedSettings: SettingsState = {
+        presenceDetection: fetchedSettings.presence_detection ?? "auto",
+        visitorIdentification:
+          fetchedSettings.visitor_identification ?? "prompt",
+        autoResponseEnabled: fetchedSettings.auto_response_enabled ?? true,
+        autoResponseMessage:
+          fetchedSettings.auto_response_message ?? "One moment please.",
+        offlineTransition: fetchedSettings.offline_transition ?? "3min",
+        showUnreadCount: fetchedSettings.show_unread_count ?? true,
+      };
+
+      // Update the form state
+      setSettings(mappedSettings);
+
+      // Save the original settings for comparison later
+      originalSettingsRef.current = { ...mappedSettings };
+    } catch (error) {
+      console.error("Error loading settings:", error);
+      setError("Failed to load settings. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle individual setting changes
+  const handleSettingChange = (
+    name: keyof SettingsState,
+    value: SettingsState[keyof SettingsState]
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving behavior settings...");
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    if (!currentWorkspace) {
+      setError("No workspace selected");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Compare current settings with original settings
+      const changedSettings: Partial<SettingsState> = {};
+      const original = originalSettingsRef.current;
+
+      if (!original) {
+        setError(
+          "Unable to determine changed settings. Please reload the page."
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (settings.presenceDetection !== original.presenceDetection) {
+        changedSettings.presenceDetection = settings.presenceDetection;
+      }
+
+      if (settings.visitorIdentification !== original.visitorIdentification) {
+        changedSettings.visitorIdentification = settings.visitorIdentification;
+      }
+
+      if (settings.autoResponseEnabled !== original.autoResponseEnabled) {
+        changedSettings.autoResponseEnabled = settings.autoResponseEnabled;
+      }
+
+      if (settings.autoResponseMessage !== original.autoResponseMessage) {
+        changedSettings.autoResponseMessage = settings.autoResponseMessage;
+      }
+
+      if (settings.offlineTransition !== original.offlineTransition) {
+        changedSettings.offlineTransition = settings.offlineTransition;
+      }
+
+      if (settings.showUnreadCount !== original.showUnreadCount) {
+        changedSettings.showUnreadCount = settings.showUnreadCount;
+      }
+
+      // If nothing changed, show a message and return
+      if (Object.keys(changedSettings).length === 0) {
+        setSuccessMessage("No changes detected");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Updating with changed settings:", changedSettings);
+
+      // Only send the changed settings to the backend
+      await workspaceSettingsService.updateSettings(
+        currentWorkspace.id,
+        changedSettings
+      );
+
+      // Update the original settings reference after successful save
+      originalSettingsRef.current = { ...settings };
+
+      // Check online status again in case auto-update setting changed
+      // if (
+      //   changedSettings.autoUpdateStatus !== undefined ||
+      //   changedSettings.presenceDetection !== undefined
+      // ) {
+      //   checkOnlineStatus(currentWorkspace.id);
+      // }
+
+      setSuccessMessage(`Settings saved successfully!`);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      setError("Failed to save settings. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="behavior-settings">
       <h2>Presence and widget behavior</h2>
 
-      <div className="behavior-settings__status-section">
+      {loading && <div className="behavior-settings__loading">Loading...</div>}
+
+      {error && <div className="behavior-settings__error">{error}</div>}
+
+      {successMessage && (
+        <div className="behavior-settings__success">{successMessage}</div>
+      )}
+
+      {/* <div className="behavior-settings__status-section">
         <div className="behavior-settings__status-label">
           Current Status{" "}
-          <span className="behavior-settings__status-badge behavior-settings__status-badge--offline">
-            offline
+          <span
+            className={`behavior-settings__status-badge ${
+              isOnline
+                ? "behavior-settings__status-badge--online"
+                : "behavior-settings__status-badge--offline"
+            }`}
+          >
+            {isOnline ? "online" : "offline"}
           </span>
           {currentWorkspace?.selected_channel_id && (
             <span className="behavior-settings__status-detail">
-              all operators away from {currentWorkspace.name}
+              {isOnline ? "operators available in" : "all operators away from"}{" "}
+              {currentWorkspace.name}
             </span>
           )}
         </div>
@@ -54,8 +240,13 @@ const BehaviorSettings = () => {
           <label className="behavior-settings__switch">
             <input
               type="checkbox"
-              checked={autoUpdateStatus}
-              onChange={() => setAutoUpdateStatus(!autoUpdateStatus)}
+              checked={settings.autoUpdateStatus}
+              onChange={() =>
+                handleSettingChange(
+                  "autoUpdateStatus",
+                  !settings.autoUpdateStatus
+                )
+              }
             />
             <span className="behavior-settings__slider"></span>
           </label>
@@ -66,7 +257,7 @@ const BehaviorSettings = () => {
             (what does this mean?)
           </span>
         </div>
-      </div>
+      </div> */}
 
       <div className="behavior-settings__section">
         <h3>Presence detection</h3>
@@ -77,8 +268,8 @@ const BehaviorSettings = () => {
               type="radio"
               name="presenceDetection"
               value="auto"
-              checked={presenceDetection === "auto"}
-              onChange={() => setPresenceDetection("auto")}
+              checked={settings.presenceDetection === "auto"}
+              onChange={() => handleSettingChange("presenceDetection", "auto")}
             />
             <span className="behavior-settings__radio-text">
               Automatically detect when your team is online and turn chat on/off
@@ -91,8 +282,10 @@ const BehaviorSettings = () => {
               type="radio"
               name="presenceDetection"
               value="manual"
-              checked={presenceDetection === "manual"}
-              onChange={() => setPresenceDetection("manual")}
+              checked={settings.presenceDetection === "manual"}
+              onChange={() =>
+                handleSettingChange("presenceDetection", "manual")
+              }
             />
             <span className="behavior-settings__radio-text">
               Do not try to detect presence in{" "}
@@ -112,8 +305,10 @@ const BehaviorSettings = () => {
               type="radio"
               name="visitorIdentification"
               value="none"
-              checked={visitorIdentification === "none"}
-              onChange={() => setVisitorIdentification("none")}
+              checked={settings.visitorIdentification === "none"}
+              onChange={() =>
+                handleSettingChange("visitorIdentification", "none")
+              }
             />
             <span className="behavior-settings__radio-text">
               Let them start chatting right away
@@ -125,17 +320,15 @@ const BehaviorSettings = () => {
               type="radio"
               name="visitorIdentification"
               value="prompt"
-              checked={visitorIdentification === "prompt"}
-              onChange={() => setVisitorIdentification("prompt")}
+              checked={settings.visitorIdentification === "prompt"}
+              onChange={() =>
+                handleSettingChange("visitorIdentification", "prompt")
+              }
             />
             <span className="behavior-settings__radio-text">
               Prompt visitors for email and name
             </span>
           </label>
-        </div>
-
-        <div className="behavior-settings__help-link">
-          <a href="#">Learn more about this feature</a>
         </div>
       </div>
 
@@ -150,8 +343,8 @@ const BehaviorSettings = () => {
               type="radio"
               name="autoResponse"
               value="enabled"
-              checked={autoResponseEnabled}
-              onChange={() => setAutoResponseEnabled(true)}
+              checked={settings.autoResponseEnabled}
+              onChange={() => handleSettingChange("autoResponseEnabled", true)}
             />
             <span className="behavior-settings__radio-text">
               Send auto response message
@@ -163,8 +356,8 @@ const BehaviorSettings = () => {
               type="radio"
               name="autoResponse"
               value="disabled"
-              checked={!autoResponseEnabled}
-              onChange={() => setAutoResponseEnabled(false)}
+              checked={!settings.autoResponseEnabled}
+              onChange={() => handleSettingChange("autoResponseEnabled", false)}
             />
             <span className="behavior-settings__radio-text">
               Do not send an auto response message
@@ -182,8 +375,11 @@ const BehaviorSettings = () => {
         <div className="behavior-settings__input-wrapper">
           <textarea
             className="behavior-settings__textarea"
-            value={autoResponseMessage}
-            onChange={(e) => setAutoResponseMessage(e.target.value)}
+            value={settings.autoResponseMessage}
+            onChange={(e) =>
+              handleSettingChange("autoResponseMessage", e.target.value)
+            }
+            disabled={!settings.autoResponseEnabled}
             rows={3}
           />
         </div>
@@ -198,8 +394,10 @@ const BehaviorSettings = () => {
         <div className="behavior-settings__select-wrapper">
           <select
             className="behavior-settings__select"
-            value={offlineTransition}
-            onChange={(e) => setOfflineTransition(e.target.value)}
+            value={settings.offlineTransition}
+            onChange={(e) =>
+              handleSettingChange("offlineTransition", e.target.value)
+            }
           >
             <option value="3min">
               Allow them to chat until they have not sent or received a message
@@ -235,8 +433,8 @@ const BehaviorSettings = () => {
               type="radio"
               name="unreadCount"
               value="show"
-              checked={showUnreadCount}
-              onChange={() => setShowUnreadCount(true)}
+              checked={settings.showUnreadCount}
+              onChange={() => handleSettingChange("showUnreadCount", true)}
             />
             <span className="behavior-settings__radio-text">
               Show unread count
@@ -248,8 +446,8 @@ const BehaviorSettings = () => {
               type="radio"
               name="unreadCount"
               value="hide"
-              checked={!showUnreadCount}
-              onChange={() => setShowUnreadCount(false)}
+              checked={!settings.showUnreadCount}
+              onChange={() => handleSettingChange("showUnreadCount", false)}
             />
             <span className="behavior-settings__radio-text">
               Do not show unread count
@@ -263,8 +461,9 @@ const BehaviorSettings = () => {
           className="behavior-settings__submit-button"
           onClick={handleSubmit}
           type="button"
+          disabled={loading}
         >
-          Save Changes
+          {loading ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>
