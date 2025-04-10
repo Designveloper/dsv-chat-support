@@ -16,7 +16,7 @@ export class ChatSessionController {
     }
 
     @Post('message')
-    async sendMessage(@Body() body: { session_id: string; message: string; userInfo?: { email: string }, currentPage?: string }, @Req() request: Request) {
+    async sendMessage(@Body() body: { session_id: string; message: string; userInfo?: { email: string, userId?: string }, currentPage?: string }, @Req() request: Request) {
         try {
             const { session_id, message, userInfo, currentPage } = body;
 

@@ -10,10 +10,18 @@ export class WorkspaceSettingsController {
     constructor(private readonly workspaceSettingsService: WorkspaceSettingsService) { }
 
     @Get(':workspaceId')
-    @UseGuards(JwtAuthGuard)
-    async getSettings(@Param('workspaceId') workspaceId: string, @Request() req) {
-        const settings = await this.workspaceSettingsService.getAllSettings(workspaceId);
-        return { settings };
+    async getSettings(@Param('workspaceId') workspaceId: string) {
+        try {
+            const settings = await this.workspaceSettingsService.getAllSettings(workspaceId);
+
+            return { settings };
+        } catch (error) {
+            this.logger.error(`Error getting workspace settings: ${error.message}`);
+            return {
+                error: error.message,
+                success: false
+            };
+        }
     }
 
     @Post(':workspaceId/update')
@@ -23,15 +31,10 @@ export class WorkspaceSettingsController {
         @Body() settings: UpdateWorkspaceSettingsDto,
     ) {
         try {
-            this.logger.log(`Updating settings for workspace: ${workspaceId}`);
-
-            const { changedSettings, updatedSettings } =
+            const { updatedSettings } =
                 await this.workspaceSettingsService.updateMultipleSettings(workspaceId, settings);
-
             return {
                 success: true,
-                message: changedSettings.length > 0 ? 'Settings updated successfully' : 'No settings were changed',
-                changedSettings,
                 settings: updatedSettings
             };
         } catch (error) {

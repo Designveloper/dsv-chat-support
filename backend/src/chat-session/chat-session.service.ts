@@ -43,7 +43,7 @@ export class ChatSessionService {
         return newSession;
     }
 
-    async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string }): Promise<void> {
+    async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string, userId?: string }): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
         if (!session) {
@@ -104,6 +104,13 @@ export class ChatSessionService {
                     userFields.push({
                         "type": "mrkdwn",
                         "text": "*Session ID:*\n" + sessionId
+                    });
+                }
+
+                if (userInfo?.userId) {
+                    userFields.push({
+                        "type": "mrkdwn",
+                        "text": "*Name:*\n" + userInfo.userId
                     });
                 }
 
@@ -206,7 +213,7 @@ export class ChatSessionService {
 
                 if (workspace.selected_channel_id) {
                     const userInfoText = userInfo?.email
-                        ? `*User:* ${userInfo.email}`
+                        ? `*User:* ${userInfo.email}${userInfo.userId ? `\n*Name:* ${userInfo.userId}` : ''}`
                         : "*Session ID:* " + sessionId;
                     const notificationBlocks = [
                         {
