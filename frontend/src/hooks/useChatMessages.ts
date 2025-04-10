@@ -1,14 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Socket } from 'socket.io-client';
 import { chatService } from '../services/chatService';
-import { useChatStore } from '../stores/useChatStore';
 
 export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void) {
     const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
     const [messageText, setMessageText] = useState<string>("");
-    const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { visitorData } = useChatStore((state) => state);
 
     // Load saved messages when session ID changes
     useEffect(() => {
@@ -17,31 +13,30 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
             if (savedMessages && savedMessages.length > 0) {
                 setMessages(savedMessages);
             } else {
-                // Set welcome message if no saved messages
                 setMessages([{
                     text: "Welcome! How can we help you today?",
                     isUser: false
                 }]);
             }
 
+            // Set up socket for messages
             const socket = chatService.setupWebSocketConnection(
                 sessionId,
                 (text) => {
                     setMessages((prev) => [...prev, { text, isUser: false }]);
                 },
                 (online) => {
-                    setIsOnline(online); // Update online status from WebSocket
+                    setIsOnline(online);
                 }
             );
 
-            socketRef.current = socket;
-
-            // Clean up on unmount
+            // Cleanup
             return () => {
-                chatService.disconnect();
+                if (socket) {
+                    socket.disconnect();
+                }
             };
         } else {
-            // Clear messages if no session
             setMessages([]);
         }
     }, [sessionId, setIsOnline]);
@@ -60,9 +55,19 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
 
     // Send a message
     const sendMessage = async () => {
-        const userInfo = { email: String(visitorData?.email || "") };
         if (!messageText.trim() || !sessionId) return;
 
+        // Get visitor data from localStorage
+        const visitorEmail = localStorage.getItem('chat_visitor_email');
+        const visitorName = localStorage.getItem('chat_visitor_name');
+
+        // Construct user info object
+        const userInfo = {
+            email: visitorEmail || '',
+            userId: visitorName || undefined
+        };
+
+        // Add message to UI
         const newMessage = { text: messageText, isUser: true };
         setMessages((prev) => [...prev, newMessage]);
 
@@ -70,6 +75,7 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
         setMessageText("");
 
         try {
+            // Send message with user info
             await chatService.sendMessage({
                 sessionId,
                 message: messageToSend,
@@ -83,7 +89,7 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
 
     // Set end chat message
     const setEndChatMessage = () => {
-        setMessages([{
+        setMessages((prev) => [...prev, {
             text: "Chat session ended. Thank you for chatting with us!",
             isUser: false
         }]);

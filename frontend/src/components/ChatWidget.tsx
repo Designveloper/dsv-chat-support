@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./ChatWidget.scss";
 import { useChatSession } from "../hooks/useChatSession";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useChatStore } from "../stores/useChatStore";
 import { useOfflineForm } from "../hooks/useOfflineForm";
+import { useVisitorIdentification } from "../hooks/useVisitorIdentification";
+import VisitorIdentificationForm from "./VisitorIdentificationForm";
+import { workspaceSettingsService } from "../services/workspaceSettingsService";
 import Button from "./Button";
 import Input from "./Input";
 
@@ -16,6 +19,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   const isOpen = useChatStore((state) => state.isOpen);
   const open = useChatStore((state) => state.open);
   const hide = useChatStore((state) => state.hide);
+  const [visitorIdentificationSetting, setVisitorIdentificationSetting] =
+    useState<string>("none");
+  const [needsIdentification, setNeedsIdentification] =
+    useState<boolean>(false);
+
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [showUnreadBadge, setShowUnreadBadge] = useState<boolean>(false);
+  const prevIsOpenRef = useRef<boolean>(isOpen);
+
   const {
     sessionId,
     activeWorkspace,
@@ -27,6 +39,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     startChatSession,
     endChatSession,
   } = useChatSession(workspaceId);
+
   const {
     messages,
     messageText,
@@ -35,6 +48,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     messagesEndRef,
     setEndChatMessage,
   } = useChatMessages(sessionId, setIsOnline);
+
   const {
     offlineEmail,
     setOfflineEmail,
@@ -47,21 +61,99 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     submitOfflineForm,
   } = useOfflineForm(activeWorkspace);
 
+  const { isIdentificationRequired, getStoredVisitorData } =
+    useVisitorIdentification(activeWorkspace);
+
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
 
+  // Initialize widget and check settings
   useEffect(() => {
     useChatStore.getState().initialize();
-  }, []);
+
+    // Fetch workspace settings
+    if (workspaceId) {
+      fetchSettings();
+    }
+  }, [workspaceId]);
+
+  // Fetch workspace settings
+  const fetchSettings = async () => {
+    if (!workspaceId) return;
+
+    try {
+      const settings = await workspaceSettingsService.getSettings(workspaceId);
+      console.log("🚀 ~ fetchSettings ~ settings:", settings);
+      setVisitorIdentificationSetting(
+        settings.visitor_identification || "none"
+      );
+      setShowUnreadBadge(settings.show_unread_count || false);
+      checkIdentificationRequired(settings.visitor_identification || "none");
+    } catch (error) {
+      console.error("Failed to fetch workspace settings:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!showUnreadBadge) return;
+
+    if (messages.length > 0 && !isOpen) {
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage.isUser) {
+        setUnreadCount((prevCount) => prevCount + 1);
+      }
+    }
+  }, [messages, isOpen, showUnreadBadge]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Update document title when unread messages exist
+  useEffect(() => {
+    const originalTitle = document.title;
+
+    if (unreadCount > 0 && !isOpen && showUnreadBadge) {
+      document.title = `(${unreadCount}) ${originalTitle}`;
+    } else {
+      document.title = originalTitle;
+    }
+
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [unreadCount, isOpen, showUnreadBadge]);
+
+  // Check if identification is required
+  const checkIdentificationRequired = (setting: string) => {
+    const required = isIdentificationRequired(setting);
+    setNeedsIdentification(required);
+  };
+
+  // Handle completing the identification process
+  const handleIdentificationComplete = () => {
+    setNeedsIdentification(false);
+
+    // Start chat session after identification
+    if (isOnline && !sessionId) {
+      startChatSession();
+    }
+  };
 
   const handleOpenWidget = async () => {
     console.log("Opening widget");
     if (activeWorkspace) {
       checkOnlineStatus();
     }
-    if (isOnline && !sessionId) {
+
+    // Only start chat automatically if identification isn't needed
+    if (isOnline && !sessionId && !needsIdentification) {
       await startChatSession();
     }
+
     open();
   };
 
@@ -110,6 +202,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       return <div className="chat-widget__error">{error}</div>;
     }
 
+    // If offline, show offline form
     if (!isOnline) {
       if (offlineFormSubmitted) {
         return (
@@ -166,6 +259,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       );
     }
 
+    if (needsIdentification && isOnline) {
+      return (
+        <VisitorIdentificationForm
+          workspaceId={activeWorkspace}
+          onComplete={handleIdentificationComplete}
+        />
+      );
+    }
+
+    // Show confirmation screen for ending chat
     if (isConfirmingEnd) {
       return (
         <div className="chat-widget__confirmation">
@@ -241,10 +344,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
           >
             <div className="chat-widget__header">
               <h3 className="chat-widget__title">
-                {isOnline ? "Live Chat Support" : "Leave a Message"}
+                {!isOnline
+                  ? "Leave a Message"
+                  : needsIdentification
+                  ? "Welcome"
+                  : "Live Chat Support"}
               </h3>
               <div className="chat-widget__header-actions">
-                {isOnline && (
+                {isOnline && !needsIdentification && (
                   <Button
                     label="⋮"
                     onClick={toggleMenu}
@@ -276,11 +383,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
         )}
 
         {!isOpen && (
-          <Button
-            label="Chat Support"
-            onClick={handleOpenWidget}
-            className="chat-widget__toggle"
-          />
+          <div className="chat-widget__toggle-container">
+            <Button
+              label="Chat Support"
+              onClick={handleOpenWidget}
+              className="chat-widget__toggle"
+            />
+            {showUnreadBadge && unreadCount > 0 && (
+              <div className="chat-widget__unread-badge">{unreadCount}</div>
+            )}
+          </div>
         )}
       </div>
     </div>

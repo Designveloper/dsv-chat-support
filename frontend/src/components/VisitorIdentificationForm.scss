@@ -1,0 +1,45 @@
+.visitor-identification {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+        color: #333;
+        text-align: center;
+    }
+
+    p {
+        margin: 0 0 1.5rem 0;
+        color: #666;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    &__form-field {
+        margin-bottom: 1rem;
+    }
+
+    &__submit {
+        margin-top: auto;
+        align-self: stretch;
+    }
+
+    &__error {
+        background-color: #ffe8e8;
+        color: #d32f2f;
+        padding: 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        border-left: 3px solid #d32f2f;
+    }
+}

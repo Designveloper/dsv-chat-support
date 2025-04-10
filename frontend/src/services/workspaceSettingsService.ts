@@ -3,53 +3,40 @@ import { authService } from './authService';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface WorkspaceSettings {
-    auto_update_status?: boolean;
     presence_detection?: string;
     visitor_identification?: string;
-    auto_response_enabled?: boolean;
-    auto_response_message?: string;
-    offline_transition?: string;
+    no_response_action?: string;
+    no_response_delay?: string;
     show_unread_count?: boolean;
+    play_sound?: boolean;
 }
 
 interface UpdateSettingsPayload {
-    autoUpdateStatus?: boolean;
     presenceDetection?: string;
     visitorIdentification?: string;
-    autoResponseEnabled?: boolean;
-    autoResponseMessage?: string;
-    offlineTransition?: string;
+    noResponseAction?: string;
+    noResponseDelay?: string;
     showUnreadCount?: boolean;
+    playSound?: boolean;
 }
 
 export const workspaceSettingsService = {
     async getSettings(workspaceId: string): Promise<WorkspaceSettings> {
         try {
-            const accessToken = authService.getAccessToken();
-            if (!accessToken) {
-                throw new Error('No access token found');
-            }
-
             const response = await fetch(`${API_URL}/workspace-settings/${workspaceId}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 }
             });
-
-            if (response.status === 401) {
-                console.log('Token expired, refreshing...');
-                await authService.refreshAccessToken();
-                return this.getSettings(workspaceId);
-            }
 
             if (!response.ok) {
                 throw new Error('Failed to fetch workspace settings');
             }
 
             const data = await response.json();
-            return data.settings || {};
+
+            return data.settings;
         } catch (error) {
             console.error('Error fetching workspace settings:', error);
             throw error;
@@ -62,9 +49,6 @@ export const workspaceSettingsService = {
             if (!accessToken) {
                 throw new Error('No access token found');
             }
-
-            // Log what's being updated for debugging
-            console.log('Updating settings with changes:', changedSettings);
 
             const response = await fetch(`${API_URL}/workspace-settings/${workspaceId}/update`, {
                 method: 'POST',

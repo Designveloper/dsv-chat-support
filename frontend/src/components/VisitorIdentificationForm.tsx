@@ -1,0 +1,75 @@
+import React from "react";
+import { useVisitorIdentification } from "../hooks/useVisitorIdentification";
+import Input from "./Input";
+import Button from "./Button";
+import "./VisitorIdentificationForm.scss";
+
+interface VisitorIdentificationFormProps {
+  workspaceId: string | null;
+  onComplete: () => void;
+}
+
+const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
+  workspaceId,
+  onComplete,
+}) => {
+  const {
+    visitorEmail,
+    setVisitorEmail,
+    visitorName,
+    setVisitorName,
+    identificationLoading,
+    error,
+    submitVisitorIdentification,
+  } = useVisitorIdentification(workspaceId);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await submitVisitorIdentification();
+    if (success) {
+      onComplete();
+    }
+  };
+
+  return (
+    <div className="visitor-identification">
+      <h3>Before we start chatting</h3>
+      <p>Please let us know who you are so we can better assist you.</p>
+
+      {error && <div className="visitor-identification__error">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="visitor-identification__form">
+        <div className="visitor-identification__form-field">
+          <Input
+            id="visitor-email"
+            type="email"
+            label="Email"
+            value={visitorEmail}
+            onChange={(e) => setVisitorEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="visitor-identification__form-field">
+          <Input
+            id="visitor-name"
+            type="text"
+            label="Name (optional)"
+            value={visitorName}
+            onChange={(e) => setVisitorName(e.target.value)}
+          />
+        </div>
+
+        <Button
+          label={identificationLoading ? "Processing..." : "Start Chat"}
+          disabled={identificationLoading}
+          onClick={() => {}}
+          type="submit"
+          className="visitor-identification__submit"
+        />
+      </form>
+    </div>
+  );
+};
+
+export default VisitorIdentificationForm;

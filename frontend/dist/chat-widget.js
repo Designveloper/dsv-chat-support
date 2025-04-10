@@ -1174,7 +1174,7 @@ var ChatWidgetApp = (() => {
             }
             return dispatcher.useContext(Context);
           }
-          function useState6(initialState) {
+          function useState7(initialState) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useState(initialState);
           }
@@ -1182,7 +1182,7 @@ var ChatWidgetApp = (() => {
             var dispatcher = resolveDispatcher();
             return dispatcher.useReducer(reducer, initialArg, init);
           }
-          function useRef2(initialValue) {
+          function useRef3(initialValue) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useRef(initialValue);
           }
@@ -1976,8 +1976,8 @@ var ChatWidgetApp = (() => {
           exports.useLayoutEffect = useLayoutEffect;
           exports.useMemo = useMemo;
           exports.useReducer = useReducer;
-          exports.useRef = useRef2;
-          exports.useState = useState6;
+          exports.useRef = useRef3;
+          exports.useState = useState7;
           exports.useSyncExternalStore = useSyncExternalStore;
           exports.useTransition = useTransition;
           exports.version = ReactVersion;
@@ -2473,9 +2473,9 @@ var ChatWidgetApp = (() => {
           if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart === "function") {
             __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
           }
-          var React6 = require_react();
+          var React7 = require_react();
           var Scheduler = require_scheduler();
-          var ReactSharedInternals = React6.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+          var ReactSharedInternals = React7.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
           var suppressWarning = false;
           function setSuppressWarning(newSuppressWarning) {
             {
@@ -4082,7 +4082,7 @@ var ChatWidgetApp = (() => {
             {
               if (props.value == null) {
                 if (typeof props.children === "object" && props.children !== null) {
-                  React6.Children.forEach(props.children, function(child) {
+                  React7.Children.forEach(props.children, function(child) {
                     if (child == null) {
                       return;
                     }
@@ -23672,11 +23672,11 @@ var ChatWidgetApp = (() => {
   });
 
   // src/embed.tsx
-  var import_react8 = __toESM(require_react(), 1);
+  var import_react10 = __toESM(require_react(), 1);
   var import_client = __toESM(require_client(), 1);
 
   // src/components/ChatWidget.tsx
-  var import_react7 = __toESM(require_react(), 1);
+  var import_react9 = __toESM(require_react(), 1);
 
   // src/components/ChatWidget.scss
   var css = `#chat-widget-root .chat-widget {
@@ -23685,6 +23685,10 @@ var ChatWidgetApp = (() => {
   right: 20px;
   z-index: 1000;
   font-family: "Inter", sans-serif;
+}
+#chat-widget-root .chat-widget__toggle-container {
+  position: relative;
+  display: inline-block;
 }
 #chat-widget-root .chat-widget__toggle {
   width: 120px;
@@ -23703,6 +23707,24 @@ var ChatWidgetApp = (() => {
   background-color: rgb(54.34375, 15.421875, 55.078125);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+#chat-widget-root .chat-widget__unread-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #E01E5A;
+  color: white;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite;
 }
 #chat-widget-root .chat-widget__panel {
   position: absolute;
@@ -23966,6 +23988,17 @@ var ChatWidgetApp = (() => {
 }
 #chat-widget-root .chat-widget__offline-thanks p {
   color: #666;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }`;
   document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css));
 
@@ -29948,7 +29981,7 @@ var ChatWidgetApp = (() => {
           }
         }
         try {
-          const response = yield fetch(`${API_URL}/chat/status/workspace_id=${workspaceId}`, {
+          const response = yield fetch(`${API_URL}/chat/status?workspace_id=${workspaceId}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json"
@@ -30101,7 +30134,88 @@ var ChatWidgetApp = (() => {
   }
 
   // src/hooks/useChatMessages.ts
-  var import_react3 = __toESM(require_react(), 1);
+  var import_react2 = __toESM(require_react(), 1);
+  function useChatMessages(sessionId, setIsOnline) {
+    const [messages, setMessages] = (0, import_react2.useState)([]);
+    const [messageText, setMessageText] = (0, import_react2.useState)("");
+    const messagesEndRef = (0, import_react2.useRef)(null);
+    (0, import_react2.useEffect)(() => {
+      if (sessionId) {
+        const savedMessages = chatService.getSavedMessages(sessionId);
+        if (savedMessages && savedMessages.length > 0) {
+          setMessages(savedMessages);
+        } else {
+          setMessages([{
+            text: "Welcome! How can we help you today?",
+            isUser: false
+          }]);
+        }
+        const socket = chatService.setupWebSocketConnection(
+          sessionId,
+          (text) => {
+            setMessages((prev) => [...prev, { text, isUser: false }]);
+          },
+          (online) => {
+            setIsOnline(online);
+          }
+        );
+        return () => {
+          if (socket) {
+            socket.disconnect();
+          }
+        };
+      } else {
+        setMessages([]);
+      }
+    }, [sessionId, setIsOnline]);
+    (0, import_react2.useEffect)(() => {
+      if (sessionId && messages.length > 0) {
+        chatService.saveMessages(sessionId, messages);
+      }
+    }, [messages, sessionId]);
+    (0, import_react2.useEffect)(() => {
+      var _a;
+      (_a = messagesEndRef.current) == null ? void 0 : _a.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+    const sendMessage = () => __async(this, null, function* () {
+      if (!messageText.trim() || !sessionId) return;
+      const visitorEmail = localStorage.getItem("chat_visitor_email");
+      const visitorName = localStorage.getItem("chat_visitor_name");
+      const userInfo = {
+        email: visitorEmail || "",
+        userId: visitorName || void 0
+      };
+      const newMessage = { text: messageText, isUser: true };
+      setMessages((prev) => [...prev, newMessage]);
+      const messageToSend = messageText;
+      setMessageText("");
+      try {
+        yield chatService.sendMessage({
+          sessionId,
+          message: messageToSend,
+          userInfo,
+          currentPage: window.location.href
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    });
+    const setEndChatMessage = () => {
+      setMessages((prev) => [...prev, {
+        text: "Chat session ended. Thank you for chatting with us!",
+        isUser: false
+      }]);
+    };
+    return {
+      messages,
+      messageText,
+      setMessageText,
+      sendMessage,
+      messagesEndRef,
+      setMessages,
+      setEndChatMessage
+    };
+  }
 
   // node_modules/zustand/esm/vanilla.mjs
   var createStoreImpl = (createState) => {
@@ -30128,15 +30242,15 @@ var ChatWidgetApp = (() => {
   var createStore = (createState) => createState ? createStoreImpl(createState) : createStoreImpl;
 
   // node_modules/zustand/esm/react.mjs
-  var import_react2 = __toESM(require_react(), 1);
+  var import_react3 = __toESM(require_react(), 1);
   var identity = (arg) => arg;
   function useStore(api, selector = identity) {
-    const slice = import_react2.default.useSyncExternalStore(
+    const slice = import_react3.default.useSyncExternalStore(
       api.subscribe,
       () => selector(api.getState()),
       () => selector(api.getInitialState())
     );
-    import_react2.default.useDebugValue(slice);
+    import_react3.default.useDebugValue(slice);
     return slice;
   }
   var createImpl = (createState) => {
@@ -30191,85 +30305,6 @@ var ChatWidgetApp = (() => {
     }
   }));
 
-  // src/hooks/useChatMessages.ts
-  function useChatMessages(sessionId, setIsOnline) {
-    const [messages, setMessages] = (0, import_react3.useState)([]);
-    const [messageText, setMessageText] = (0, import_react3.useState)("");
-    const socketRef = (0, import_react3.useRef)(null);
-    const messagesEndRef = (0, import_react3.useRef)(null);
-    const { visitorData } = useChatStore((state) => state);
-    (0, import_react3.useEffect)(() => {
-      if (sessionId) {
-        const savedMessages = chatService.getSavedMessages(sessionId);
-        if (savedMessages && savedMessages.length > 0) {
-          setMessages(savedMessages);
-        } else {
-          setMessages([{
-            text: "Welcome! How can we help you today?",
-            isUser: false
-          }]);
-        }
-        const socket = chatService.setupWebSocketConnection(
-          sessionId,
-          (text) => {
-            setMessages((prev) => [...prev, { text, isUser: false }]);
-          },
-          (online) => {
-            setIsOnline(online);
-          }
-        );
-        socketRef.current = socket;
-        return () => {
-          chatService.disconnect();
-        };
-      } else {
-        setMessages([]);
-      }
-    }, [sessionId, setIsOnline]);
-    (0, import_react3.useEffect)(() => {
-      if (sessionId && messages.length > 0) {
-        chatService.saveMessages(sessionId, messages);
-      }
-    }, [messages, sessionId]);
-    (0, import_react3.useEffect)(() => {
-      var _a;
-      (_a = messagesEndRef.current) == null ? void 0 : _a.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-    const sendMessage = () => __async(this, null, function* () {
-      const userInfo = { email: String((visitorData == null ? void 0 : visitorData.email) || "") };
-      if (!messageText.trim() || !sessionId) return;
-      const newMessage = { text: messageText, isUser: true };
-      setMessages((prev) => [...prev, newMessage]);
-      const messageToSend = messageText;
-      setMessageText("");
-      try {
-        yield chatService.sendMessage({
-          sessionId,
-          message: messageToSend,
-          userInfo,
-          currentPage: window.location.href
-        });
-      } catch (error) {
-        console.error("Error sending message:", error);
-      }
-    });
-    const setEndChatMessage = () => {
-      setMessages([{
-        text: "Chat session ended. Thank you for chatting with us!",
-        isUser: false
-      }]);
-    };
-    return {
-      messages,
-      messageText,
-      setMessageText,
-      sendMessage,
-      messagesEndRef,
-      setMessages,
-      setEndChatMessage
-    };
-  }
-
   // src/hooks/useOfflineForm.ts
   var import_react4 = __toESM(require_react(), 1);
   function useOfflineForm(workspaceId) {
@@ -30314,100 +30349,78 @@ var ChatWidgetApp = (() => {
     };
   }
 
-  // src/components/Button.tsx
+  // src/hooks/useVisitorIdentification.ts
   var import_react5 = __toESM(require_react(), 1);
+  function useVisitorIdentification(workspaceId) {
+    const [visitorEmail, setVisitorEmail] = (0, import_react5.useState)("");
+    const [visitorName, setVisitorName] = (0, import_react5.useState)("");
+    const [identificationSubmitted, setIdentificationSubmitted] = (0, import_react5.useState)(false);
+    const [identificationLoading, setIdentificationLoading] = (0, import_react5.useState)(false);
+    const [error, setError] = (0, import_react5.useState)(null);
+    const submitVisitorIdentification = () => __async(this, null, function* () {
+      if (!workspaceId || !visitorEmail.trim()) {
+        setError("Email is required");
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(visitorEmail)) {
+        setError("Please enter a valid email address");
+        return;
+      }
+      try {
+        setError(null);
+        setIdentificationLoading(true);
+        localStorage.setItem("chat_visitor_email", visitorEmail);
+        if (visitorName) {
+          localStorage.setItem("chat_visitor_name", visitorName);
+        }
+        sessionStorage.setItem("chat_identified", "true");
+        setIdentificationSubmitted(true);
+        setIdentificationLoading(false);
+        return true;
+      } catch (error2) {
+        console.error("Error submitting visitor identification:", error2);
+        setError("Failed to submit your information. Please try again.");
+        setIdentificationLoading(false);
+        return false;
+      }
+    });
+    const isIdentificationRequired = (visitorIdentificationSetting) => {
+      if (visitorIdentificationSetting !== "prompt") {
+        return false;
+      }
+      return sessionStorage.getItem("chat_identified") !== "true";
+    };
+    const getStoredVisitorData = () => {
+      const email = localStorage.getItem("chat_visitor_email");
+      const name = localStorage.getItem("chat_visitor_name");
+      return {
+        email: email || "",
+        name: name || ""
+      };
+    };
+    return {
+      visitorEmail,
+      setVisitorEmail,
+      visitorName,
+      setVisitorName,
+      identificationSubmitted,
+      identificationLoading,
+      error,
+      submitVisitorIdentification,
+      isIdentificationRequired,
+      getStoredVisitorData
+    };
+  }
 
-  // src/components/Button.scss
-  var css2 = `.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border: none;
-  outline: none;
-}
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  background-color: #5C4BFF;
-  color: white;
-}
-.btn--primary:hover:not(:disabled) {
-  background-color: rgb(45.8166666667, 24, 255);
-}
-
-.btn--outline {
-  background-color: transparent;
-  color: #5C4BFF;
-  border: 1px solid #5C4BFF;
-}
-.btn--outline:hover:not(:disabled) {
-  background-color: rgb(45.8166666667, 24, 255);
-  color: white;
-}
-
-.btn--small {
-  padding: 6px 12px;
-  font-size: 0.875rem;
-}
-
-.btn--medium {
-  padding: 8px 16px;
-  font-size: 1rem;
-}
-
-.btn--large {
-  padding: 10px 20px;
-  font-size: 1.125rem;
-}
-
-.btn--full {
-  width: 100%;
-}`;
-  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css2));
-
-  // src/components/Button.tsx
-  var Button = ({
-    label,
-    type = "button",
-    className = "",
-    onClick,
-    disabled = false,
-    variant = "primary",
-    size = "medium",
-    fullWidth = false
-  }) => {
-    const buttonClasses = [
-      "btn",
-      `btn--${variant}`,
-      `btn--${size}`,
-      `${fullWidth ? "btn--full" : ""}`,
-      className
-    ].filter(Boolean).join(" ");
-    return /* @__PURE__ */ import_react5.default.createElement(
-      "button",
-      {
-        type,
-        className: buttonClasses,
-        onClick,
-        disabled
-      },
-      label
-    );
-  };
-  var Button_default = Button;
+  // src/components/VisitorIdentificationForm.tsx
+  var import_react8 = __toESM(require_react(), 1);
 
   // src/components/Input.tsx
   var import_react6 = __toESM(require_react(), 1);
 
   // src/components/Input.scss
-  var css3 = `/* Base input container */
+  var css2 = `/* Base input container */
 .input {
   display: flex;
   flex-direction: column;
@@ -30498,7 +30511,7 @@ var ChatWidgetApp = (() => {
   margin-top: 4px;
   color: #f44336;
 }`;
-  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css3));
+  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css2));
 
   // src/components/Input.tsx
   var Input = ({
@@ -30543,11 +30556,463 @@ var ChatWidgetApp = (() => {
   };
   var Input_default = Input;
 
+  // src/components/Button.tsx
+  var import_react7 = __toESM(require_react(), 1);
+
+  // src/components/Button.scss
+  var css3 = `.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background-color: #5C4BFF;
+  color: white;
+}
+.btn--primary:hover:not(:disabled) {
+  background-color: rgb(45.8166666667, 24, 255);
+}
+
+.btn--outline {
+  background-color: transparent;
+  color: #5C4BFF;
+  border: 1px solid #5C4BFF;
+}
+.btn--outline:hover:not(:disabled) {
+  background-color: rgb(45.8166666667, 24, 255);
+  color: white;
+}
+
+.btn--small {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+.btn--medium {
+  padding: 8px 16px;
+  font-size: 1rem;
+}
+
+.btn--large {
+  padding: 10px 20px;
+  font-size: 1.125rem;
+}
+
+.btn--full {
+  width: 100%;
+}`;
+  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css3));
+
+  // src/components/Button.tsx
+  var Button = ({
+    label,
+    type = "button",
+    className = "",
+    onClick,
+    disabled = false,
+    variant = "primary",
+    size = "medium",
+    fullWidth = false
+  }) => {
+    const buttonClasses = [
+      "btn",
+      `btn--${variant}`,
+      `btn--${size}`,
+      `${fullWidth ? "btn--full" : ""}`,
+      className
+    ].filter(Boolean).join(" ");
+    return /* @__PURE__ */ import_react7.default.createElement(
+      "button",
+      {
+        type,
+        className: buttonClasses,
+        onClick,
+        disabled
+      },
+      label
+    );
+  };
+  var Button_default = Button;
+
+  // src/components/VisitorIdentificationForm.scss
+  var css4 = `.visitor-identification {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.visitor-identification h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+}
+.visitor-identification p {
+  margin: 0 0 1.5rem 0;
+  color: #666;
+  text-align: center;
+  font-size: 0.9rem;
+}
+.visitor-identification__form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.visitor-identification__form-field {
+  margin-bottom: 1rem;
+}
+.visitor-identification__submit {
+  margin-top: auto;
+  align-self: stretch;
+}
+.visitor-identification__error {
+  background-color: #ffe8e8;
+  color: #d32f2f;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border-left: 3px solid #d32f2f;
+}`;
+  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css4));
+
+  // src/components/VisitorIdentificationForm.tsx
+  var VisitorIdentificationForm = ({
+    workspaceId,
+    onComplete
+  }) => {
+    const {
+      visitorEmail,
+      setVisitorEmail,
+      visitorName,
+      setVisitorName,
+      identificationLoading,
+      error,
+      submitVisitorIdentification
+    } = useVisitorIdentification(workspaceId);
+    const handleSubmit = (e) => __async(void 0, null, function* () {
+      e.preventDefault();
+      const success = yield submitVisitorIdentification();
+      if (success) {
+        onComplete();
+      }
+    });
+    return /* @__PURE__ */ import_react8.default.createElement("div", { className: "visitor-identification" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "Before we start chatting"), /* @__PURE__ */ import_react8.default.createElement("p", null, "Please let us know who you are so we can better assist you."), error && /* @__PURE__ */ import_react8.default.createElement("div", { className: "visitor-identification__error" }, error), /* @__PURE__ */ import_react8.default.createElement("form", { onSubmit: handleSubmit, className: "visitor-identification__form" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react8.default.createElement(
+      Input_default,
+      {
+        id: "visitor-email",
+        type: "email",
+        label: "Email",
+        value: visitorEmail,
+        onChange: (e) => setVisitorEmail(e.target.value),
+        required: true
+      }
+    )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react8.default.createElement(
+      Input_default,
+      {
+        id: "visitor-name",
+        type: "text",
+        label: "Name (optional)",
+        value: visitorName,
+        onChange: (e) => setVisitorName(e.target.value)
+      }
+    )), /* @__PURE__ */ import_react8.default.createElement(
+      Button_default,
+      {
+        label: identificationLoading ? "Processing..." : "Start Chat",
+        disabled: identificationLoading,
+        onClick: () => {
+        },
+        type: "submit",
+        className: "visitor-identification__submit"
+      }
+    )));
+  };
+  var VisitorIdentificationForm_default = VisitorIdentificationForm;
+
+  // src/services/authService.ts
+  var API_URL2 = "http://localhost:3000";
+  var authService = {
+    signup(email, password) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Signup failed");
+        }
+        return response.json();
+      });
+    },
+    confirmEmail(email, code) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/confirm`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, code })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Failed to confirm email");
+        }
+      });
+    },
+    resendConfirmation(email) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/resend-confirmation`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Failed to resend confirmation code");
+        }
+      });
+    },
+    forgotPassword(email) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/forgot-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Failed to send password reset code");
+        }
+      });
+    },
+    resetPassword(email, code, newPassword) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/reset-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, code, newPassword })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Failed to reset password");
+        }
+      });
+    },
+    login(email, password) {
+      return __async(this, null, function* () {
+        const response = yield fetch(`${API_URL2}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password })
+        });
+        if (!response.ok) {
+          const errorData = yield response.json();
+          throw new Error(errorData.message || "Login failed");
+        }
+        return response.json();
+      });
+    },
+    refreshAccessToken() {
+      return __async(this, null, function* () {
+        try {
+          const response = yield axios_default.post(
+            `${API_URL2}/auth/refresh`,
+            {},
+            {
+              withCredentials: true,
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
+          const { accessToken } = response.data;
+          localStorage.setItem("accessToken", accessToken);
+          return accessToken;
+        } catch (e) {
+          this.clearTokens();
+          throw new Error("Session expired. Please login again");
+        }
+      });
+    },
+    getUserProfile() {
+      return __async(this, null, function* () {
+        try {
+          const accessToken = this.getAccessToken();
+          if (!accessToken) {
+            throw new Error("Access token not found");
+          }
+          const response = yield fetch(`${API_URL2}/users/profile`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json"
+            },
+            credentials: "include"
+          });
+          if (!response.ok) {
+            if (response.status === 401) {
+              console.log("Access token expired. Refreshing token...");
+              yield this.refreshAccessToken();
+              return this.getUserProfile();
+            }
+            throw new Error("Failed to fetch user profile");
+          }
+          return response.json();
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+      });
+    },
+    logout() {
+      return __async(this, null, function* () {
+        try {
+          yield fetch(`${API_URL2}/auth/logout`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            credentials: "include"
+          });
+          this.clearTokens();
+        } catch (error) {
+          console.error(error);
+          throw new Error("Failed to logout");
+        }
+      });
+    },
+    changePassword(currentPassword, newPassword) {
+      return __async(this, null, function* () {
+        const accessToken = this.getAccessToken();
+        if (!accessToken) {
+          throw new Error("Access token not found");
+        }
+        const response = yield fetch(`${API_URL2}/auth/change-password`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        console.log(response);
+        if (!response.ok) {
+          const errorData = yield response.json();
+          if (response.status === 401 && !errorData.message.includes("incorrect")) {
+            yield this.refreshAccessToken();
+            return this.changePassword(currentPassword, newPassword);
+          }
+          throw new Error(errorData.message || "Failed to change password");
+        }
+      });
+    },
+    saveTokens(accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    },
+    getAccessToken() {
+      return localStorage.getItem("accessToken");
+    },
+    clearTokens() {
+      localStorage.removeItem("accessToken");
+    },
+    isAuthenticated() {
+      return !!this.getAccessToken();
+    }
+  };
+
+  // src/services/workspaceSettingsService.ts
+  var API_URL3 = "http://localhost:3000";
+  var workspaceSettingsService = {
+    getSettings(workspaceId) {
+      return __async(this, null, function* () {
+        try {
+          const response = yield fetch(`${API_URL3}/workspace-settings/${workspaceId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+          if (!response.ok) {
+            throw new Error("Failed to fetch workspace settings");
+          }
+          const data = yield response.json();
+          return data.settings;
+        } catch (error) {
+          console.error("Error fetching workspace settings:", error);
+          throw error;
+        }
+      });
+    },
+    updateSettings(workspaceId, changedSettings) {
+      return __async(this, null, function* () {
+        try {
+          const accessToken = authService.getAccessToken();
+          if (!accessToken) {
+            throw new Error("No access token found");
+          }
+          const response = yield fetch(`${API_URL3}/workspace-settings/${workspaceId}/update`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(changedSettings)
+          });
+          if (response.status === 401) {
+            console.log("Token expired, refreshing...");
+            yield authService.refreshAccessToken();
+            return this.updateSettings(workspaceId, changedSettings);
+          }
+          if (!response.ok) {
+            const errorData = yield response.json();
+            throw new Error(errorData.message || "Failed to update workspace settings");
+          }
+          const data = yield response.json();
+          return data.settings || {};
+        } catch (error) {
+          console.error("Error updating workspace settings:", error);
+          throw error;
+        }
+      });
+    }
+  };
+
   // src/components/ChatWidget.tsx
   var ChatWidget = ({ workspaceId }) => {
     const isOpen = useChatStore((state) => state.isOpen);
     const open = useChatStore((state) => state.open);
     const hide = useChatStore((state) => state.hide);
+    const [visitorIdentificationSetting, setVisitorIdentificationSetting] = (0, import_react9.useState)("none");
+    const [needsIdentification, setNeedsIdentification] = (0, import_react9.useState)(false);
+    const [unreadCount, setUnreadCount] = (0, import_react9.useState)(0);
+    const [showUnreadBadge, setShowUnreadBadge] = (0, import_react9.useState)(false);
+    const prevIsOpenRef = (0, import_react9.useRef)(isOpen);
     const {
       sessionId,
       activeWorkspace,
@@ -30578,17 +31043,71 @@ var ChatWidgetApp = (() => {
       offlineFormLoading,
       submitOfflineForm
     } = useOfflineForm(activeWorkspace);
-    const [isMenuOpen, setIsMenuOpen] = (0, import_react7.useState)(false);
-    const [isConfirmingEnd, setIsConfirmingEnd] = (0, import_react7.useState)(false);
-    (0, import_react7.useEffect)(() => {
+    const { isIdentificationRequired, getStoredVisitorData } = useVisitorIdentification(activeWorkspace);
+    const [isMenuOpen, setIsMenuOpen] = (0, import_react9.useState)(false);
+    const [isConfirmingEnd, setIsConfirmingEnd] = (0, import_react9.useState)(false);
+    (0, import_react9.useEffect)(() => {
       useChatStore.getState().initialize();
-    }, []);
+      if (workspaceId) {
+        fetchSettings();
+      }
+    }, [workspaceId]);
+    const fetchSettings = () => __async(void 0, null, function* () {
+      if (!workspaceId) return;
+      try {
+        const settings = yield workspaceSettingsService.getSettings(workspaceId);
+        console.log("\u{1F680} ~ fetchSettings ~ settings:", settings);
+        setVisitorIdentificationSetting(
+          settings.visitor_identification || "none"
+        );
+        setShowUnreadBadge(settings.show_unread_count || false);
+        checkIdentificationRequired(settings.visitor_identification || "none");
+      } catch (error2) {
+        console.error("Failed to fetch workspace settings:", error2);
+      }
+    });
+    (0, import_react9.useEffect)(() => {
+      if (!showUnreadBadge) return;
+      if (messages.length > 0 && !isOpen) {
+        const lastMessage = messages[messages.length - 1];
+        if (!lastMessage.isUser) {
+          setUnreadCount((prevCount) => prevCount + 1);
+        }
+      }
+    }, [messages, isOpen, showUnreadBadge]);
+    (0, import_react9.useEffect)(() => {
+      if (isOpen) {
+        setUnreadCount(0);
+      }
+      prevIsOpenRef.current = isOpen;
+    }, [isOpen]);
+    (0, import_react9.useEffect)(() => {
+      const originalTitle = document.title;
+      if (unreadCount > 0 && !isOpen && showUnreadBadge) {
+        document.title = `(${unreadCount}) ${originalTitle}`;
+      } else {
+        document.title = originalTitle;
+      }
+      return () => {
+        document.title = originalTitle;
+      };
+    }, [unreadCount, isOpen, showUnreadBadge]);
+    const checkIdentificationRequired = (setting) => {
+      const required = isIdentificationRequired(setting);
+      setNeedsIdentification(required);
+    };
+    const handleIdentificationComplete = () => {
+      setNeedsIdentification(false);
+      if (isOnline && !sessionId) {
+        startChatSession();
+      }
+    };
     const handleOpenWidget = () => __async(void 0, null, function* () {
       console.log("Opening widget");
       if (activeWorkspace) {
         checkOnlineStatus();
       }
-      if (isOnline && !sessionId) {
+      if (isOnline && !sessionId && !needsIdentification) {
         yield startChatSession();
       }
       open();
@@ -30619,16 +31138,16 @@ var ChatWidgetApp = (() => {
     };
     const renderContent = () => {
       if (loading || offlineFormLoading) {
-        return /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__loading" }, "Connecting to support...");
+        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__loading" }, "Connecting to support...");
       }
       if (error) {
-        return /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__error" }, error);
+        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__error" }, error);
       }
       if (!isOnline) {
         if (offlineFormSubmitted) {
-          return /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__offline-thanks" }, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Thanks for your message!"), /* @__PURE__ */ import_react7.default.createElement("p", null, "We will be in touch soon."));
+          return /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__offline-thanks" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, "Thanks for your message!"), /* @__PURE__ */ import_react9.default.createElement("p", null, "We will be in touch soon."));
         }
-        return /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__offline-form" }, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Sorry, we are away"), /* @__PURE__ */ import_react7.default.createElement("p", null, "But we would love to hear from you and chat soon!"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react7.default.createElement(
+        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__offline-form" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, "Sorry, we are away"), /* @__PURE__ */ import_react9.default.createElement("p", null, "But we would love to hear from you and chat soon!"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react9.default.createElement(
           Input_default,
           {
             id: "offline-email",
@@ -30638,7 +31157,7 @@ var ChatWidgetApp = (() => {
             onChange: (e) => setOfflineEmail(e.target.value),
             required: true
           }
-        )), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react7.default.createElement("label", { htmlFor: "offline-message" }, "Your message here"), /* @__PURE__ */ import_react7.default.createElement(
+        )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "offline-message" }, "Your message here"), /* @__PURE__ */ import_react9.default.createElement(
           "textarea",
           {
             id: "offline-message",
@@ -30647,7 +31166,7 @@ var ChatWidgetApp = (() => {
             rows: 4,
             required: true
           }
-        )), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react7.default.createElement(
+        )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react9.default.createElement(
           Input_default,
           {
             id: "offline-name",
@@ -30656,7 +31175,7 @@ var ChatWidgetApp = (() => {
             value: offlineName,
             onChange: (e) => setOfflineName(e.target.value)
           }
-        )), /* @__PURE__ */ import_react7.default.createElement(
+        )), /* @__PURE__ */ import_react9.default.createElement(
           Button_default,
           {
             label: "Send",
@@ -30666,8 +31185,17 @@ var ChatWidgetApp = (() => {
           }
         ));
       }
+      if (needsIdentification && isOnline) {
+        return /* @__PURE__ */ import_react9.default.createElement(
+          VisitorIdentificationForm_default,
+          {
+            workspaceId: activeWorkspace,
+            onComplete: handleIdentificationComplete
+          }
+        );
+      }
       if (isConfirmingEnd) {
-        return /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__confirmation" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "Are you sure you want to end this chat session?"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__confirmation-actions" }, /* @__PURE__ */ import_react7.default.createElement(
+        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__confirmation" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "Are you sure you want to end this chat session?"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__confirmation-actions" }, /* @__PURE__ */ import_react9.default.createElement(
           Button_default,
           {
             label: "Yes",
@@ -30675,7 +31203,7 @@ var ChatWidgetApp = (() => {
             variant: "primary",
             size: "small"
           }
-        ), /* @__PURE__ */ import_react7.default.createElement(
+        ), /* @__PURE__ */ import_react9.default.createElement(
           Button_default,
           {
             label: "No",
@@ -30685,14 +31213,14 @@ var ChatWidgetApp = (() => {
           }
         )));
       }
-      return /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__messages" }, messages.map((msg, index) => /* @__PURE__ */ import_react7.default.createElement(
+      return /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__messages" }, messages.map((msg, index) => /* @__PURE__ */ import_react9.default.createElement(
         "div",
         {
           key: index,
           className: `chat-widget__message ${msg.isUser ? "chat-widget__message--user" : "chat-widget__message--support"}`
         },
         msg.text
-      )), /* @__PURE__ */ import_react7.default.createElement("div", { ref: messagesEndRef })), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__input" }, /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react9.default.createElement("div", { ref: messagesEndRef })), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__input" }, /* @__PURE__ */ import_react9.default.createElement(
         "textarea",
         {
           className: "chat-widget__textarea",
@@ -30702,7 +31230,7 @@ var ChatWidgetApp = (() => {
           placeholder: "Type your message...",
           disabled: !sessionId
         }
-      ), /* @__PURE__ */ import_react7.default.createElement(
+      ), /* @__PURE__ */ import_react9.default.createElement(
         Button_default,
         {
           label: "Send",
@@ -30712,12 +31240,12 @@ var ChatWidgetApp = (() => {
         }
       )));
     };
-    return /* @__PURE__ */ import_react7.default.createElement("div", { id: "chat-widget-root" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget" }, isOpen && /* @__PURE__ */ import_react7.default.createElement(
+    return /* @__PURE__ */ import_react9.default.createElement("div", { id: "chat-widget-root" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget" }, isOpen && /* @__PURE__ */ import_react9.default.createElement(
       "div",
       {
         className: `chat-widget__panel ${!isOnline && !offlineFormSubmitted && !offlineFormLoading ? "chat-widget__panel--offline" : ""}`
       },
-      /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__header" }, /* @__PURE__ */ import_react7.default.createElement("h3", { className: "chat-widget__title" }, isOnline ? "Live Chat Support" : "Leave a Message"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__header-actions" }, isOnline && /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__header" }, /* @__PURE__ */ import_react9.default.createElement("h3", { className: "chat-widget__title" }, !isOnline ? "Leave a Message" : needsIdentification ? "Welcome" : "Live Chat Support"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__header-actions" }, isOnline && !needsIdentification && /* @__PURE__ */ import_react9.default.createElement(
         Button_default,
         {
           label: "\u22EE",
@@ -30725,7 +31253,7 @@ var ChatWidgetApp = (() => {
           variant: "text",
           className: "chat-widget__menu-button"
         }
-      ), /* @__PURE__ */ import_react7.default.createElement(
+      ), /* @__PURE__ */ import_react9.default.createElement(
         Button_default,
         {
           label: "\xD7",
@@ -30733,7 +31261,7 @@ var ChatWidgetApp = (() => {
           variant: "text",
           className: "chat-widget__close-button"
         }
-      ), isMenuOpen && isOnline && /* @__PURE__ */ import_react7.default.createElement("div", { className: "chat-widget__menu-dropdown" }, /* @__PURE__ */ import_react7.default.createElement(
+      ), isMenuOpen && isOnline && /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__menu-dropdown" }, /* @__PURE__ */ import_react9.default.createElement(
         Button_default,
         {
           label: "End chat",
@@ -30743,19 +31271,19 @@ var ChatWidgetApp = (() => {
         }
       )))),
       renderContent()
-    ), !isOpen && /* @__PURE__ */ import_react7.default.createElement(
+    ), !isOpen && /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__toggle-container" }, /* @__PURE__ */ import_react9.default.createElement(
       Button_default,
       {
         label: "Chat Support",
         onClick: handleOpenWidget,
         className: "chat-widget__toggle"
       }
-    )));
+    ), showUnreadBadge && unreadCount > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "chat-widget__unread-badge" }, unreadCount))));
   };
   var ChatWidget_default = ChatWidget;
 
   // src/styles/main.scss
-  var css4 = `* {
+  var css5 = `* {
   box-sizing: border-box;
 }
 
@@ -30794,7 +31322,7 @@ a {
     transform: rotate(360deg);
   }
 }`;
-  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css4));
+  document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css5));
 
   // src/embed.tsx
   window.useChatStore = useChatStore;
@@ -30890,7 +31418,7 @@ a {
         if (!this.root) {
           this.root = (0, import_client.createRoot)(this.mountPoint);
         }
-        this.root.render(/* @__PURE__ */ import_react8.default.createElement(ChatWidget_default, { workspaceId: this.workspaceId }));
+        this.root.render(/* @__PURE__ */ import_react10.default.createElement(ChatWidget_default, { workspaceId: this.workspaceId }));
       } catch (error) {
         console.error("Error rendering chat widget:", error);
       }

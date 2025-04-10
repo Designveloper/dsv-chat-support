@@ -147,7 +147,7 @@ export const chatService = {
 
         // Fallback to REST API
         try {
-            const response = await fetch(`${API_URL}/chat/status/workspace_id=${workspaceId}`, {
+            const response = await fetch(`${API_URL}/chat/status?workspace_id=${workspaceId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

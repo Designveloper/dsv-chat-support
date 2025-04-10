@@ -9,12 +9,12 @@ type ContextType = { workspace: Workspace | null };
 
 // Define a type for the settings state
 interface SettingsState {
-  presenceDetection: string;
-  visitorIdentification: string;
-  autoResponseEnabled: boolean;
-  autoResponseMessage: string;
-  offlineTransition: string;
-  showUnreadCount: boolean;
+  presenceDetection?: string;
+  visitorIdentification?: string;
+  noResponseAction?: string;
+  noResponseDelay?: string;
+  showUnreadCount?: boolean;
+  playSound?: boolean;
 }
 
 const BehaviorSettings = () => {
@@ -27,16 +27,7 @@ const BehaviorSettings = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   // const [isOnline, setIsOnline] = useState<boolean>(false);
 
-  // Form state
-  const [settings, setSettings] = useState<SettingsState>({
-    // autoUpdateStatus: true,
-    presenceDetection: "auto",
-    visitorIdentification: "prompt",
-    autoResponseEnabled: true,
-    autoResponseMessage: "One moment please.",
-    offlineTransition: "3min",
-    showUnreadCount: true,
-  });
+  const [settings, setSettings] = useState<SettingsState>({} as SettingsState);
 
   // Reference to the original settings for change tracking
   const originalSettingsRef = useRef<SettingsState | null>(null);
@@ -64,32 +55,21 @@ const BehaviorSettings = () => {
     setLoading(true);
     setError(null);
     try {
-      // First check if settings already exist
-      // const settingsInitialized =
-      //   await workspaceSettingsService.checkIfSettingsInitialized(workspaceId);
-
-      // Only initialize if needed
-      // if (!settingsInitialized) {
-      //   console.log("Settings not initialized, initializing now...");
-      //   await workspaceSettingsService.initializeSettings(workspaceId);
-      // }
-
       const fetchedSettings = await workspaceSettingsService.getSettings(
         workspaceId
       );
 
-      // Map backend settings to frontend state
+      // Map backend settings to frontend state - remove fallbacks
       const mappedSettings: SettingsState = {
-        presenceDetection: fetchedSettings.presence_detection ?? "auto",
-        visitorIdentification:
-          fetchedSettings.visitor_identification ?? "prompt",
-        autoResponseEnabled: fetchedSettings.auto_response_enabled ?? true,
-        autoResponseMessage:
-          fetchedSettings.auto_response_message ?? "One moment please.",
-        offlineTransition: fetchedSettings.offline_transition ?? "3min",
-        showUnreadCount: fetchedSettings.show_unread_count ?? true,
+        presenceDetection: fetchedSettings.presence_detection,
+        visitorIdentification: fetchedSettings.visitor_identification,
+        noResponseAction: fetchedSettings.no_response_action,
+        noResponseDelay: fetchedSettings.no_response_delay,
+        showUnreadCount: fetchedSettings.show_unread_count,
+        playSound: fetchedSettings.play_sound,
       };
-
+      console.log("Fetched settings:", fetchedSettings);
+      console.log("Mapped settings:", mappedSettings);
       // Update the form state
       setSettings(mappedSettings);
 
@@ -128,8 +108,7 @@ const BehaviorSettings = () => {
     }
 
     try {
-      // Compare current settings with original settings
-      const changedSettings: Partial<SettingsState> = {};
+      const changedSettings: Record<string, unknown> = {};
       const original = originalSettingsRef.current;
 
       if (!original) {
@@ -140,28 +119,17 @@ const BehaviorSettings = () => {
         return;
       }
 
-      if (settings.presenceDetection !== original.presenceDetection) {
-        changedSettings.presenceDetection = settings.presenceDetection;
-      }
+      const settingsKeys: (keyof SettingsState)[] = [
+        "presenceDetection",
+        "visitorIdentification",
+        "showUnreadCount",
+      ];
 
-      if (settings.visitorIdentification !== original.visitorIdentification) {
-        changedSettings.visitorIdentification = settings.visitorIdentification;
-      }
-
-      if (settings.autoResponseEnabled !== original.autoResponseEnabled) {
-        changedSettings.autoResponseEnabled = settings.autoResponseEnabled;
-      }
-
-      if (settings.autoResponseMessage !== original.autoResponseMessage) {
-        changedSettings.autoResponseMessage = settings.autoResponseMessage;
-      }
-
-      if (settings.offlineTransition !== original.offlineTransition) {
-        changedSettings.offlineTransition = settings.offlineTransition;
-      }
-
-      if (settings.showUnreadCount !== original.showUnreadCount) {
-        changedSettings.showUnreadCount = settings.showUnreadCount;
+      // Loop through the relevant settings keys and check which ones have changed
+      for (const key of settingsKeys) {
+        if (settings[key] !== original[key]) {
+          changedSettings[key] = settings[key];
+        }
       }
 
       // If nothing changed, show a message and return
@@ -329,98 +297,6 @@ const BehaviorSettings = () => {
               Prompt visitors for email and name
             </span>
           </label>
-        </div>
-      </div>
-
-      <div className="behavior-settings__section">
-        <h3>
-          What should happen when your first Slack operator joins the chat?
-        </h3>
-
-        <div className="behavior-settings__radio-group">
-          <label className="behavior-settings__radio">
-            <input
-              type="radio"
-              name="autoResponse"
-              value="enabled"
-              checked={settings.autoResponseEnabled}
-              onChange={() => handleSettingChange("autoResponseEnabled", true)}
-            />
-            <span className="behavior-settings__radio-text">
-              Send auto response message
-            </span>
-          </label>
-
-          <label className="behavior-settings__radio">
-            <input
-              type="radio"
-              name="autoResponse"
-              value="disabled"
-              checked={!settings.autoResponseEnabled}
-              onChange={() => handleSettingChange("autoResponseEnabled", false)}
-            />
-            <span className="behavior-settings__radio-text">
-              Do not send an auto response message
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <div className="behavior-settings__section">
-        <h3>
-          Auto response message that will be sent when the first Slack operator
-          joins the chat
-        </h3>
-
-        <div className="behavior-settings__input-wrapper">
-          <textarea
-            className="behavior-settings__textarea"
-            value={settings.autoResponseMessage}
-            onChange={(e) =>
-              handleSettingChange("autoResponseMessage", e.target.value)
-            }
-            disabled={!settings.autoResponseEnabled}
-            rows={3}
-          />
-        </div>
-      </div>
-
-      <div className="behavior-settings__section">
-        <h3>
-          What should happen with actively chatting visitors when you transition
-          offline?
-        </h3>
-
-        <div className="behavior-settings__select-wrapper">
-          <select
-            className="behavior-settings__select"
-            value={settings.offlineTransition}
-            onChange={(e) =>
-              handleSettingChange("offlineTransition", e.target.value)
-            }
-          >
-            <option value="3min">
-              Allow them to chat until they have not sent or received a message
-              for 3 minutes
-            </option>
-            <option value="5min">
-              Allow them to chat until they have not sent or received a message
-              for 5 minutes
-            </option>
-            <option value="10min">
-              Allow them to chat until they have not sent or received a message
-              for 10 minutes
-            </option>
-            <option value="immediate">End conversations immediately</option>
-          </select>
-        </div>
-
-        <div className="behavior-settings__help-text">
-          <p>
-            NOTE: This means you could receive messages after you go offline
-            from visitors you were actively chatting with until they have no
-            chat activity for 3 minutes. After that they will see offline form.
-          </p>
         </div>
       </div>
 
