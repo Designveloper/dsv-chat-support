@@ -1,14 +1,17 @@
-import { Column, Entity, ManyToOne, PrimaryColumn, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 import { EavAttributes } from './eav-attributes.entity';
 import { WorkSpace } from '../../workspace/workspace.entity';
 
 
 @Entity('workspace_entity_boolean')
 export class WorkspaceEntityBoolean {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
+    value_id: number;
+
+    @Column()
     entity_id: string;
 
-    @PrimaryColumn()
+    @Column()
     att_id: number;
 
     @Column()
@@ -21,10 +24,10 @@ export class WorkspaceEntityBoolean {
     updated_at: Date;
 
     @ManyToOne(() => EavAttributes)
-    @JoinColumn({ name: "att_id" })  // Specify the column name for the foreign key
+    @JoinColumn({ name: "att_id" })
     attribute: EavAttributes;
 
     @ManyToOne(() => WorkSpace, (workSpace) => workSpace.id)
-    @JoinColumn({ name: "entity_id" })  // Specify the column name for the foreign key
+    @JoinColumn({ name: "entity_id" })
     workSpace: WorkSpace;
 }

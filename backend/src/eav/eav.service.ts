@@ -7,7 +7,7 @@ import { WorkspaceEntityVarchar } from './entities/workspace-entity-varchar.enti
 import { WorkspaceEntityBoolean } from './entities/workspace-entity-boolean.entity';
 import { WorkspaceEntityInteger } from './entities/workspace-entity-integer.entity';
 import { EavEntityType } from './entities/eav-entity-type.entity';
-import e from 'express';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class EavService {
@@ -25,6 +25,7 @@ export class EavService {
         private readonly integerRepository: Repository<WorkspaceEntityInteger>,
         @InjectRepository(EavEntityType)
         private readonly entityTypeRepository: Repository<EavEntityType>,
+        private readonly dataSource: DataSource
     ) {
         // Map backend_type to repositories
         this.valueRepositories = {
@@ -146,6 +147,26 @@ export class EavService {
         }
     }
 
+    async fetchAttributeValues(
+        backendType: 'boolean' | 'varchar' | 'int',
+        entityId: string,
+        attributeCodes: string[]
+    ): Promise<any[]> {
+        const repository = this.valueRepositories[backendType];
+
+        return repository
+            .createQueryBuilder('v')
+            .innerJoinAndSelect(
+                'v.attribute',
+                'attr',
+                'v.att_id = attr.att_id'
+            )
+            .where('v.entity_id = :entityId', { entityId })
+            .andWhere('attr.backend_type = :type', { type: backendType })
+            .andWhere('attr.att_code IN (:...codes)', { codes: attributeCodes })
+            .getMany();
+    }
+
     async getAttributeValue(entityId: string, attCode: string): Promise<any> {
         this.logger.log(`Fetching attribute value for entityId: ${entityId}, attCode: ${attCode}`);
         console.log(`Fetching attribute value for entityId: ${entityId}, attCode: ${attCode}`);
@@ -188,76 +209,37 @@ export class EavService {
 
         const results: Record<string, any> = {};
 
-        const booleanValuesPromise = this.booleanRepository
-            .createQueryBuilder('bv')
-            .innerJoinAndSelect(
-                'bv.attribute',
-                'attr',
-                'bv.att_id = attr.att_id'
-            )
-            .where('bv.entity_id = :entityId', { entityId })
-            .andWhere('attr.backend_type = :type', { type: 'boolean' })
-            .andWhere('attr.att_code IN (:...codes)', { codes: attributeCodes })
-            .getMany();
+        if (!attributeCodes.length) {
+            return results;
+        }
 
-        const varcharValuesPromise = this.varcharRepository
-            .createQueryBuilder('vv')
-            .innerJoinAndSelect(
-                'vv.attribute',
-                'attr',
-                'vv.att_id = attr.att_id'
-            )
-            .where('vv.entity_id = :entityId', { entityId })
-            .andWhere('attr.backend_type = :type', { type: 'varchar' })
-            .andWhere('attr.att_code IN (:...codes)', { codes: attributeCodes })
-            .getMany();
-
-        const intValuesPromise = this.integerRepository
-            .createQueryBuilder('iv')
-            .innerJoinAndSelect(
-                'iv.attribute',
-                'attr',
-                'iv.att_id = attr.att_id'
-            )
-            .where('iv.entity_id = :entityId', { entityId })
-            .andWhere('attr.backend_type = :type', { type: 'int' })
-            .andWhere('attr.att_code IN (:...codes)', { codes: attributeCodes })
-            .getMany();
-
+        // Create a single query that fetches values from all three tables
         const [booleanValues, varcharValues, intValues] = await Promise.all([
-            booleanValuesPromise,
-            varcharValuesPromise,
-            intValuesPromise
+            this.fetchAttributeValues('boolean', entityId, attributeCodes),
+            this.fetchAttributeValues('varchar', entityId, attributeCodes),
+            this.fetchAttributeValues('int', entityId, attributeCodes)
         ]);
 
         console.log('Fetched boolean values:', booleanValues);
 
-        if (booleanValues && booleanValues.length > 0) {
-            booleanValues.forEach(item => {
-                if (item && item.attribute) {
-                    results[item.attribute.att_code] = item.value;
-                }
-            });
-        }
+        const valueGroups = {
+            boolean: booleanValues,
+            varchar: varcharValues,
+            int: intValues,
+        };
 
-        if (varcharValues && varcharValues.length > 0) {
-            varcharValues.forEach(item => {
-                if (item && item.attribute) {
-                    results[item.attribute.att_code] = item.value;
-                }
-            });
-        }
-
-        if (intValues && intValues.length > 0) {
-            intValues.forEach(item => {
-                if (item && item.attribute) {
-                    results[item.attribute.att_code] = item.value;
-                }
-            });
-        }
+        Object.keys(valueGroups).forEach(type => {
+            const values = valueGroups[type];
+            if (values && values.length > 0) {
+                values.forEach(item => {
+                    if (item && item.attribute) {
+                        results[item.attribute.att_code] = item.value;
+                    }
+                });
+            }
+        });
 
         this.logger.log(`Fetched attributes for entityId: ${entityId}`);
-        console.log(`Fetched attributes for entityId: ${entityId}`);
         return results;
     }
 
@@ -270,135 +252,120 @@ export class EavService {
         entityTypeCode: string,
         attributes: { code: string, type: string, value: any }[]
     }): Promise<void> {
+        await this.dataSource.transaction(async (transactionalEntityManager) => {
+            const entityData = await transactionalEntityManager.findOne(EavEntityType, {
+                where: { type_code: entityTypeCode },
+            });
 
-        const entityData = await this.entityTypeRepository.findOne({
-            where: { type_code: entityTypeCode },
-        });
-        if (!entityData) {
-            throw new Error(`Entity type '${entityTypeCode}' not found`);
-        }
-
-        const attributeCodes = attributes.map(attr => attr.code);
-        const existingAttributes = await this.attributesRepository.find({
-            where: {
-                att_code: In(attributeCodes),
-                entity_type_id: entityData.type_id
+            if (!entityData) {
+                throw new Error(`Entity type '${entityTypeCode}' not found`);
             }
-        });
 
-        const attributeMap = {};
-        existingAttributes.forEach(attr => {
-            attributeMap[attr.att_code] = attr;
-        });
-
-        const missingAttributes = attributes.filter(attr => !attributeMap[attr.code]);
-
-        if (missingAttributes.length > 0) {
-            await Promise.all(missingAttributes.map(async attr => {
-                try {
-                    const newAttribute = await this.createAttribute(
-                        {
-                            attCode: attr.code,
-                            entityTypeId: entityData.type_id,
-                            backendType: attr.type
-                        }
-                    );
-                    attributeMap[attr.code] = newAttribute;
-                    this.logger.log(`Created attribute ${attr.code} of type ${attr.type}`);
-                } catch (error) {
-                    this.logger.error(`Failed to create attribute ${attr.code}: ${error.message}`);
+            const attributeCodes = attributes.map(attr => attr.code);
+            const existingAttributes = await transactionalEntityManager.find(EavAttributes, {
+                where: {
+                    att_code: In(attributeCodes),
+                    entity_type_id: entityData.type_id
                 }
-            }));
-        }
+            });
 
-        const now = new Date();
+            const attributeMap = {};
+            existingAttributes.forEach(attr => {
+                attributeMap[attr.att_code] = attr;
+            });
 
-        const booleanValues: { entity_id: string; att_id: number; value: boolean; created_at: Date; updated_at: Date }[] = [];
-        const varcharValues: { entity_id: string; att_id: number; value: string; created_at: Date; updated_at: Date }[] = [];
-        const intValues: { entity_id: string; att_id: number; value: number; created_at: Date; updated_at: Date }[] = [];
+            const missingAttributes = attributes.filter(attr => !attributeMap[attr.code]);
 
-        attributes.forEach(attr => {
-            const attributeInfo = attributeMap[attr.code];
-            if (!attributeInfo) {
-                return;
+            if (missingAttributes.length > 0) {
+                await Promise.all(missingAttributes.map(async attr => {
+                    try {
+                        const newAttribute = transactionalEntityManager.create(EavAttributes, {
+                            att_code: attr.code,
+                            entity_type_id: entityData.type_id,
+                            backend_type: attr.type,
+                            created_at: new Date()
+                        });
+
+                        await transactionalEntityManager.save(newAttribute);
+                        attributeMap[attr.code] = newAttribute;
+                        this.logger.log(`Created attribute ${attr.code} of type ${attr.type}`);
+                    } catch (error) {
+                        throw error;
+                    }
+                }));
             }
 
-            const attributeId = attributeInfo.att_id;
+            const now = new Date();
 
-            if (attributeInfo.backend_type !== attr.type) {
-                return;
-            }
+            const booleanValues: { entity_id: string; att_id: number; value: boolean; created_at: Date; updated_at: Date }[] = [];
+            const varcharValues: { entity_id: string; att_id: number; value: string; created_at: Date; updated_at: Date }[] = [];
+            const intValues: { entity_id: string; att_id: number; value: number; created_at: Date; updated_at: Date }[] = [];
 
-            switch (attr.type) {
-                case 'boolean':
-                    booleanValues.push({
-                        entity_id: entityId,
-                        att_id: attributeId,
-                        value: attr.value,
-                        created_at: now,
-                        updated_at: now
-                    });
-                    break;
-                case 'varchar':
-                    varcharValues.push({
-                        entity_id: entityId,
-                        att_id: attributeId,
-                        value: attr.value,
-                        created_at: now,
-                        updated_at: now
-                    });
-                    break;
-                case 'int':
-                    intValues.push({
-                        entity_id: entityId,
-                        att_id: attributeId,
-                        value: attr.value,
-                        created_at: now,
-                        updated_at: now
-                    });
-                    break;
-                default:
-                    this.logger.warn(`Unsupported attribute type: ${attr.type}`);
-                    break;
+            attributes.forEach(attr => {
+                const attributeInfo = attributeMap[attr.code];
+                if (!attributeInfo) {
+                    return;
+                }
+
+                const attributeId = attributeInfo.att_id;
+
+                if (attributeInfo.backend_type !== attr.type) {
+                    return;
+                }
+
+                const valueObject = {
+                    entity_id: entityId,
+                    att_id: attributeId,
+                    value: attr.value,
+                    created_at: now,
+                    updated_at: now
+                };
+
+                switch (attr.type) {
+                    case 'boolean':
+                        booleanValues.push(valueObject);
+                        break;
+                    case 'varchar':
+                        varcharValues.push(valueObject);
+                        break;
+                    case 'int':
+                        intValues.push(valueObject);
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            const promises: Promise<any>[] = [];
+
+            const valueMap = [
+                { values: booleanValues, entity: WorkspaceEntityBoolean },
+                { values: varcharValues, entity: WorkspaceEntityVarchar },
+                { values: intValues, entity: WorkspaceEntityInteger },
+            ];
+
+            valueMap.forEach(({ values, entity }) => {
+                if (values.length > 0) {
+                    promises.push(
+                        transactionalEntityManager
+                            .createQueryBuilder()
+                            .insert()
+                            .into(entity)
+                            .values(values as any[])
+                            .orUpdate(['value', 'updated_at'], ['entity_id', 'att_id'])
+                            .execute()
+                    );
+                    this.logger.log(`Inserted/Updated ${values.length} values for entity type ${entity.name}`);
+                }
+            });
+            if (promises.length > 0) {
+                await Promise.all(promises);
+                this.logger.log(`Updated attributes for entity ${entityId}`);
             }
+        }).catch(error => {
+            this.logger.error(`Error setting attributes for entity ${entityId}: ${error.message}`);
+            throw error;
         });
-
-        const promises: Promise<any>[] = [];
-
-        if (booleanValues.length > 0) {
-            promises.push(this.booleanRepository
-                .createQueryBuilder()
-                .insert()
-                .values(booleanValues)
-                .orUpdate(['value', 'updated_at'], ['entity_id', 'att_id'])
-                .execute()
-            );
-        }
-
-        if (varcharValues.length > 0) {
-            promises.push(this.varcharRepository
-                .createQueryBuilder()
-                .insert()
-                .values(varcharValues)
-                .orUpdate(['value', 'updated_at'], ['entity_id', 'att_id'])
-                .execute()
-            );
-        }
-
-        if (intValues.length > 0) {
-            promises.push(this.integerRepository
-                .createQueryBuilder()
-                .insert()
-                .values(intValues)
-                .orUpdate(['value', 'updated_at'], ['entity_id', 'att_id'])
-                .execute()
-            );
-        }
-
-        if (promises.length > 0) {
-            await Promise.all(promises);
-            this.logger.log(`Updated attributes for entity ${entityId}`);
-        }
     }
 
     async setBooleanValue(entityId: string, attCode: string, value: boolean): Promise<void> {

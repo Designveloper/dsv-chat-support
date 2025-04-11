@@ -1,14 +1,17 @@
 // src/eav/entities/workspace-entity-integer.entity.ts
-import { Column, Entity, ManyToOne, PrimaryColumn, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 import { EavAttributes } from './eav-attributes.entity';
 import { WorkSpace } from '../../workspace/workspace.entity';
 
 @Entity('workspace_entity_integer')
 export class WorkspaceEntityInteger {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
+    value_id: number;
+
+    @Column()
     entity_id: string;
 
-    @PrimaryColumn()
+    @Column()
     att_id: number;
 
     @Column()
@@ -21,10 +24,10 @@ export class WorkspaceEntityInteger {
     updated_at: Date;
 
     @ManyToOne(() => EavAttributes)
-    @JoinColumn({ name: "att_id" })  // Specify the column name for the foreign key
+    @JoinColumn({ name: "att_id" })
     attribute: EavAttributes;
 
     @ManyToOne(() => WorkSpace)
-    @JoinColumn({ name: "entity_id" })  // Specify the column name for the foreign key
+    @JoinColumn({ name: "entity_id" })
     workSpace: WorkSpace;
 }
