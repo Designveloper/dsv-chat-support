@@ -33,16 +33,6 @@ export class EavService {
             boolean: this.booleanRepository,
             int: this.integerRepository,
         };
-
-        // Log that service is constructed
-        this.logger.log('EavService initialized');
-        console.log('EavService initialized with repositories', {
-            attributesRepo: !!this.attributesRepository,
-            entityTypeRepo: !!this.entityTypeRepository,
-            varcharRepo: !!this.varcharRepository,
-            booleanRepo: !!this.booleanRepository,
-            integerRepo: !!this.integerRepository
-        });
     }
 
     async getOrCreateEntityType(typeCode: string, description?: string): Promise<EavEntityType> {
@@ -168,10 +158,6 @@ export class EavService {
     }
 
     async getAttributeValue(entityId: string, attCode: string): Promise<any> {
-        this.logger.log(`Fetching attribute value for entityId: ${entityId}, attCode: ${attCode}`);
-        console.log(`Fetching attribute value for entityId: ${entityId}, attCode: ${attCode}`);
-
-        // Get the attribute
         const attribute = await this.attributesRepository.findOne({
             where: { att_code: attCode },
         });
@@ -180,14 +166,12 @@ export class EavService {
             throw new Error(errorMessage);
         }
 
-        // Select the correct repository based on backend_type
         const repository = this.valueRepositories[attribute.backend_type];
         if (!repository) {
             const errorMessage = `Unsupported backend_type: ${attribute.backend_type}`;
             throw new Error(errorMessage);
         }
 
-        // Query the value
         const valueEntity = await repository.findOne({
             where: { entity_id: entityId, att_id: attribute.att_id },
         });

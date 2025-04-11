@@ -31012,7 +31012,6 @@ var ChatWidgetApp = (() => {
     const [needsIdentification, setNeedsIdentification] = (0, import_react9.useState)(false);
     const [unreadCount, setUnreadCount] = (0, import_react9.useState)(0);
     const [showUnreadBadge, setShowUnreadBadge] = (0, import_react9.useState)(false);
-    const prevIsOpenRef = (0, import_react9.useRef)(isOpen);
     const {
       sessionId,
       activeWorkspace,
@@ -31067,8 +31066,8 @@ var ChatWidgetApp = (() => {
       }
     });
     (0, import_react9.useEffect)(() => {
-      if (!showUnreadBadge) return;
-      if (messages.length > 0 && !isOpen) {
+      if (!showUnreadBadge || isOpen) return;
+      if (messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
         if (!lastMessage.isUser) {
           setUnreadCount((prevCount) => prevCount + 1);
@@ -31079,7 +31078,6 @@ var ChatWidgetApp = (() => {
       if (isOpen) {
         setUnreadCount(0);
       }
-      prevIsOpenRef.current = isOpen;
     }, [isOpen]);
     (0, import_react9.useEffect)(() => {
       const originalTitle = document.title;

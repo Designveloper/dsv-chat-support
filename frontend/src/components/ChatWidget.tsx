@@ -26,7 +26,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showUnreadBadge, setShowUnreadBadge] = useState<boolean>(false);
-  const prevIsOpenRef = useRef<boolean>(isOpen);
 
   const {
     sessionId,
@@ -95,9 +94,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   };
 
   useEffect(() => {
-    if (!showUnreadBadge) return;
+    if (!showUnreadBadge || isOpen) return;
 
-    if (messages.length > 0 && !isOpen) {
+    if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage.isUser) {
         setUnreadCount((prevCount) => prevCount + 1);
@@ -109,10 +108,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     if (isOpen) {
       setUnreadCount(0);
     }
-    prevIsOpenRef.current = isOpen;
   }, [isOpen]);
 
-  // Update document title when unread messages exist
   useEffect(() => {
     const originalTitle = document.title;
 
@@ -127,17 +124,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     };
   }, [unreadCount, isOpen, showUnreadBadge]);
 
-  // Check if identification is required
   const checkIdentificationRequired = (setting: string) => {
     const required = isIdentificationRequired(setting);
     setNeedsIdentification(required);
   };
 
-  // Handle completing the identification process
   const handleIdentificationComplete = () => {
     setNeedsIdentification(false);
 
-    // Start chat session after identification
     if (isOnline && !sessionId) {
       startChatSession();
     }
@@ -149,7 +143,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       checkOnlineStatus();
     }
 
-    // Only start chat automatically if identification isn't needed
     if (isOnline && !sessionId && !needsIdentification) {
       await startChatSession();
     }

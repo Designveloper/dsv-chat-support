@@ -9,6 +9,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ChatSessionModule } from '../chat-session/chat-session.module';
 import { ConfigModule } from '@nestjs/config';
 import { EavModule } from 'src/eav/eav.module';
+import { NoResponseTrackerService } from '../chat-session/no-response-tracker.service';
 
 @Module({
     imports: [
@@ -19,7 +20,7 @@ import { EavModule } from 'src/eav/eav.module';
         ConfigModule,
         forwardRef(() => ChatSessionModule),
     ],
-    providers: [SlackService, SlackBoltService],
+    providers: [SlackService, SlackBoltService, NoResponseTrackerService],
     controllers: [SlackController],
     exports: [SlackService, SlackBoltService],
 })

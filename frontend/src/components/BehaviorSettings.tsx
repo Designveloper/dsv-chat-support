@@ -29,7 +29,6 @@ const BehaviorSettings = () => {
 
   const [settings, setSettings] = useState<SettingsState>({} as SettingsState);
 
-  // Reference to the original settings for change tracking
   const originalSettingsRef = useRef<SettingsState | null>(null);
 
   // Load workspace and settings
@@ -122,17 +121,22 @@ const BehaviorSettings = () => {
       const settingsKeys: (keyof SettingsState)[] = [
         "presenceDetection",
         "visitorIdentification",
+        "noResponseAction",
+        "noResponseDelay",
         "showUnreadCount",
+        "playSound",
       ];
 
-      // Loop through the relevant settings keys and check which ones have changed
       for (const key of settingsKeys) {
         if (settings[key] !== original[key]) {
           changedSettings[key] = settings[key];
         }
       }
 
-      // If nothing changed, show a message and return
+      console.log("Original settings:", original);
+      console.log("Current settings:", settings);
+      console.log("Changed settings:", changedSettings);
+
       if (Object.keys(changedSettings).length === 0) {
         setSuccessMessage("No changes detected");
         setLoading(false);
@@ -175,15 +179,11 @@ const BehaviorSettings = () => {
   return (
     <div className="behavior-settings">
       <h2>Presence and widget behavior</h2>
-
       {loading && <div className="behavior-settings__loading">Loading...</div>}
-
       {error && <div className="behavior-settings__error">{error}</div>}
-
       {successMessage && (
         <div className="behavior-settings__success">{successMessage}</div>
       )}
-
       {/* <div className="behavior-settings__status-section">
         <div className="behavior-settings__status-label">
           Current Status{" "}
@@ -226,7 +226,6 @@ const BehaviorSettings = () => {
           </span>
         </div>
       </div> */}
-
       <div className="behavior-settings__section">
         <h3>Presence detection</h3>
 
@@ -263,7 +262,6 @@ const BehaviorSettings = () => {
           </label>
         </div>
       </div>
-
       <div className="behavior-settings__section">
         <h3>Ask visitors to identify themselves</h3>
 
@@ -301,6 +299,57 @@ const BehaviorSettings = () => {
       </div>
 
       <div className="behavior-settings__section">
+        <h3>
+          What should happen if no one responds to a visitor's first message?
+        </h3>
+
+        <div className="behavior-settings__radio-group">
+          <label className="behavior-settings__radio">
+            <input
+              type="radio"
+              name="noResponseAction"
+              value="send warning"
+              checked={settings.noResponseAction === "send warning"}
+              onChange={() =>
+                handleSettingChange("noResponseAction", "send warning")
+              }
+            />
+            <span className="behavior-settings__radio-text">
+              Send warning notifications every
+              <select
+                value={settings.noResponseDelay || "30sec"}
+                onChange={(e) =>
+                  handleSettingChange("noResponseDelay", e.target.value)
+                }
+                // disabled={settings.noResponseAction !== "send warning"}
+                className="behavior-settings__inline-select"
+              >
+                <option value="30sec">30 secs</option>
+                <option value="1min">1 minute</option>
+                <option value="2min">2 minutes</option>
+                <option value="5min">5 minutes</option>
+              </select>
+              until a visitor receives a reply
+            </span>
+          </label>
+
+          <label className="behavior-settings__radio">
+            <input
+              type="radio"
+              name="noResponseAction"
+              value="no warnings"
+              checked={settings.noResponseAction === "no warnings"}
+              onChange={() =>
+                handleSettingChange("noResponseAction", "no warnings")
+              }
+            />
+            <span className="behavior-settings__radio-text">
+              Do not send warnings
+            </span>
+          </label>
+        </div>
+      </div>
+      <div className="behavior-settings__section">
         <h3>Show a badge with unread messages count on the tab?</h3>
 
         <div className="behavior-settings__radio-group">
@@ -331,7 +380,6 @@ const BehaviorSettings = () => {
           </label>
         </div>
       </div>
-
       <div className="behavior-settings__actions">
         <button
           className="behavior-settings__submit-button"

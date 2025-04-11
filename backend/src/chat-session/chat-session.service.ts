@@ -10,6 +10,7 @@ import { WorkSpace } from '../workspace/workspace.entity';
 import { Request } from 'express';
 import { format } from 'date-fns';
 import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-settings.service';
+import { NoResponseTrackerService } from './no-response-tracker.service';
 
 @Injectable()
 export class ChatSessionService {
@@ -20,7 +21,8 @@ export class ChatSessionService {
         private slackBoltService: SlackBoltService,
         @InjectRepository(ChatSession)
         private chatSessionRepository: Repository<ChatSession>,
-        private workspaceSettingsService: WorkspaceSettingsService
+        private workspaceSettingsService: WorkspaceSettingsService,
+        private noResponseTracker: NoResponseTrackerService,
     ) { }
 
     async startChat(workspaceId: string): Promise<ChatSession> {
@@ -298,6 +300,8 @@ export class ChatSessionService {
                 `${message}`,
                 username
             );
+
+            await this.noResponseTracker.trackUserMessage(sessionId, true);
         } catch (error) {
             console.error('Error sending message to Slack channel:', error);
             throw new Error('Failed to send message to Slack channel');
