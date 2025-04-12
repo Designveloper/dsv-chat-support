@@ -5,7 +5,7 @@ import { WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { ChatSessionService } from '../chat-session/chat-session.service';
 import { INestApplication } from '@nestjs/common';
-import { NoResponseTrackerService } from 'src/chat-session/no-response-tracker.service';
+import { NoResponseTrackerService } from '../chat-session/no-response-tracker.service';
 interface PresenceChangeEvent {
     type: 'presence_change';
     user: string;
@@ -25,7 +25,7 @@ export class SlackBoltService implements OnModuleInit {
         @Inject(forwardRef(() => ChatSessionService))
         private chatSessionService: ChatSessionService,
         @Inject(forwardRef(() => NoResponseTrackerService))
-        private noResponseTrackerService: NoResponseTrackerService,
+        private noResponseTracker: NoResponseTrackerService,
     ) {
         // Create an Express receiver
         this.receiver = new ExpressReceiver({
@@ -122,7 +122,9 @@ export class SlackBoltService implements OnModuleInit {
                             });
                         });
 
-                        await this.noResponseTrackerService.trackUserMessage(session.session_id, false)
+                        console.log(`Found session ${session.session_id} for channel ${channelId}, tracking staff message`);
+
+                        await this.noResponseTracker.trackUserMessage(session.session_id, false)
                     } else {
                         console.log(`No connected clients for session ${session.session_id}`);
                     }

@@ -73,6 +73,7 @@ export function useChatSession(workspaceId?: string) {
             await chatService.endChatSession(sessionId);
             localStorage.removeItem(`chat_messages_${sessionId}`);
             localStorage.removeItem('chat_session_id');
+            localStorage.removeItem(`lastSeen_${sessionId}`);
 
             setSessionId(null);
             return {

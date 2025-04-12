@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "./ChatWidget.scss";
 import { useChatSession } from "../hooks/useChatSession";
 import { useChatMessages } from "../hooks/useChatMessages";
@@ -19,13 +19,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   const isOpen = useChatStore((state) => state.isOpen);
   const open = useChatStore((state) => state.open);
   const hide = useChatStore((state) => state.hide);
-  const [visitorIdentificationSetting, setVisitorIdentificationSetting] =
-    useState<string>("none");
   const [needsIdentification, setNeedsIdentification] =
     useState<boolean>(false);
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showUnreadBadge, setShowUnreadBadge] = useState<boolean>(false);
+  const [lastSeenMessageIndex, setLastSeenMessageIndex] = useState<number>(0);
+
+  const [playSound, setPlaySound] = useState<boolean>(false);
 
   const {
     sessionId,
@@ -46,7 +47,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     sendMessage,
     messagesEndRef,
     setEndChatMessage,
-  } = useChatMessages(sessionId, setIsOnline);
+  } = useChatMessages(sessionId, setIsOnline, playSound);
 
   const {
     offlineEmail,
@@ -60,7 +61,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     submitOfflineForm,
   } = useOfflineForm(activeWorkspace);
 
-  const { isIdentificationRequired, getStoredVisitorData } =
+  const { isIdentificationRequired } =
     useVisitorIdentification(activeWorkspace);
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -83,32 +84,50 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     try {
       const settings = await workspaceSettingsService.getSettings(workspaceId);
       console.log("🚀 ~ fetchSettings ~ settings:", settings);
-      setVisitorIdentificationSetting(
-        settings.visitor_identification || "none"
-      );
       setShowUnreadBadge(settings.show_unread_count || false);
       checkIdentificationRequired(settings.visitor_identification || "none");
+      setPlaySound(settings.play_sound || false);
     } catch (error) {
       console.error("Failed to fetch workspace settings:", error);
     }
   };
 
   useEffect(() => {
+    if (sessionId) {
+      const storedLastSeen = localStorage.getItem(`lastSeen_${sessionId}`);
+      if (storedLastSeen) {
+        setLastSeenMessageIndex(parseInt(storedLastSeen, 10));
+      }
+    }
+  }, [sessionId]);
+
+  // Update unread count based on new messages
+  useEffect(() => {
     if (!showUnreadBadge || isOpen) return;
 
     if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage.isUser) {
+      const lastMessageIndex = messages.length - 1;
+      const lastMessage = messages[lastMessageIndex];
+      if (!lastMessage.isUser && lastMessageIndex > lastSeenMessageIndex) {
         setUnreadCount((prevCount) => prevCount + 1);
       }
     }
-  }, [messages, isOpen, showUnreadBadge]);
+  }, [messages, isOpen, showUnreadBadge, lastSeenMessageIndex, playSound]);
 
+  // Reset unread count and update last seen index when chat is opened
   useEffect(() => {
     if (isOpen) {
       setUnreadCount(0);
+      const currentLastIndex = messages.length - 1;
+      setLastSeenMessageIndex(currentLastIndex);
+      if (sessionId) {
+        localStorage.setItem(
+          `lastSeen_${sessionId}`,
+          currentLastIndex.toString()
+        );
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length, sessionId]);
 
   useEffect(() => {
     const originalTitle = document.title;

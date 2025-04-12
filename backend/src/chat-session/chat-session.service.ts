@@ -332,6 +332,9 @@ export class ChatSessionService {
                 session.channel_id,
                 `Chat session ended`
             );
+
+            console.log("🚀 ~ ChatSessionService ~ endChatSession ~ sessionId:", sessionId)
+            await this.noResponseTracker.trackUserMessage(sessionId, false);
         } catch (error) {
             console.error('Error sending message to Slack channel:', error);
             throw new Error('Failed to send message to Slack channel');

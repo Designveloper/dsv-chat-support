@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { chatService } from '../services/chatService';
+import { useSound } from './useSound';
 
-export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void) {
+export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void, playSoundEnabled?: boolean) {
     const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
     const [messageText, setMessageText] = useState<string>("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { playNotificationSound } = useSound();
 
     // Load saved messages when session ID changes
     useEffect(() => {
@@ -24,6 +26,9 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
                 sessionId,
                 (text) => {
                     setMessages((prev) => [...prev, { text, isUser: false }]);
+                    if (playSoundEnabled) {
+                        playNotificationSound();
+                    }
                 },
                 (online) => {
                     setIsOnline(online);

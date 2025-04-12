@@ -380,6 +380,39 @@ const BehaviorSettings = () => {
           </label>
         </div>
       </div>
+
+      <div className="behavior-settings__section">
+        <h3>Play sound for new messages?</h3>
+
+        <div className="behavior-settings__radio-group">
+          <label className="behavior-settings__radio">
+            <input
+              type="radio"
+              name="playSound"
+              value="yes"
+              checked={settings.playSound}
+              onChange={() => handleSettingChange("playSound", true)}
+            />
+            <span className="behavior-settings__radio-text">
+              Play sound when a new message is sent to the widget
+            </span>
+          </label>
+
+          <label className="behavior-settings__radio">
+            <input
+              type="radio"
+              name="playSound"
+              value="no"
+              checked={!settings.playSound}
+              onChange={() => handleSettingChange("playSound", false)}
+            />
+            <span className="behavior-settings__radio-text">
+              Do not play sound when a new message is sent to the widget
+            </span>
+          </label>
+        </div>
+      </div>
+
       <div className="behavior-settings__actions">
         <button
           className="behavior-settings__submit-button"
