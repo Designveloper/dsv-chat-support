@@ -256,7 +256,7 @@ const BehaviorSettings = () => {
             />
             <span className="behavior-settings__radio-text">
               Do not try to detect presence in{" "}
-              {currentWorkspace?.name || "this channel"} and turn chat on/off
+              {currentWorkspace?.name || "this channel"} and turn chat on
               manually
             </span>
           </label>

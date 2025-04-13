@@ -18,6 +18,7 @@ import Settings from "./components/Settings";
 import BehaviorSettings from "./components/BehaviorSettings";
 import AppearanceSettings from "./components/AppearanceSettings";
 import WidgetInstall from "./components/WidgetInstall";
+import OperatingHours from "./components/OperatingHours";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -58,15 +59,7 @@ const App = () => {
             />
             <Route path="behavior" element={<BehaviorSettings />} />
             <Route path="appearance" element={<AppearanceSettings />} />
-            <Route
-              path="operating-hours"
-              element={
-                <div>
-                  <h2>Operating Hours</h2>
-                  <p>Set when your chat service is available.</p>
-                </div>
-              }
-            />
+            <Route path="operating-hours" element={<OperatingHours />} />
             <Route path="widget-install" element={<WidgetInstall />} />
             <Route
               path="saved-replies"

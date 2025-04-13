@@ -2,7 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ChatSessionService } from './chat-session.service';
 import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-settings.service';
 import { SlackService } from '../slack/slack.service';
-import { differenceInSeconds, format } from 'date-fns';
+import { differenceInSeconds } from 'date-fns';
 
 @Injectable()
 export class NoResponseTrackerService {
@@ -87,17 +87,23 @@ export class NoResponseTrackerService {
         console.log(`Starting warning timer for session ${sessionId}`);
 
         const timer = setTimeout(async () => {
-            this.activeTimers.delete(sessionId); // Remove immediately after firing
-            if (!this.sessionHasReply.has(sessionId)) {
-                console.log(`Session ${sessionId} is no longer being tracked, stopping warning timer`);
-                return;
-            }
+            // Check if the session has received a reply BEFORE processing the warning
             if (this.sessionHasReply.get(sessionId) === true) {
                 console.log(`Session ${sessionId} has received a staff reply, stopping warning timer`);
                 return;
             }
+
+            this.activeTimers.delete(sessionId); // Remove after checking for reply
+
+            if (!this.sessionHasReply.has(sessionId)) {
+                console.log(`Session ${sessionId} is no longer being tracked, stopping warning timer`);
+                return;
+            }
+
             console.log(`No staff reply detected for session ${sessionId}, sending warning`);
             await this.sendWarningMessage(session);
+
+            // Only start a new timer if still no reply
             if (this.sessionHasReply.has(sessionId) && this.sessionHasReply.get(sessionId) === false) {
                 this.startWarningTimer(session, delayMs);
             }
