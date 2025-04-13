@@ -23,13 +23,11 @@ const Settings = () => {
     return "behavior"; // Default
   };
 
-  // Handle tab click navigations
   const handleTabClick = (tab: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     navigate(`/settings/${tab}`);
   };
 
-  // Get tab title for header
   const getTabTitle = () => {
     const activeTab = getActiveTab();
     return activeTab
@@ -41,7 +39,6 @@ const Settings = () => {
   useEffect(() => {
     const fetchWorkspace = async () => {
       if (!workspaceId) {
-        // If workspaceId is not available via params, try to get one workspace
         try {
           setLoading(true);
           const workspaces = await workspaceService.fetchWorkspaces();
@@ -54,16 +51,6 @@ const Settings = () => {
           setLoading(false);
         }
         return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await workspaceService.getWorkspace(workspaceId);
-        setWorkspace(data);
-      } catch (error) {
-        console.error("Error fetching workspace:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -162,7 +149,6 @@ const Settings = () => {
         </div>
         <div className="settings__body">
           <div className="settings__content-section">
-            {/* Outlet renders the matched child route */}
             <Outlet context={{ workspace }} />
           </div>
         </div>

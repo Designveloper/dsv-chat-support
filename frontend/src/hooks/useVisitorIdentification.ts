@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useChatStore } from '../stores/useChatStore';
 
 export function useVisitorIdentification(workspaceId: string | null) {
     const [visitorEmail, setVisitorEmail] = useState<string>("");
@@ -10,26 +11,31 @@ export function useVisitorIdentification(workspaceId: string | null) {
     const submitVisitorIdentification = async () => {
         if (!workspaceId || !visitorEmail.trim()) {
             setError("Email is required");
-            return;
+            return false;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(visitorEmail)) {
             setError("Please enter a valid email address");
-            return;
+            return false;
         }
 
         try {
             setError(null);
             setIdentificationLoading(true);
 
-            // Store visitor information in localStorage to persist across sessions
+            const userData = {
+                email: visitorEmail,
+                name: visitorName || '',
+            };
+
+            const identifySuccess = useChatStore.getState().identify(visitorEmail, userData);
+            console.log("Visitor identification success:", identifySuccess);
+
             localStorage.setItem('chat_visitor_email', visitorEmail);
             if (visitorName) {
                 localStorage.setItem('chat_visitor_name', visitorName);
             }
-
-            // Save to session storage to indicate identification is complete for this session
             sessionStorage.setItem('chat_identified', 'true');
 
             setIdentificationSubmitted(true);
@@ -48,8 +54,6 @@ export function useVisitorIdentification(workspaceId: string | null) {
         if (visitorIdentificationSetting !== 'prompt') {
             return false;
         }
-
-        // Check if user is already identified in this session
         return sessionStorage.getItem('chat_identified') !== 'true';
     };
 

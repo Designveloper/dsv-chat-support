@@ -19,11 +19,13 @@ export class NoResponseTrackerService {
     ) { }
 
     async trackUserMessage(sessionId: string, isUserMessage: boolean): Promise<void> {
+        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ isUserMessage:", isUserMessage)
+        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ sessionId:", sessionId)
         console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ this.activeTimers:", this.activeTimers)
 
         if (!isUserMessage) {
             console.log('Staff message received');
-            this.sessionHasReply.set(sessionId, true); // Indicate a reply has occurred
+            this.sessionHasReply.set(sessionId, true);
             console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ this.activeTimers.has(sessionId):", this.activeTimers.has(sessionId))
             if (this.activeTimers.has(sessionId)) {
                 clearTimeout(this.activeTimers.get(sessionId));
@@ -38,7 +40,6 @@ export class NoResponseTrackerService {
         if (!session || session.status !== 'active' || !session.channel_id) return;
 
         this.lastUserMessageTime.set(sessionId, new Date());
-        this.sessionHasReply.set(sessionId, false); // Reset on new user message
 
         if (this.activeTimers.has(sessionId)) {
             clearTimeout(this.activeTimers.get(sessionId));
@@ -83,34 +84,18 @@ export class NoResponseTrackerService {
     }
 
     private startWarningTimer(session: any, delayMs: number): void {
-        const sessionId = session.session_id;
-        console.log(`Starting warning timer for session ${sessionId}`);
-
         const timer = setTimeout(async () => {
-            // Check if the session has received a reply BEFORE processing the warning
-            if (this.sessionHasReply.get(sessionId) === true) {
-                console.log(`Session ${sessionId} has received a staff reply, stopping warning timer`);
+            if (this.sessionHasReply.get(session.session_id)) {
+                this.clearSessionTracking(session.session_id);
                 return;
             }
 
-            this.activeTimers.delete(sessionId); // Remove after checking for reply
-
-            if (!this.sessionHasReply.has(sessionId)) {
-                console.log(`Session ${sessionId} is no longer being tracked, stopping warning timer`);
-                return;
-            }
-
-            console.log(`No staff reply detected for session ${sessionId}, sending warning`);
             await this.sendWarningMessage(session);
 
-            // Only start a new timer if still no reply
-            if (this.sessionHasReply.has(sessionId) && this.sessionHasReply.get(sessionId) === false) {
-                this.startWarningTimer(session, delayMs);
-            }
+            this.startWarningTimer(session, delayMs);
         }, delayMs);
 
-        this.activeTimers.set(sessionId, timer);
-        console.log(`Warning timer registered for session ${sessionId}`);
+        this.activeTimers.set(session.session_id, timer);
     }
 
     private async sendWarningMessage(session: any): Promise<void> {

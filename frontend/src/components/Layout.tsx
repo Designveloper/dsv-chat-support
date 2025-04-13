@@ -10,13 +10,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine active tab based on current route
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes("/dashboard")) return "dashboard";
     if (path.includes("/settings")) return "settings";
-    if (path.includes("/account")) return "account";
-    if (path.includes("/reports")) return "reports";
     return "dashboard"; // Default
   };
 

@@ -25,30 +25,17 @@ const BehaviorSettings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  // const [isOnline, setIsOnline] = useState<boolean>(false);
 
   const [settings, setSettings] = useState<SettingsState>({} as SettingsState);
 
   const originalSettingsRef = useRef<SettingsState | null>(null);
 
-  // Load workspace and settings
   useEffect(() => {
     if (workspace) {
       setCurrentWorkspace(workspace);
       loadWorkspaceSettings(workspace.id);
-      // checkOnlineStatus(workspace.id);
     }
   }, [workspace]);
-
-  // const checkOnlineStatus = async (workspaceId: string) => {
-  //   try {
-  //     const online = await chatService.checkOnlineStatus(workspaceId);
-  //     setIsOnline(online);
-  //   } catch (error) {
-  //     console.error("Error checking online status:", error);
-  //     setIsOnline(false);
-  //   }
-  // };
 
   const loadWorkspaceSettings = async (workspaceId: string) => {
     setLoading(true);
@@ -57,8 +44,6 @@ const BehaviorSettings = () => {
       const fetchedSettings = await workspaceSettingsService.getSettings(
         workspaceId
       );
-
-      // Map backend settings to frontend state - remove fallbacks
       const mappedSettings: SettingsState = {
         presenceDetection: fetchedSettings.presence_detection,
         visitorIdentification: fetchedSettings.visitor_identification,
@@ -69,10 +54,9 @@ const BehaviorSettings = () => {
       };
       console.log("Fetched settings:", fetchedSettings);
       console.log("Mapped settings:", mappedSettings);
-      // Update the form state
+
       setSettings(mappedSettings);
 
-      // Save the original settings for comparison later
       originalSettingsRef.current = { ...mappedSettings };
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -82,7 +66,6 @@ const BehaviorSettings = () => {
     }
   };
 
-  // Handle individual setting changes
   const handleSettingChange = (
     name: keyof SettingsState,
     value: SettingsState[keyof SettingsState]
@@ -145,26 +128,15 @@ const BehaviorSettings = () => {
 
       console.log("Updating with changed settings:", changedSettings);
 
-      // Only send the changed settings to the backend
       await workspaceSettingsService.updateSettings(
         currentWorkspace.id,
         changedSettings
       );
 
-      // Update the original settings reference after successful save
       originalSettingsRef.current = { ...settings };
-
-      // Check online status again in case auto-update setting changed
-      // if (
-      //   changedSettings.autoUpdateStatus !== undefined ||
-      //   changedSettings.presenceDetection !== undefined
-      // ) {
-      //   checkOnlineStatus(currentWorkspace.id);
-      // }
 
       setSuccessMessage(`Settings saved successfully!`);
 
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -184,48 +156,7 @@ const BehaviorSettings = () => {
       {successMessage && (
         <div className="behavior-settings__success">{successMessage}</div>
       )}
-      {/* <div className="behavior-settings__status-section">
-        <div className="behavior-settings__status-label">
-          Current Status{" "}
-          <span
-            className={`behavior-settings__status-badge ${
-              isOnline
-                ? "behavior-settings__status-badge--online"
-                : "behavior-settings__status-badge--offline"
-            }`}
-          >
-            {isOnline ? "online" : "offline"}
-          </span>
-          {currentWorkspace?.selected_channel_id && (
-            <span className="behavior-settings__status-detail">
-              {isOnline ? "operators available in" : "all operators away from"}{" "}
-              {currentWorkspace.name}
-            </span>
-          )}
-        </div>
 
-        <div className="behavior-settings__switch-wrapper">
-          <label className="behavior-settings__switch">
-            <input
-              type="checkbox"
-              checked={settings.autoUpdateStatus}
-              onChange={() =>
-                handleSettingChange(
-                  "autoUpdateStatus",
-                  !settings.autoUpdateStatus
-                )
-              }
-            />
-            <span className="behavior-settings__slider"></span>
-          </label>
-          <span className="behavior-settings__switch-label">
-            Update widget status automatically
-          </span>
-          <span className="behavior-settings__help-text">
-            (what does this mean?)
-          </span>
-        </div>
-      </div> */}
       <div className="behavior-settings__section">
         <h3>Presence detection</h3>
 

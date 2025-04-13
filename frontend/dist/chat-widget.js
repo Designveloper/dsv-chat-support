@@ -30392,16 +30392,26 @@ var ChatWidgetApp = (() => {
     const submitVisitorIdentification = () => __async(this, null, function* () {
       if (!workspaceId || !visitorEmail.trim()) {
         setError("Email is required");
-        return;
+        return false;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(visitorEmail)) {
         setError("Please enter a valid email address");
-        return;
+        return false;
       }
       try {
         setError(null);
         setIdentificationLoading(true);
+        const userData = {
+          email: visitorEmail,
+          name: visitorName || ""
+        };
+        const identifySuccess = useChatStore.getState().identify(visitorEmail, userData);
+        console.log("Visitor identification success:", identifySuccess);
+        if (!identifySuccess && window._chatSupport) {
+          window._chatSupport.identify(visitorEmail, userData);
+          console.log("Visitor identification success via window._chatSupport");
+        }
         localStorage.setItem("chat_visitor_email", visitorEmail);
         if (visitorName) {
           localStorage.setItem("chat_visitor_name", visitorName);

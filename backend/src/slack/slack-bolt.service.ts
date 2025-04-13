@@ -145,7 +145,6 @@ export class SlackBoltService implements OnModuleInit {
                 return false;
             }
 
-            // Try to join the channel first
             try {
                 console.log(`Joining channel ${workspace.selected_channel_id}`);
                 await this.boltApp.client.conversations.join({
@@ -156,7 +155,6 @@ export class SlackBoltService implements OnModuleInit {
                 console.log(`Error joining channel: ${joinError.message}`);
             }
 
-            // Now try to get members
             const membersResponse = await this.boltApp.client.conversations.members({
                 token: workspace.bot_token_slack,
                 channel: workspace.selected_channel_id,

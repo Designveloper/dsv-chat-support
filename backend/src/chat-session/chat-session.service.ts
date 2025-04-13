@@ -356,16 +356,11 @@ export class ChatSessionService {
                 'auto' // Default to auto if setting doesn't exist
             );
 
-            console.log(`Workspace ${workspaceId} settings - presenceDetection: ${presenceDetection}`);
-
-            // If auto-update is disabled or presence detection is manual, 
-            // always return true (assume online)
             if (presenceDetection === 'manual') {
                 console.log(`Workspace ${workspaceId} has manual presence detection, returning online`);
                 return true;
             }
 
-            // Use Slack bolt service to check actual online status
             const isOnline = await this.slackBoltService.isWorkspaceOnline(workspaceId);
             console.log(`Workspace ${workspaceId} actual online status: ${isOnline}`);
             return isOnline;
