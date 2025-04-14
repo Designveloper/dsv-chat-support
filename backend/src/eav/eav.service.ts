@@ -6,6 +6,7 @@ import { EavAttributes } from './entities/eav-attributes.entity';
 import { WorkspaceEntityVarchar } from './entities/workspace-entity-varchar.entity';
 import { WorkspaceEntityBoolean } from './entities/workspace-entity-boolean.entity';
 import { WorkspaceEntityInteger } from './entities/workspace-entity-integer.entity';
+import { WorkspaceEntityText } from './entities/workspace-entity-text.entity';
 import { EavEntityType } from './entities/eav-entity-type.entity';
 import { DataSource } from 'typeorm';
 
@@ -23,6 +24,8 @@ export class EavService {
         private readonly booleanRepository: Repository<WorkspaceEntityBoolean>,
         @InjectRepository(WorkspaceEntityInteger)
         private readonly integerRepository: Repository<WorkspaceEntityInteger>,
+        @InjectRepository(WorkspaceEntityText)
+        private readonly textRepository: Repository<WorkspaceEntityText>,
         @InjectRepository(EavEntityType)
         private readonly entityTypeRepository: Repository<EavEntityType>,
         private readonly dataSource: DataSource
@@ -32,6 +35,7 @@ export class EavService {
             varchar: this.varcharRepository,
             boolean: this.booleanRepository,
             int: this.integerRepository,
+            text: this.textRepository,
         };
     }
 
@@ -138,7 +142,7 @@ export class EavService {
     }
 
     async fetchAttributeValues(
-        backendType: 'boolean' | 'varchar' | 'int',
+        backendType: 'boolean' | 'varchar' | 'int' | 'text',
         entityId: string,
         attributeCodes: string[]
     ): Promise<any[]> {
@@ -198,10 +202,11 @@ export class EavService {
         }
 
         // Create a single query that fetches values from all three tables
-        const [booleanValues, varcharValues, intValues] = await Promise.all([
+        const [booleanValues, varcharValues, intValues, textValues] = await Promise.all([
             this.fetchAttributeValues('boolean', entityId, attributeCodes),
             this.fetchAttributeValues('varchar', entityId, attributeCodes),
-            this.fetchAttributeValues('int', entityId, attributeCodes)
+            this.fetchAttributeValues('int', entityId, attributeCodes),
+            this.fetchAttributeValues('text', entityId, attributeCodes),
         ]);
 
         console.log('Fetched boolean values:', booleanValues);
@@ -210,6 +215,7 @@ export class EavService {
             boolean: booleanValues,
             varchar: varcharValues,
             int: intValues,
+            text: textValues,
         };
 
         Object.keys(valueGroups).forEach(type => {
@@ -284,6 +290,7 @@ export class EavService {
             const booleanValues: { entity_id: string; att_id: number; value: boolean; created_at: Date; updated_at: Date }[] = [];
             const varcharValues: { entity_id: string; att_id: number; value: string; created_at: Date; updated_at: Date }[] = [];
             const intValues: { entity_id: string; att_id: number; value: number; created_at: Date; updated_at: Date }[] = [];
+            const textValues: { entity_id: string; att_id: number; value: string; created_at: Date; updated_at: Date }[] = [];
 
             attributes.forEach(attr => {
                 const attributeInfo = attributeMap[attr.code];
@@ -315,6 +322,9 @@ export class EavService {
                     case 'int':
                         intValues.push(valueObject);
                         break;
+                    case 'text':
+                        textValues.push(valueObject);
+                        break;
                     default:
                         break;
                 }
@@ -326,6 +336,7 @@ export class EavService {
                 { values: booleanValues, entity: WorkspaceEntityBoolean },
                 { values: varcharValues, entity: WorkspaceEntityVarchar },
                 { values: intValues, entity: WorkspaceEntityInteger },
+                { values: textValues, entity: WorkspaceEntityText }
             ];
 
             valueMap.forEach(({ values, entity }) => {
@@ -472,6 +483,46 @@ export class EavService {
                 updated_at: now,
             });
             await this.integerRepository.save(newValue);
+        }
+    }
+
+    async setTextValue(entityId: string, attCode: string, value: string): Promise<void> {
+        this.logger.log(`Setting text value for entityId: ${entityId}, attCode: ${attCode}, value: ${value}`);
+
+        const attribute = await this.attributesRepository.findOne({
+            where: { att_code: attCode },
+        });
+
+        if (!attribute) {
+            throw new Error(`Attribute '${attCode}' not found`);
+        }
+
+        if (attribute.backend_type !== 'text') {
+            throw new Error(`Attribute '${attCode}' is not a text type`);
+        }
+
+        // Check if value already exists
+        let existingValue = await this.textRepository.findOne({
+            where: { entity_id: entityId, att_id: attribute.att_id },
+        });
+
+        const now = new Date();
+
+        if (existingValue) {
+            // Update existing value
+            existingValue.value = value;
+            existingValue.updated_at = now;
+            await this.textRepository.save(existingValue);
+        } else {
+            // Create new value
+            const newValue = this.textRepository.create({
+                entity_id: entityId,
+                att_id: attribute.att_id,
+                value: value,
+                created_at: now,
+                updated_at: now,
+            });
+            await this.textRepository.save(newValue);
         }
     }
 }

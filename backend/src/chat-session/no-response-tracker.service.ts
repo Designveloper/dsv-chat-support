@@ -7,7 +7,6 @@ import { differenceInSeconds } from 'date-fns';
 @Injectable()
 export class NoResponseTrackerService {
     private activeTimers = new Map<string, NodeJS.Timeout>();
-    private warningCounts = new Map<string, number>();
     private lastUserMessageTime = new Map<string, Date>();
     private sessionHasReply = new Map<string, boolean>();
 
@@ -63,7 +62,6 @@ export class NoResponseTrackerService {
             );
 
             const delayMs = this.parseDelayToMs(noResponseDelay);
-            this.warningCounts.set(sessionId, 0);
             this.startWarningTimer(session, delayMs);
         }
     }
@@ -113,9 +111,6 @@ export class NoResponseTrackerService {
 
             const formattedTime = this.formatElapsedTime(elapsedSeconds);
 
-            const warningCount = (this.warningCounts.get(session.session_id) || 0) + 1;
-            this.warningCounts.set(session.session_id, warningCount);
-
             await this.slackService.postMessage(
                 workspace.bot_token_slack,
                 session.channel_id,
@@ -143,13 +138,7 @@ export class NoResponseTrackerService {
             console.log(`Timer cleared for session ${sessionId}`);
             this.activeTimers.delete(sessionId);
         }
-
-        this.warningCounts.delete(sessionId);
         this.lastUserMessageTime.delete(sessionId);
         this.sessionHasReply.delete(sessionId);
-    }
-
-    async handleSessionEnded(sessionId: string): Promise<void> {
-        this.clearSessionTracking(sessionId);
     }
 }

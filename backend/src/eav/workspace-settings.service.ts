@@ -10,6 +10,7 @@ export const WORKSPACE_SETTINGS = {
     NO_RESPONSE_DELAY: 'no_response_delay',
     SHOW_UNREAD_COUNT: 'show_unread_count',
     PLAY_SOUND: 'play_sound',
+    OPERATING_HOURS: 'operating_hours',
 };
 
 @Injectable()
@@ -28,6 +29,7 @@ export class WorkspaceSettingsService {
             { code: WORKSPACE_SETTINGS.NO_RESPONSE_DELAY, type: 'varchar', value: '300' },
             { code: WORKSPACE_SETTINGS.SHOW_UNREAD_COUNT, type: 'boolean', value: false },
             { code: WORKSPACE_SETTINGS.PLAY_SOUND, type: 'boolean', value: true },
+            { code: WORKSPACE_SETTINGS.OPERATING_HOURS, type: 'text', value: 'none' },
         ];
 
 
@@ -55,6 +57,12 @@ export class WorkspaceSettingsService {
         // Ensure the attribute exists before setting the value
         await this.ensureAttributeExists(settingCode, 'int');
         return this.eavService.setIntegerValue(workspaceId, settingCode, value);
+    }
+
+    async setTextSetting(workspaceId: string, settingCode: string, value: string): Promise<void> {
+        // Ensure the attribute exists before setting the value
+        await this.ensureAttributeExists(settingCode, 'text');
+        return this.eavService.setTextValue(workspaceId, settingCode, value);
     }
 
     private async ensureAttributeExists(attCode: string, backendType: string): Promise<void> {
@@ -153,6 +161,11 @@ export class WorkspaceSettingsService {
                 attrCode: WORKSPACE_SETTINGS.PLAY_SOUND,
                 type: 'boolean'
             },
+            {
+                dtoKey: 'operatingHours',
+                attrCode: WORKSPACE_SETTINGS.OPERATING_HOURS,
+                type: 'text'
+            }
         ];
 
         const attributes: { code: string; type: string; value: any }[] = [];

@@ -1,4 +1,3 @@
-// src/eav/entities/workspace-entity-integer.entity.ts
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 import { EavAttributes } from './eav-attributes.entity';
 import { WorkSpace } from '../../workspace/workspace.entity';

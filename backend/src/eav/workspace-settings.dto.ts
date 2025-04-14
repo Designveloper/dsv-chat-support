@@ -7,4 +7,5 @@ export class UpdateWorkspaceSettingsDto {
     @IsOptional() @IsString() noResponseDelay?: string;
     @IsOptional() @IsBoolean() showUnreadCount?: boolean;
     @IsOptional() @IsBoolean() playSound?: boolean;
+    @IsOptional() @IsString() operatingHours?: string;
 }

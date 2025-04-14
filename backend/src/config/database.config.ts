@@ -11,7 +11,7 @@ export const getDatabaseConfig = (configService: ConfigService): MysqlConnection
     database: configService.get<string>('DB_NAME'),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
-    migrationsRun: true,
+    // migrationsRun: true,
     multipleStatements: true,
     synchronize: false,
   };

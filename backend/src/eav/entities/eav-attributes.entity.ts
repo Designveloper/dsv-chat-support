@@ -12,7 +12,7 @@ export class EavAttributes {
     @Column({ nullable: false })
     entity_type_id: number;
 
-    @Column({ type: 'enum', enum: ['varchar', 'int', 'boolean', 'datetime'] })
+    @Column({ type: 'enum', enum: ['varchar', 'int', 'boolean', 'text'] })
     backend_type: string;
 
     @Column()

@@ -2,8 +2,8 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 't
 import { EavAttributes } from './eav-attributes.entity';
 import { WorkSpace } from '../../workspace/workspace.entity';
 
-@Entity('workspace_entity_varchar')
-export class WorkspaceEntityVarchar {
+@Entity('workspace_entity_text')
+export class WorkspaceEntityText {
     @PrimaryGeneratedColumn()
     value_id: number;
 
@@ -16,7 +16,7 @@ export class WorkspaceEntityVarchar {
     @Column()
     value: string;
 
-    @Column()
+    @Column({ type: 'text' })
     created_at: Date;
 
     @Column({ nullable: true })

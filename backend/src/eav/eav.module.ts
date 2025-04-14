@@ -6,6 +6,7 @@ import { EavAttributes } from './entities/eav-attributes.entity';
 import { WorkspaceEntityVarchar } from './entities/workspace-entity-varchar.entity';
 import { WorkspaceEntityBoolean } from './entities/workspace-entity-boolean.entity';
 import { WorkspaceEntityInteger } from './entities/workspace-entity-integer.entity';
+import { WorkspaceEntityText } from './entities/workspace-entity-text.entity';
 import { EavController } from './eav.controller';
 import { WorkspaceSettingsService } from './workspace-settings.service';
 import { WorkspaceSettingsController } from './workspace-settings.controller';
@@ -18,6 +19,7 @@ import { WorkspaceSettingsController } from './workspace-settings.controller';
             WorkspaceEntityVarchar,
             WorkspaceEntityBoolean,
             WorkspaceEntityInteger,
+            WorkspaceEntityText,
         ]),
     ],
     providers: [EavService, WorkspaceSettingsService],
