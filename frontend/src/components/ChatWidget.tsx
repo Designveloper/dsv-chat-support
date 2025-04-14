@@ -7,6 +7,7 @@ import { useOfflineForm } from "../hooks/useOfflineForm";
 import { useVisitorIdentification } from "../hooks/useVisitorIdentification";
 import VisitorIdentificationForm from "./VisitorIdentificationForm";
 import { workspaceSettingsService } from "../services/workspaceSettingsService";
+import { useOperatingHours } from "../hooks/useOperatingHours";
 import Button from "./Button";
 import Input from "./Input";
 
@@ -67,6 +68,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState<boolean>(false);
 
+  const [operatingHoursData, setOperatingHoursData] = useState<string | null>(
+    null
+  );
+  const { isWithinOperatingHours, nextOpenTime } =
+    useOperatingHours(operatingHoursData);
+
   // Initialize widget and check settings
   useEffect(() => {
     useChatStore.getState().initialize();
@@ -87,6 +94,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       setShowUnreadBadge(settings.show_unread_count || false);
       checkIdentificationRequired(settings.visitor_identification || "none");
       setPlaySound(settings.play_sound || false);
+      setOperatingHoursData(settings.operating_hours || null);
     } catch (error) {
       console.error("Failed to fetch workspace settings:", error);
     }
@@ -215,7 +223,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     }
 
     // If offline, show offline form
-    if (!isOnline) {
+    if (!isOnline || !isWithinOperatingHours) {
       if (offlineFormSubmitted) {
         return (
           <div className="chat-widget__offline-thanks">
@@ -228,6 +236,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       return (
         <div className="chat-widget__offline-form">
           <h3>Sorry, we are away</h3>
+          {!isWithinOperatingHours && nextOpenTime && (
+            <p>We'll be back {nextOpenTime}</p>
+          )}
           <p>But we would love to hear from you and chat soon!</p>
 
           <div className="chat-widget__offline-form-field">
@@ -341,18 +352,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       </>
     );
   };
-
   // Main render
   return (
     <div id="chat-widget-root">
       <div className="chat-widget">
         {isOpen && (
           <div
-            className={`chat-widget__panel ${
-              !isOnline && !offlineFormSubmitted && !offlineFormLoading
-                ? "chat-widget__panel--offline"
-                : ""
-            }`}
+            className={
+              isOnline && isWithinOperatingHours
+                ? "chat-widget__panel"
+                : "chat-widget__panel--offline"
+            }
           >
             <div className="chat-widget__header">
               <h3 className="chat-widget__title">

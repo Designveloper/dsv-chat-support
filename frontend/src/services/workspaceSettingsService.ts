@@ -9,6 +9,7 @@ interface WorkspaceSettings {
     no_response_delay?: string;
     show_unread_count?: boolean;
     play_sound?: boolean;
+    operating_hours?: string;
 }
 
 interface UpdateSettingsPayload {
@@ -18,6 +19,7 @@ interface UpdateSettingsPayload {
     noResponseDelay?: string;
     showUnreadCount?: boolean;
     playSound?: boolean;
+    operatingHours?: string;
 }
 
 export const workspaceSettingsService = {

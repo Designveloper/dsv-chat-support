@@ -290,4 +290,13 @@
     .operating-hours__time-separator {
         margin: 0.5rem 0;
     }
+
+    .operating-hours__error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
 }

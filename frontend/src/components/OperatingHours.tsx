@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Workspace } from "../services/workspaceService";
 import "./OperatingHours.scss";
+import { workspaceSettingsService } from "../services/workspaceSettingsService";
 
 type ContextType = { workspace: Workspace | null };
 
@@ -29,6 +30,13 @@ const OperatingHours = () => {
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (workspace) {
+      loadScheduleSettings(workspace.id);
+    }
+  }, [workspace]);
 
   useEffect(() => {
     const storedSchedule = localStorage.getItem(
@@ -39,31 +47,114 @@ const OperatingHours = () => {
     }
   }, [workspace]);
 
+  const handleClearSchedule = async () => {
+    if (!workspace?.id) return;
+
+    setIsSaving(true);
+    setError("");
+
+    try {
+      // Send 'none' to backend to indicate no operating hours are set
+      await workspaceSettingsService.updateSettings(workspace.id, {
+        operatingHours: "none",
+      });
+
+      // Reset the local state
+      setSchedule(initialSchedule);
+      setShowScheduleSetup(false);
+
+      setSuccessMessage("Operating hours schedule cleared successfully!");
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } catch (err) {
+      console.error("Error clearing operating hours:", err);
+      setError("Failed to clear schedule. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadScheduleSettings = async (workspaceId: string) => {
+    try {
+      const settings = await workspaceSettingsService.getSettings(workspaceId);
+      console.log("Loaded settings:", settings);
+
+      if (settings.operating_hours && settings.operating_hours !== "none") {
+        try {
+          const scheduleData = JSON.parse(settings.operating_hours);
+          if (scheduleData.timezone) {
+            setTimezone(scheduleData.timezone);
+          }
+          if (scheduleData.schedule && Array.isArray(scheduleData.schedule)) {
+            setSchedule(scheduleData.schedule);
+          }
+          setShowScheduleSetup(true);
+        } catch (error) {
+          console.error("Error parsing schedule data:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading schedule settings:", error);
+    }
+  };
+
   const handleSetupSchedule = () => {
     setShowScheduleSetup(true);
   };
 
-  const handleSaveChanges = () => {
-    setIsSaving(true);
-    localStorage.setItem(
-      `operating_hours_${workspace?.id}`,
-      JSON.stringify({ timezone, schedule })
-    );
+  const handleSaveChanges = async () => {
+    if (!workspace?.id) return;
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+    setIsSaving(true);
+    setError("");
+
+    const allDaysDisabled = !schedule.some((day) => day.enabled);
+
+    if (allDaysDisabled) {
+      return handleClearSchedule();
+    }
+
+    const scheduleData = {
+      timezone,
+      schedule,
+    };
+
+    const scheduleJson = JSON.stringify(scheduleData);
+
+    try {
+      await workspaceSettingsService.updateSettings(workspace.id, {
+        operatingHours: scheduleJson,
+      });
+      console.log(
+        "🚀 ~ handleSaveChanges ~ workspaceSettingsService:",
+        workspaceSettingsService
+      );
+
+      console.log("Schedule saved:", scheduleJson);
+
       setSuccessMessage("Schedule saved successfully!");
 
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-    }, 1000);
+    } catch (err) {
+      console.error("Error saving operating hours:", err);
+      setError("Failed to save schedule. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setShowScheduleSetup(false);
+    if (workspace?.id) {
+      loadScheduleSettings(workspace.id);
+    }
+
+    if (!schedule.some((day) => day.enabled)) {
+      setShowScheduleSetup(false);
+    }
   };
 
   const handleToggleDay = (index: number) => {
@@ -112,6 +203,10 @@ const OperatingHours = () => {
         <div className="operating-hours__schedule-setup">
           <h2 className="operating-hours__title">Operating Hours Setup</h2>
 
+          {error && (
+            <div className="operating-hours__error-message">{error}</div>
+          )}
+
           <div className="operating-hours__timezone">
             <label className="operating-hours__timezone-label">
               Select your timezone
@@ -129,7 +224,6 @@ const OperatingHours = () => {
                 America/New_York (-05:00)
               </option>
               <option value="Europe/London">Europe/London (+00:00)</option>
-              {/* Add more timezone options as needed */}
             </select>
           </div>
 

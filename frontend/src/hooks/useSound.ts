@@ -7,7 +7,6 @@ export function useSound() {
         try {
             console.log("Attempting to play notification sound");
 
-            // Create audio element if it doesn't exist
             if (!audioRef.current) {
                 audioRef.current = new Audio('/frontend/public/sounds/message-notification.mp3');
                 audioRef.current.volume = 0.5;

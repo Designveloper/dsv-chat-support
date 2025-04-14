@@ -1,9 +1,9 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn, Index } from 'typeorm';
 import { EavAttributes } from './eav-attributes.entity';
 import { WorkSpace } from '../../workspace/workspace.entity';
 
-
 @Entity('workspace_entity_boolean')
+@Index(['entity_id', 'att_id'], { unique: true })
 export class WorkspaceEntityBoolean {
     @PrimaryGeneratedColumn()
     value_id: number;

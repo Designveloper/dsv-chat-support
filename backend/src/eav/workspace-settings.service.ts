@@ -92,6 +92,7 @@ export class WorkspaceSettingsService {
     async getStringSetting(workspaceId: string, settingCode: string, defaultValue = ''): Promise<string> {
         try {
             const value = await this.eavService.getAttributeValue(workspaceId, settingCode);
+            console.log("🚀 ~ WorkspaceSettingsService ~ getStringSetting ~ value:", value)
             return value !== null ? value : defaultValue;
         } catch (error) {
             this.logger.warn(`Error getting string setting ${settingCode}: ${error.message}`);

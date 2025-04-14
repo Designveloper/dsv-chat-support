@@ -27,6 +27,7 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
                 (text) => {
                     setMessages((prev) => [...prev, { text, isUser: false }]);
                     if (playSoundEnabled) {
+                        console.log("Playing notification sound");
                         playNotificationSound();
                     }
                 },

@@ -355,6 +355,7 @@ export class ChatSessionService {
                 WORKSPACE_SETTINGS.PRESENCE_DETECTION,
                 'auto' // Default to auto if setting doesn't exist
             );
+            console.log("🚀 ~ ChatSessionService ~ isWorkspaceOnline ~ presenceDetection:", presenceDetection)
 
             if (presenceDetection === 'manual') {
                 console.log(`Workspace ${workspaceId} has manual presence detection, returning online`);

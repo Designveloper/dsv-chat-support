@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { chatService } from '../services/chatService';
+import { useOperatingHours } from './useOperatingHours';
 
 export function useChatSession(workspaceId?: string) {
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -7,6 +8,7 @@ export function useChatSession(workspaceId?: string) {
     const [isOnline, setIsOnline] = useState<boolean>(true);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const { isWithinOperatingHours } = useOperatingHours(activeWorkspace);
 
     useEffect(() => {
         if (workspaceId) {
@@ -25,6 +27,10 @@ export function useChatSession(workspaceId?: string) {
     // Initial check for online status
     const checkOnlineStatus = async () => {
         if (!activeWorkspace) return;
+        if (!isWithinOperatingHours) {
+            setIsOnline(false);
+            return;
+        }
 
         try {
             const online = await chatService.checkOnlineStatus(activeWorkspace);
