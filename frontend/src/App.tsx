@@ -46,6 +46,14 @@ const App = () => {
 
           {/* Settings routes */}
           <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/settings/workspace/:workspaceId"
             element={
               <ProtectedRoute>

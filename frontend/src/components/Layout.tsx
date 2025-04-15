@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Settings.scss";
+import WorkspaceSelector from "./WorkspaceSelector";
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ type LayoutProps = {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
 
   const getActiveTab = () => {
     const path = location.pathname;
@@ -20,10 +22,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleNavClick = (tab: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     if (tab === "settings") {
-      navigate("/settings/behavior"); // Default settings tab
+      setShowWorkspaceSelector(true);
     } else {
       navigate(`/${tab}`);
     }
+  };
+
+  const handleWorkspaceSelect = (workspaceId: string) => {
+    setShowWorkspaceSelector(false);
+    navigate(`/settings/workspace/${workspaceId}/behavior`);
   };
 
   return (
@@ -103,6 +110,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
       </div>
       {children}
+
+      {/* Workspace Selector Modal */}
+      {showWorkspaceSelector && (
+        <WorkspaceSelector
+          onSelect={handleWorkspaceSelect}
+          onClose={() => setShowWorkspaceSelector(false)}
+        />
+      )}
     </div>
   );
 };
