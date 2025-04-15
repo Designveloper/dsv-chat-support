@@ -19,7 +19,6 @@ const Settings = () => {
     if (path.includes("/settings/appearance")) return "appearance";
     if (path.includes("/settings/operating-hours")) return "operating-hours";
     if (path.includes("/settings/widget-install")) return "widget-install";
-    if (path.includes("/settings/saved-replies")) return "saved-replies";
     return "behavior"; // Default
   };
 
@@ -127,21 +126,6 @@ const Settings = () => {
                   onClick={handleTabClick("widget-install")}
                 >
                   Widget Install
-                </a>
-              </li>
-              <li
-                className={`settings__tabs-item ${
-                  getActiveTab() === "saved-replies"
-                    ? "settings__tabs-item--active"
-                    : ""
-                }`}
-              >
-                <a
-                  href="#"
-                  className="settings__tabs-link"
-                  onClick={handleTabClick("saved-replies")}
-                >
-                  Saved Replies
                 </a>
               </li>
             </ul>

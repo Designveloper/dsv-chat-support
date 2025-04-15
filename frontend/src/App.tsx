@@ -61,15 +61,6 @@ const App = () => {
             <Route path="appearance" element={<AppearanceSettings />} />
             <Route path="operating-hours" element={<OperatingHours />} />
             <Route path="widget-install" element={<WidgetInstall />} />
-            <Route
-              path="saved-replies"
-              element={
-                <div>
-                  <h2>Saved Replies</h2>
-                  <p>Create templates for common responses.</p>
-                </div>
-              }
-            />
           </Route>
 
           <Route

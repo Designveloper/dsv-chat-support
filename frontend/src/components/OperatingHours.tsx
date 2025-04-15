@@ -386,7 +386,6 @@ const OperatingHours = () => {
                             </div>
                           ))}
 
-                          {/* Add time range button */}
                           <button
                             type="button"
                             onClick={() => handleAddTimeRange(dayIndex)}
