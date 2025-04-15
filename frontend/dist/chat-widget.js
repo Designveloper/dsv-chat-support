@@ -30091,52 +30091,40 @@ var ChatWidgetApp = (() => {
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
-        const todaySchedule = schedule.find((item) => item.day === dayOfWeek);
-        if (todaySchedule && todaySchedule.enabled) {
-          if (currentTimeStr >= todaySchedule.startTime && currentTimeStr <= todaySchedule.endTime) {
-            setIsWithinOperatingHours(true);
-            setNextOpenTime(null);
-          } else {
-            setIsWithinOperatingHours(false);
-            if (currentTimeStr < todaySchedule.startTime) {
-              setNextOpenTime(`Today at ${todaySchedule.startTime}`);
-            } else {
-              let nextOpenDay = null;
-              const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-              const currentDayIndex = daysOfWeek.indexOf(dayOfWeek);
-              for (let i = 1; i <= 7; i++) {
-                const nextDayIndex = (currentDayIndex + i) % 7;
-                const nextDay = daysOfWeek[nextDayIndex];
-                const nextDaySchedule = schedule.find((item) => item.day === nextDay);
-                if (nextDaySchedule && nextDaySchedule.enabled) {
-                  nextOpenDay = nextDaySchedule;
-                  setNextOpenTime(`${nextDay} at ${nextDaySchedule.startTime}`);
-                  break;
-                }
-              }
-              if (!nextOpenDay) {
-                setNextOpenTime(null);
+        const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const currentDayIndex = daysOfWeek.indexOf(dayOfWeek);
+        const findNextOpenTimeSlot = () => {
+          const todaySchedule2 = schedule.find((item) => item.day === dayOfWeek);
+          if (todaySchedule2 && todaySchedule2.enabled) {
+            for (const timeRange of todaySchedule2.timeRanges) {
+              if (currentTimeStr < timeRange.startTime) {
+                return `Today at ${timeRange.startTime}`;
               }
             }
           }
-        } else {
-          setIsWithinOperatingHours(false);
-          let nextOpenDay = null;
-          const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-          const currentDayIndex = daysOfWeek.indexOf(dayOfWeek);
           for (let i = 1; i <= 7; i++) {
             const nextDayIndex = (currentDayIndex + i) % 7;
             const nextDay = daysOfWeek[nextDayIndex];
-            const nextDaySchedule = schedule.find((item) => item.day === nextDay);
-            if (nextDaySchedule && nextDaySchedule.enabled) {
-              nextOpenDay = nextDaySchedule;
-              setNextOpenTime(`${nextDay} at ${nextDaySchedule.startTime}`);
-              break;
+            const nextDaySchedule = schedule.find((item) => item.day === nextDay && item.enabled);
+            if (nextDaySchedule && nextDaySchedule.timeRanges.length > 0) {
+              const earliestSlot = [...nextDaySchedule.timeRanges].sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+              return `${nextDay} at ${earliestSlot.startTime}`;
             }
           }
-          if (!nextOpenDay) {
-            setNextOpenTime(null);
-          }
+          return null;
+        };
+        const todaySchedule = schedule.find((item) => item.day === dayOfWeek);
+        let isWithinAnyTimeSlot = false;
+        if (todaySchedule && todaySchedule.enabled && todaySchedule.timeRanges.length > 0) {
+          isWithinAnyTimeSlot = todaySchedule.timeRanges.some(
+            (timeRange) => currentTimeStr >= timeRange.startTime && currentTimeStr <= timeRange.endTime
+          );
+        }
+        setIsWithinOperatingHours(isWithinAnyTimeSlot);
+        if (!isWithinAnyTimeSlot) {
+          setNextOpenTime(findNextOpenTimeSlot());
+        } else {
+          setNextOpenTime(null);
         }
         setIsLoading(false);
       } catch (err) {

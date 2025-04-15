@@ -6,21 +6,53 @@ import { workspaceSettingsService } from "../services/workspaceSettingsService";
 
 type ContextType = { workspace: Workspace | null };
 
-type ScheduleItem = {
-  day: string;
+type TimeRanges = {
   startTime: string;
   endTime: string;
+};
+
+type ScheduleItem = {
+  day: string;
+  timeRanges: TimeRanges[];
   enabled: boolean;
 };
 
 const initialSchedule: ScheduleItem[] = [
-  { day: "Monday", startTime: "", endTime: "", enabled: false },
-  { day: "Tuesday", startTime: "", endTime: "", enabled: false },
-  { day: "Wednesday", startTime: "", endTime: "", enabled: false },
-  { day: "Thursday", startTime: "", endTime: "", enabled: false },
-  { day: "Friday", startTime: "", endTime: "", enabled: false },
-  { day: "Saturday", startTime: "", endTime: "", enabled: false },
-  { day: "Sunday", startTime: "", endTime: "", enabled: false },
+  {
+    day: "Monday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Tuesday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Wednesday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Thursday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Friday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Saturday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
+  {
+    day: "Sunday",
+    timeRanges: [{ startTime: "", endTime: "" }],
+    enabled: false,
+  },
 ];
 
 const OperatingHours = () => {
@@ -84,12 +116,30 @@ const OperatingHours = () => {
       if (settings.operating_hours && settings.operating_hours !== "none") {
         try {
           const scheduleData = JSON.parse(settings.operating_hours);
+
           if (scheduleData.timezone) {
             setTimezone(scheduleData.timezone);
           }
+
           if (scheduleData.schedule && Array.isArray(scheduleData.schedule)) {
-            setSchedule(scheduleData.schedule);
+            const newSchedule = scheduleData.schedule.map(
+              (day: ScheduleItem) => {
+                if ("startTime" in day && "endTime" in day) {
+                  return {
+                    day: day.day,
+                    enabled: day.enabled,
+                    timeRanges: day.enabled
+                      ? [{ startTime: day.startTime, endTime: day.endTime }]
+                      : [{ startTime: "", endTime: "" }],
+                  };
+                }
+                return day;
+              }
+            );
+
+            setSchedule(newSchedule);
           }
+
           setShowScheduleSetup(true);
         } catch (error) {
           console.error("Error parsing schedule data:", error);
@@ -161,23 +211,41 @@ const OperatingHours = () => {
     const newSchedule = [...schedule];
     newSchedule[index].enabled = !newSchedule[index].enabled;
     if (!newSchedule[index].enabled) {
-      newSchedule[index].startTime = "";
-      newSchedule[index].endTime = "";
-    } else if (newSchedule[index].startTime === "") {
-      newSchedule[index].startTime = "09:00";
-      newSchedule[index].endTime = "17:00";
+      newSchedule[index].timeRanges = [{ startTime: "", endTime: "" }];
+    } else if (newSchedule[index].timeRanges[0].startTime === "") {
+      newSchedule[index].timeRanges = [
+        { startTime: "09:00", endTime: "17:00" },
+      ];
     }
     setSchedule(newSchedule);
   };
 
   const handleTimeChange = (
-    index: number,
+    dayIndex: number,
+    rangeIndex: number,
     field: "startTime" | "endTime",
     value: string
   ) => {
     const newSchedule = [...schedule];
-    newSchedule[index][field] = value;
+    newSchedule[dayIndex].timeRanges[rangeIndex][field] = value;
     setSchedule(newSchedule);
+  };
+
+  const handleAddTimeRange = (dayIndex: number) => {
+    const newSchedule = [...schedule];
+    newSchedule[dayIndex].timeRanges.push({
+      startTime: "09:00",
+      endTime: "17:00",
+    });
+    setSchedule(newSchedule);
+  };
+
+  const handleRemoveTimeRange = (dayIndex: number, rangeIndex: number) => {
+    const newSchedule = [...schedule];
+    if (newSchedule[dayIndex].timeRanges.length > 1) {
+      newSchedule[dayIndex].timeRanges.splice(rangeIndex, 1);
+      setSchedule(newSchedule);
+    }
   };
 
   const generateTimeOptions = () => {
@@ -238,14 +306,14 @@ const OperatingHours = () => {
                 </tr>
               </thead>
               <tbody>
-                {schedule.map((item, index) => (
+                {schedule.map((item, dayIndex) => (
                   <tr key={item.day} className="operating-hours__table-row">
                     <td className="operating-hours__table-day">
                       <label className="operating-hours__day-label">
                         <input
                           type="checkbox"
                           checked={item.enabled}
-                          onChange={() => handleToggleDay(index)}
+                          onChange={() => handleToggleDay(dayIndex)}
                           className="operating-hours__day-checkbox"
                         />
                         {item.day}
@@ -253,40 +321,79 @@ const OperatingHours = () => {
                     </td>
                     <td className="operating-hours__table-time">
                       {item.enabled ? (
-                        <div className="operating-hours__time-selectors">
-                          <select
-                            value={item.startTime}
-                            onChange={(e) =>
-                              handleTimeChange(
-                                index,
-                                "startTime",
-                                e.target.value
-                              )
-                            }
-                            className="operating-hours__time-select"
-                            disabled={!item.enabled}
-                          >
-                            {item.startTime === "" && (
-                              <option value="">–</option>
-                            )}
-                            {generateTimeOptions()}
-                          </select>
+                        <div className="operating-hours__time-ranges">
+                          {item.timeRanges.map((timeRange, rangeIndex) => (
+                            <div
+                              key={rangeIndex}
+                              className="operating-hours__time-range"
+                            >
+                              <div className="operating-hours__time-selectors">
+                                <select
+                                  value={timeRange.startTime}
+                                  onChange={(e) =>
+                                    handleTimeChange(
+                                      dayIndex,
+                                      rangeIndex,
+                                      "startTime",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="operating-hours__time-select"
+                                >
+                                  {timeRange.startTime === "" && (
+                                    <option value="">–</option>
+                                  )}
+                                  {generateTimeOptions()}
+                                </select>
 
-                          <span className="operating-hours__time-separator">
-                            to
-                          </span>
+                                <span className="operating-hours__time-separator">
+                                  to
+                                </span>
 
-                          <select
-                            value={item.endTime}
-                            onChange={(e) =>
-                              handleTimeChange(index, "endTime", e.target.value)
-                            }
-                            className="operating-hours__time-select"
-                            disabled={!item.enabled}
+                                <select
+                                  value={timeRange.endTime}
+                                  onChange={(e) =>
+                                    handleTimeChange(
+                                      dayIndex,
+                                      rangeIndex,
+                                      "endTime",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="operating-hours__time-select"
+                                >
+                                  {timeRange.endTime === "" && (
+                                    <option value="">–</option>
+                                  )}
+                                  {generateTimeOptions()}
+                                </select>
+
+                                {item.timeRanges.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveTimeRange(
+                                        dayIndex,
+                                        rangeIndex
+                                      )
+                                    }
+                                    className="operating-hours__time-range-remove"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Add time range button */}
+                          <button
+                            type="button"
+                            onClick={() => handleAddTimeRange(dayIndex)}
+                            className="operating-hours__add-time-range"
                           >
-                            {item.endTime === "" && <option value="">–</option>}
-                            {generateTimeOptions()}
-                          </select>
+                            + Add another time range
+                          </button>
                         </div>
                       ) : (
                         <div className="operating-hours__time-disabled">
@@ -307,10 +414,6 @@ const OperatingHours = () => {
               </tbody>
             </table>
           </div>
-
-          <p className="operating-hours__note-text">
-            Note: Operating hours will take affect at the next scheduled time.
-          </p>
 
           {successMessage && (
             <div className="operating-hours__success-message">
