@@ -359,7 +359,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
         {isOpen && (
           <div
             className={
-              isOnline && isWithinOperatingHours
+              (isOnline && isWithinOperatingHours) ||
+              (offlineFormSubmitted && !offlineFormLoading)
                 ? "chat-widget__panel"
                 : "chat-widget__panel--offline"
             }

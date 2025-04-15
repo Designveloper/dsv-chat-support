@@ -31402,14 +31402,10 @@ var ChatWidgetApp = (() => {
         }
       )));
     };
-    console.log("Is online:", isOnline);
-    console.log("Is within operating hours:", isWithinOperatingHours);
-    const isOffline = !isOnline && !offlineFormSubmitted;
-    console.log("ChatWidget render - isOffline:", isOffline);
     return /* @__PURE__ */ import_react11.default.createElement("div", { id: "chat-widget-root" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget" }, isOpen && /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
-        className: isOnline && isWithinOperatingHours ? "chat-widget__panel" : "chat-widget__panel--offline"
+        className: isOnline && isWithinOperatingHours || offlineFormSubmitted && !offlineFormLoading ? "chat-widget__panel" : "chat-widget__panel--offline"
       },
       /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header" }, /* @__PURE__ */ import_react11.default.createElement("h3", { className: "chat-widget__title" }, !isOnline ? "Leave a Message" : needsIdentification ? "Welcome" : "Live Chat Support"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header-actions" }, isOnline && !needsIdentification && /* @__PURE__ */ import_react11.default.createElement(
         Button_default,

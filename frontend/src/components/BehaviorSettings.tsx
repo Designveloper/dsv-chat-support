@@ -153,9 +153,6 @@ const BehaviorSettings = () => {
       <h2>Presence and widget behavior</h2>
       {loading && <div className="behavior-settings__loading">Loading...</div>}
       {error && <div className="behavior-settings__error">{error}</div>}
-      {successMessage && (
-        <div className="behavior-settings__success">{successMessage}</div>
-      )}
 
       <div className="behavior-settings__section">
         <h3>Presence detection</h3>
@@ -343,6 +340,10 @@ const BehaviorSettings = () => {
           </label>
         </div>
       </div>
+
+      {successMessage && (
+        <div className="behavior-settings__success">{successMessage}</div>
+      )}
 
       <div className="behavior-settings__actions">
         <button

@@ -4,12 +4,12 @@ import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-
 import { SlackService } from '../slack/slack.service';
 import { differenceInSeconds } from 'date-fns';
 
+const activeTimer = new Map<string, NodeJS.Timeout>();
+const lastUserMessageTime = new Map<string, Date>();
+const sessionHasReply = new Map<string, boolean>();
+
 @Injectable()
 export class NoResponseTrackerService {
-    private activeTimers = new Map<string, NodeJS.Timeout>();
-    private lastUserMessageTime = new Map<string, Date>();
-    private sessionHasReply = new Map<string, boolean>();
-
     constructor(
         @Inject(forwardRef(() => ChatSessionService))
         private chatSessionService: ChatSessionService,
@@ -20,29 +20,29 @@ export class NoResponseTrackerService {
     async trackUserMessage(sessionId: string, isUserMessage: boolean): Promise<void> {
         console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ isUserMessage:", isUserMessage)
         console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ sessionId:", sessionId)
-        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ this.activeTimers:", this.activeTimers)
+        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ activeTimer:", activeTimer)
 
         if (!isUserMessage) {
             console.log('Staff message received');
-            this.sessionHasReply.set(sessionId, true);
-            console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ this.activeTimers.has(sessionId):", this.activeTimers.has(sessionId))
-            if (this.activeTimers.has(sessionId)) {
-                clearTimeout(this.activeTimers.get(sessionId));
-                this.activeTimers.delete(sessionId);
+            sessionHasReply.set(sessionId, true);
+            console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ activeTimer.has(sessionId):", activeTimer.has(sessionId))
+            if (activeTimer.has(sessionId)) {
+                clearTimeout(activeTimer.get(sessionId));
+                activeTimer.delete(sessionId);
                 console.log('Timer cleared for staff response');
             }
             return;
         }
-        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ this.activeTimers:", this.activeTimers)
+        console.log("🚀 ~ NoResponseTrackerService ~ trackUserMessage ~ activeTimer:", activeTimer)
 
         const session = await this.chatSessionService.findSessionBySessionId(sessionId);
         if (!session || session.status !== 'active' || !session.channel_id) return;
 
-        this.lastUserMessageTime.set(sessionId, new Date());
+        lastUserMessageTime.set(sessionId, new Date());
 
-        if (this.activeTimers.has(sessionId)) {
-            clearTimeout(this.activeTimers.get(sessionId));
-            this.activeTimers.delete(sessionId);
+        if (activeTimer.has(sessionId)) {
+            clearTimeout(activeTimer.get(sessionId));
+            activeTimer.delete(sessionId);
         }
 
         const workspace = await this.chatSessionService.findWorkspaceById(session.workspace_id);
@@ -83,7 +83,7 @@ export class NoResponseTrackerService {
 
     private startWarningTimer(session: any, delayMs: number): void {
         const timer = setTimeout(async () => {
-            if (this.sessionHasReply.get(session.session_id)) {
+            if (sessionHasReply.get(session.session_id)) {
                 this.clearSessionTracking(session.session_id);
                 return;
             }
@@ -93,7 +93,7 @@ export class NoResponseTrackerService {
             this.startWarningTimer(session, delayMs);
         }, delayMs);
 
-        this.activeTimers.set(session.session_id, timer);
+        activeTimer.set(session.session_id, timer);
     }
 
     private async sendWarningMessage(session: any): Promise<void> {
@@ -107,7 +107,7 @@ export class NoResponseTrackerService {
                 return;
             }
 
-            const elapsedSeconds = differenceInSeconds(new Date(), this.lastUserMessageTime.get(session.session_id) || new Date());
+            const elapsedSeconds = differenceInSeconds(new Date(), lastUserMessageTime.get(session.session_id) || new Date());
 
             const formattedTime = this.formatElapsedTime(elapsedSeconds);
 
@@ -132,13 +132,13 @@ export class NoResponseTrackerService {
     }
 
     clearSessionTracking(sessionId: string): void {
-        if (this.activeTimers.has(sessionId)) {
+        if (activeTimer.has(sessionId)) {
             console.log(`Clearing timer for session ${sessionId}`);
-            clearTimeout(this.activeTimers.get(sessionId));
+            clearTimeout(activeTimer.get(sessionId));
             console.log(`Timer cleared for session ${sessionId}`);
-            this.activeTimers.delete(sessionId);
+            activeTimer.delete(sessionId);
         }
-        this.lastUserMessageTime.delete(sessionId);
-        this.sessionHasReply.delete(sessionId);
+        lastUserMessageTime.delete(sessionId);
+        sessionHasReply.delete(sessionId);
     }
 }
