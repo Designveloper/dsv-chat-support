@@ -1,30 +1,33 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet, useParams } from "react-router-dom";
 import "./Settings.scss";
 import Layout from "./Layout";
 import { workspaceService, Workspace } from "../services/workspaceService";
-import { useParams } from "react-router-dom";
+import Button from "./Button";
 
 const Settings = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id: workspaceId } = useParams<{ id: string }>();
+  const [error, setError] = useState<string | null>(null);
+  const { workspaceId } = useParams<{ workspaceId: string }>();
 
   // Determine active tab based on the URL path
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.includes("/settings/behavior")) return "behavior";
-    if (path.includes("/settings/appearance")) return "appearance";
-    if (path.includes("/settings/operating-hours")) return "operating-hours";
-    if (path.includes("/settings/widget-install")) return "widget-install";
+    if (path.includes("/behavior")) return "behavior";
+    if (path.includes("/appearance")) return "appearance";
+    if (path.includes("/operating-hours")) return "operating-hours";
+    if (path.includes("/widget-install")) return "widget-install";
     return "behavior"; // Default
   };
 
   const handleTabClick = (tab: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate(`/settings/${tab}`);
+    if (workspaceId) {
+      navigate(`/settings/workspace/${workspaceId}/${tab}`);
+    }
   };
 
   const getTabTitle = () => {
@@ -38,33 +41,68 @@ const Settings = () => {
   useEffect(() => {
     const fetchWorkspace = async () => {
       if (!workspaceId) {
-        try {
-          setLoading(true);
-          const workspaces = await workspaceService.fetchWorkspaces();
-          if (workspaces.length > 0) {
-            setWorkspace(workspaces[0]);
-          }
-        } catch (error) {
-          console.error("Error fetching workspaces:", error);
-        } finally {
-          setLoading(false);
-        }
+        setError("No workspace selected");
+        setLoading(false);
         return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const workspace = await workspaceService.getWorkspace(workspaceId);
+        setWorkspace(workspace);
+      } catch (error) {
+        console.error("Error fetching workspace:", error);
+        setError("Failed to load workspace settings");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchWorkspace();
   }, [workspaceId]);
 
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="settings__content">
+          <div className="loading">Loading workspace settings...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !workspace) {
+    return (
+      <Layout>
+        <div className="settings__content">
+          <div className="settings__error">
+            <p>{error || "Workspace not found"}</p>
+            <Button
+              label="Back to Dashboard"
+              onClick={handleBackToDashboard}
+              className="settings__back-btn"
+            />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="settings__content">
         <div className="settings__header">
           <div className="settings__header-top">
-            <h1 className="settings__title">
-              {loading ? "Loading..." : workspace?.name || "Workspace"} -{" "}
-              {getTabTitle()}
-            </h1>
+            <div className="settings__title-container">
+              <h1 className="settings__title">
+                {workspace.name} - {getTabTitle()}
+              </h1>
+            </div>
           </div>
           <div className="settings__tabs">
             <ul className="settings__tabs-list">

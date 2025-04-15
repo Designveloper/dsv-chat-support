@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Request, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { WorkspaceService } from './workspace.service';
 
@@ -20,5 +20,18 @@ export class WorkspaceController {
             workspace_id: newWorkspace.id,
             created_at: newWorkspace.createdAt,
         };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get(':id')
+    async getWorkspace(@Param('id') id: string, @Request() req) {
+        const workspaces = await this.workspaceService.findByOwnerId(req.user.userId);
+        const workspace = workspaces.find(w => w.id === id);
+
+        if (!workspace) {
+            throw new Error(`Workspace with ID ${id} not found or access denied`);
+        }
+
+        return workspace;
     }
 }

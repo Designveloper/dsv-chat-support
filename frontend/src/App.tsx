@@ -46,7 +46,7 @@ const App = () => {
 
           {/* Settings routes */}
           <Route
-            path="/settings"
+            path="/settings/workspace/:workspaceId"
             element={
               <ProtectedRoute>
                 <Settings />

@@ -126,7 +126,14 @@ const Dashboard = () => {
             {activeTab === "overview" && (
               <section className="dashboard__integrations-section">
                 {slackConnected ? (
-                  <h2>Your workspace</h2>
+                  <div className="dashboard__header-actions">
+                    <h2>Your workspaces</h2>
+                    <Button
+                      label="Add New Workspace"
+                      onClick={handleAddToSlack}
+                      className="dashboard__create-btn"
+                    />
+                  </div>
                 ) : (
                   <h2>
                     Click the button below to add Chat Support to your Slack
@@ -142,7 +149,9 @@ const Dashboard = () => {
                           key={workspace.id}
                           className="dashboard__workspace-card"
                         >
-                          <h3>{workspace.name}</h3>
+                          <div className="dashboard__workspace-header">
+                            <h3>{workspace.name}</h3>
+                          </div>
                           <div className="dashboard__workspace-details">
                             <p>
                               Created:{" "}
@@ -164,7 +173,7 @@ const Dashboard = () => {
                             </p>
                             <p>
                               <a
-                                href={`/settings/behavior`}
+                                href={`/settings/workspace/${workspace.id}/behavior`}
                                 className="dashboard__link"
                               >
                                 Manage Settings

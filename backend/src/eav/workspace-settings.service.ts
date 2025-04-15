@@ -26,7 +26,7 @@ export class WorkspaceSettingsService {
             { code: WORKSPACE_SETTINGS.PRESENCE_DETECTION, type: 'varchar', value: 'auto' },
             { code: WORKSPACE_SETTINGS.VISITOR_IDENTIFICATION, type: 'varchar', value: 'none' },
             { code: WORKSPACE_SETTINGS.NO_RESPONSE_ACTION, type: 'varchar', value: 'no warnings' },
-            { code: WORKSPACE_SETTINGS.NO_RESPONSE_DELAY, type: 'varchar', value: '300' },
+            { code: WORKSPACE_SETTINGS.NO_RESPONSE_DELAY, type: 'varchar', value: '30sec' },
             { code: WORKSPACE_SETTINGS.SHOW_UNREAD_COUNT, type: 'boolean', value: false },
             { code: WORKSPACE_SETTINGS.PLAY_SOUND, type: 'boolean', value: true },
             { code: WORKSPACE_SETTINGS.OPERATING_HOURS, type: 'text', value: 'none' },

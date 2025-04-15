@@ -92,7 +92,6 @@ export const workspaceService = {
             return response.data;
         });
     },
-
     // Check if any workspace has Slack connected
     hasSlackIntegration(workspaces: Workspace[]): boolean {
         return workspaces.some(workspace => workspace.bot_token_slack);
