@@ -1,32 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { workspaceService } from "../services/workspaceService";
+import React, { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { Workspace } from "../services/workspaceService";
 import "./WidgetInstall.scss";
 
+// Define the type for the context
+type ContextType = { workspace: Workspace };
+
 const WidgetInstall: React.FC = () => {
-  const [widgetId, setWidgetId] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const { workspace } = useOutletContext<ContextType>();
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchWidgetId();
-  }, []);
-
-  const fetchWidgetId = async () => {
-    try {
-      setIsLoading(true);
-      // This is where you would fetch the actual widget ID from your backend
-      const workspaces = await workspaceService.fetchWorkspaces();
-      if (workspaces.length > 0) {
-        // Assuming the first workspace's ID can be used as widget ID
-        // In a real implementation, you might need to fetch this specifically
-        setWidgetId(workspaces[0].id);
-      }
-    } catch (error) {
-      console.error("Error fetching widget ID:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const widgetId = workspace?.id || "";
 
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard
@@ -42,17 +26,12 @@ const WidgetInstall: React.FC = () => {
       });
   };
 
-  if (isLoading) {
-    return (
-      <div className="widget-install__loading">
-        Loading widget information...
-      </div>
-    );
-  }
-
   return (
     <div className="widget-install">
       <h2>Widget Installation Instructions</h2>
+      <p className="widget-install__workspace-info">
+        Workspace: <strong>{workspace?.name}</strong>
+      </p>
 
       <div className="widget-install__step">
         <h3>Step 1: Add the Script to Your HTML Head</h3>

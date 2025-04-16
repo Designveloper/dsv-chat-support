@@ -55,7 +55,7 @@ export function useChatSession(workspaceId?: string) {
             // Add welcome message
             const initialMessages = [
                 {
-                    text: "Welcome! How can we help you today?",
+                    text: "Question? Just type it below and we are online and ready to answer.",
                     isUser: false,
                 }
             ];

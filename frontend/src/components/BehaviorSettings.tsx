@@ -150,7 +150,7 @@ const BehaviorSettings = () => {
 
   return (
     <div className="behavior-settings">
-      <h2>Presence and widget behavior</h2>
+      <h2>Widget behavior</h2>
       {loading && <div className="behavior-settings__loading">Loading...</div>}
       {error && <div className="behavior-settings__error">{error}</div>}
 
