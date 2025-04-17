@@ -46,16 +46,14 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
         } else {
             setMessages([]);
         }
-    }, [sessionId, setIsOnline]);
+    }, [sessionId, setIsOnline, playSoundEnabled]);
 
-    // Save messages to local storage when they change
     useEffect(() => {
         if (sessionId && messages.length > 0) {
             chatService.saveMessages(sessionId, messages);
         }
     }, [messages, sessionId]);
 
-    // Scroll to bottom when messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -64,17 +62,14 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
     const sendMessage = async () => {
         if (!messageText.trim() || !sessionId) return;
 
-        // Get visitor data from localStorage
         const visitorEmail = localStorage.getItem('chat_visitor_email');
         const visitorName = localStorage.getItem('chat_visitor_name');
 
-        // Construct user info object
         const userInfo = {
             email: visitorEmail || '',
             userId: visitorName || undefined
         };
 
-        // Add message to UI
         const newMessage = { text: messageText, isUser: true };
         setMessages((prev) => [...prev, newMessage]);
 
@@ -82,7 +77,6 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
         setMessageText("");
 
         try {
-            // Send message with user info
             await chatService.sendMessage({
                 sessionId,
                 message: messageToSend,
@@ -94,7 +88,6 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
         }
     };
 
-    // Set end chat message
     const setEndChatMessage = () => {
         setMessages((prev) => [...prev, {
             text: "Chat session ended. Thank you for chatting with us!",

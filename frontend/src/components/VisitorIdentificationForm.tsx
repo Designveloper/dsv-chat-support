@@ -43,7 +43,7 @@ const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
           <Input
             id="visitor-email"
             type="email"
-            label="Email"
+            placeholder="Email"
             value={visitorEmail}
             onChange={(e) => setVisitorEmail(e.target.value)}
             required
@@ -54,7 +54,7 @@ const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
           <Input
             id="visitor-name"
             type="text"
-            label="Name (optional)"
+            placeholder="Name (optional)"
             value={visitorName}
             onChange={(e) => setVisitorName(e.target.value)}
           />

@@ -40,8 +40,8 @@
 
     .chat-widget__unread-badge {
         position: absolute;
-        top: -8px;
-        right: -8px;
+        top: -3px;
+        left: -3px;
         background-color: #E01E5A;
         color: white;
         border-radius: 50%;
@@ -566,6 +566,13 @@
     .chat-widget__header-with-avatar {
         display: flex;
         align-items: center;
+    }
+
+    .chat-widget__visitor-identification {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
     }
 
     @keyframes pulse {

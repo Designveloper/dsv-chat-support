@@ -23691,27 +23691,28 @@ var ChatWidgetApp = (() => {
   display: inline-block;
 }
 #chat-widget-root .chat-widget__toggle {
-  width: 120px;
+  width: 240px;
   height: 60px;
-  border-radius: 50%;
-  background-color: #4A154B;
+  border-radius: 28px 28px 28px 0px;
+  background-color: #4050b5;
   color: white;
   border: none;
   font-size: 16px;
-  font-weight: bold;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.3s ease;
+}
+#chat-widget-root .chat-widget__toggle--offline {
+  width: 140px;
 }
 #chat-widget-root .btn.chat-widget__toggle:hover {
-  background-color: rgb(54.34375, 15.421875, 55.078125);
+  background-color: rgb(57.3387755102, 71.6734693878, 162.1612244898);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 #chat-widget-root .chat-widget__unread-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -3px;
+  left: -3px;
   background-color: #E01E5A;
   color: white;
   border-radius: 50%;
@@ -23730,96 +23731,208 @@ var ChatWidgetApp = (() => {
   position: absolute;
   bottom: 70px;
   right: 0;
-  width: 320px;
-  height: 400px;
+  width: 370px;
+  height: 500px;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+#chat-widget-root .chat-widget__panel,
+#chat-widget-root .chat-widget__panel--offline {
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform-origin: bottom right;
+}
+#chat-widget-root .chat-widget__panel--closed,
+#chat-widget-root .chat-widget__panel--offline--closed {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+  pointer-events: none;
+}
+#chat-widget-root .chat-widget__toggle-container {
+  transition: transform 0.3s ease-in-out, opacity 0.2s ease;
+}
+#chat-widget-root .chat-widget__toggle-container--hidden {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+  pointer-events: none;
+}
 #chat-widget-root .chat-widget__header {
-  padding: 12px 16px;
-  background-color: #4A154B;
-  color: white;
+  padding: 16px;
+  color: #666;
+  border-bottom: #f1f0f0 1px solid;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+#chat-widget-root .chat-widget__header--offline {
+  display: none;
+}
 #chat-widget-root .chat-widget__title {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
 }
-#chat-widget-root .chat-widget__close-button {
+#chat-widget-root .chat-widget__header-actions {
+  display: flex;
+  height: 30px;
+  padding-top: 0;
+  line-height: 30px;
+  cursor: pointer;
+  text-align: center;
+  align-items: center;
+}
+#chat-widget-root .chat-widget__header-actions svg {
+  display: inline;
+  width: 18px;
+  height: 4px;
+  vertical-align: middle;
+}
+#chat-widget-root .chat-widget__menu-button {
   background: none;
   border: none;
-  color: white;
-  font-size: 20px;
-  padding: 0 4px;
+  color: black;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin-bottom: 10px;
+}
+#chat-widget-root .chat-widget__menu-button:hover {
+  color: #E01E5A;
+}
+#chat-widget-root .chat-widget__close-button {
+  background: url(https://w.chatlio.com/v5/images/x-dark.d84d0cd0.svg) center no-repeat;
+  background-size: 15px 15px;
+  width: 18px;
+  height: 30px;
+  margin-left: 14px;
+  float: right;
   cursor: pointer;
 }
-#chat-widget-root .chat-widget__close-button:hover {
-  color: #E01E5A;
+#chat-widget-root .chat-widget__close-button--offline {
+  margin: 12px 18px 0 auto;
+}
+#chat-widget-root .chat-widget__menu-dropdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 50px;
+  right: 40px;
+  background: white;
+  padding: 20px;
+  border-radius: 14px 0 14px 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+#chat-widget-root .chat-widget__menu-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+#chat-widget-root .chat-widget__menu-dropdown:hover {
+  background-color: #f5f5f5;
+}
+#chat-widget-root .chat-widget__menu-item {
+  display: block;
+  width: 100%;
+  background: none;
+  color: #444;
+  font-weight: 200;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  margin-left: 10px;
 }
 #chat-widget-root .chat-widget__messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 12px;
   color: #333;
   display: flex;
   flex-direction: column;
+  background-color: #fff;
+}
+#chat-widget-root .chat-widget__message-container {
+  display: flex;
+  align-items: center;
 }
 #chat-widget-root .chat-widget__message {
   margin-bottom: 12px;
-  padding: 10px 12px;
-  max-width: 80%;
-  border-radius: 8px;
+  padding: 6px 10px;
+  max-width: 270px;
+  border-radius: 12px;
   word-break: break-word;
+  font-size: 15px;
+  line-height: 1.4;
 }
 #chat-widget-root .chat-widget__message--user {
-  background-color: #EBF5FB;
+  background-color: rgb(63, 81, 181);
+  color: white;
   align-self: flex-end;
   margin-left: auto;
+  border-radius: 16px 16px 0 16px;
 }
 #chat-widget-root .chat-widget__message--support {
   background-color: #F5F5F5;
   align-self: flex-start;
+  border-radius: 12px 24px 24px 0;
 }
 #chat-widget-root .chat-widget__input {
   display: flex;
-  padding: 10px;
-  border-top: 1px solid #E0E0E0;
+  padding: 12px;
+  background-color: #fff;
+}
+#chat-widget-root .chat-widget__input:hover {
+  background-color: #f8fbfc;
+}
+#chat-widget-root .chat-widget__input:hover .chat-widget__textarea,
+#chat-widget-root .chat-widget__input:hover .chat-widget__send-button {
+  background-color: #f8fbfc;
 }
 #chat-widget-root .chat-widget__textarea {
   flex: 1;
   height: 40px;
-  padding: 10px;
-  border: 1px solid #E0E0E0;
-  border-radius: 4px;
+  padding: 10px 12px;
   resize: none;
   font-family: inherit;
+  font-size: 15px;
+  border: none;
+  background-color: #fff;
 }
 #chat-widget-root .chat-widget__textarea:focus {
-  border-color: #4A154B;
+  border-color: #511252;
   outline: none;
 }
 #chat-widget-root .chat-widget__send-button {
   margin-left: 8px;
-  padding: 0 16px;
-  background-color: #4A154B;
-  color: white;
+  color: #333;
   border: none;
   border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
+  height: 40px;
+  background-color: #fff;
 }
 #chat-widget-root .btn.chat-widget__send-button:hover {
-  background-color: rgb(54.34375, 15.421875, 55.078125);
+  color: #000;
 }
 #chat-widget-root .btn.chat-widget__send-button:disabled {
-  background-color: #CCCCCC;
   cursor: not-allowed;
 }
 #chat-widget-root .chat-widget__loading {
@@ -23839,54 +23952,14 @@ var ChatWidgetApp = (() => {
   font-size: 14px;
   text-align: center;
 }
-#chat-widget-root .chat-widget__header-actions {
-  display: flex;
-  align-items: center;
-}
-#chat-widget-root .chat-widget__menu-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 8px;
-  margin-right: 5px;
-}
-#chat-widget-root .chat-widget__menu-button:hover {
-  color: #E01E5A;
-}
-#chat-widget-root .chat-widget__menu-dropdown {
-  position: absolute;
-  top: 40px;
-  right: 40px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-#chat-widget-root .chat-widget__menu-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-#chat-widget-root .chat-widget__menu-item:hover {
-  background-color: #f5f5f5;
-}
 #chat-widget-root .chat-widget__confirmation {
-  padding: 10px;
+  padding: 16px;
   border-bottom: 1px solid #eee;
   background-color: #f9f9f9;
   text-align: center;
 }
 #chat-widget-root .chat-widget__confirmation p {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 0.9rem;
   color: #333;
 }
@@ -23894,6 +23967,30 @@ var ChatWidgetApp = (() => {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+#chat-widget-root .chat-widget__confirmation-yes {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+#chat-widget-root .chat-widget__confirmation-yes:hover {
+  background-color: #218838;
+}
+#chat-widget-root .chat-widget__confirmation-no {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+#chat-widget-root .chat-widget__confirmation-no:hover {
+  background-color: #c82333;
 }
 #chat-widget-root .chat-widget__confirmation-button {
   padding: 5px 15px;
@@ -23926,84 +24023,158 @@ var ChatWidgetApp = (() => {
   right: 0;
   width: 320px;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
+  /* Increased border radius */
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
 }
-#chat-widget-root .chat-widget__offline-form {
-  padding: 10px;
+#chat-widget-root .chat-widget__offline {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+#chat-widget-root .chat-widget__offline-form {
+  padding: 12px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   overflow-y: auto;
   height: auto;
 }
 #chat-widget-root .chat-widget__offline-form h3 {
   color: #333;
   margin: 0;
+  font-size: 18px;
 }
 #chat-widget-root .chat-widget__offline-form p {
   color: #666;
   margin-bottom: 15px;
 }
+#chat-widget-root .chat-widget__offline-form-message {
+  max-width: 270px;
+  border-radius: 12px;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
+}
 #chat-widget-root .chat-widget__offline-form-field {
   display: flex;
   flex-direction: column;
 }
-#chat-widget-root .chat-widget__offline-form-field label {
-  font-size: 0.85rem;
-  margin-bottom: 5px;
-  color: #555;
-}
 #chat-widget-root .chat-widget__offline-form-field input,
 #chat-widget-root .chat-widget__offline-form-field textarea {
-  padding: 8px;
-  border: 1px solid #ddd;
   border-radius: 4px;
   font-family: inherit;
+  border: none;
+  background-color: #f9fbfc;
+  font-size: 14px;
 }
 #chat-widget-root .chat-widget__offline-form-field input:focus,
 #chat-widget-root .chat-widget__offline-form-field textarea:focus {
-  border-color: #4a90e2;
   outline: none;
 }
 #chat-widget-root .chat-widget__offline-form-field textarea {
   resize: none;
-  height: 70px;
+  height: 80px;
+  padding: 16px;
+}
+#chat-widget-root .chat-widget__offline-form-field textarea::-webkit-input-placeholder {
+  color: #999;
+}
+#chat-widget-root .chat-widget__offline-form-input {
+  margin: 0;
+  background-color: #f9fbfc;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 14px;
 }
 #chat-widget-root .chat-widget__offline-form-submit {
-  background-color: #4a90e2;
+  background-color: #4050b5;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 12px;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
+  margin-top: 8px;
 }
 #chat-widget-root .btn.chat-widget__offline-form-submit:hover {
-  background-color: rgb(34.3857142857, 117.3857142857, 214.6142857143);
+  background-color: rgb(50.6775510204, 63.3469387755, 143.3224489796);
 }
 #chat-widget-root .btn.chat-widget__offline-form-submit:disabled {
-  background-color: #CCCCCC;
+  background-color: #b4c0cc;
   cursor: not-allowed;
 }
 #chat-widget-root .chat-widget__offline-thanks {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
   text-align: center;
-}
-#chat-widget-root .chat-widget__offline-thanks h3 {
-  color: #4a90e2;
-  margin-bottom: 10px;
+  margin-top: 60px;
+  gap: 14px;
 }
 #chat-widget-root .chat-widget__offline-thanks p {
-  color: #666;
+  max-width: 270px;
+  border-radius: 12px;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
 }
 #chat-widget-root .chat-widget__operating-hours-message {
   font-style: italic;
   color: #666;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 0.9em;
+}
+#chat-widget-root .chat-widget__avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#chat-widget-root .chat-widget__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#chat-widget-root .chat-widget__status {
+  width: 10px;
+  height: 10px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  border: 2px solid #fff;
+}
+#chat-widget-root .chat-widget__status--not-open {
+  width: 16px;
+  height: 16px;
+  bottom: 40%;
+  right: -8px;
+}
+#chat-widget-root .chat-widget__header-with-avatar {
+  display: flex;
+  align-items: center;
+}
+#chat-widget-root .chat-widget__visitor-identification {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 @keyframes pulse {
   0% {
@@ -30179,7 +30350,7 @@ var ChatWidgetApp = (() => {
         setSessionId(session_id);
         const initialMessages = [
           {
-            text: "Welcome! How can we help you today?",
+            text: "Question? Just type it below and we are online and ready to answer.",
             isUser: false
           }
         ];
@@ -30237,7 +30408,7 @@ var ChatWidgetApp = (() => {
       try {
         console.log("Attempting to play notification sound");
         if (!audioRef.current) {
-          audioRef.current = new Audio("/frontend/public/sounds/message-notification.mp3");
+          audioRef.current = new Audio("/frontend/src/assets/sounds/message-notification.mp3");
           audioRef.current.volume = 0.5;
         }
         const audio = audioRef.current;
@@ -30267,7 +30438,7 @@ var ChatWidgetApp = (() => {
           setMessages(savedMessages);
         } else {
           setMessages([{
-            text: "Welcome! How can we help you today?",
+            text: "Question? Just type it below and we are online and ready to answer.",
             isUser: false
           }]);
         }
@@ -30275,6 +30446,7 @@ var ChatWidgetApp = (() => {
           sessionId,
           (text) => {
             setMessages((prev) => [...prev, { text, isUser: false }]);
+            console.log("\u{1F680} ~ useEffect ~ playSoundEnabled:", playSoundEnabled);
             if (playSoundEnabled) {
               console.log("Playing notification sound");
               playNotificationSound();
@@ -30292,7 +30464,7 @@ var ChatWidgetApp = (() => {
       } else {
         setMessages([]);
       }
-    }, [sessionId, setIsOnline]);
+    }, [sessionId, setIsOnline, playSoundEnabled]);
     (0, import_react4.useEffect)(() => {
       if (sessionId && messages.length > 0) {
         chatService.saveMessages(sessionId, messages);
@@ -30782,6 +30954,7 @@ var ChatWidgetApp = (() => {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 20px;
 }
 .visitor-identification h3 {
   margin: 0 0 0.5rem 0;
@@ -30795,18 +30968,22 @@ var ChatWidgetApp = (() => {
   text-align: center;
   font-size: 0.9rem;
 }
+
 .visitor-identification__form {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
+
 .visitor-identification__form-field {
   margin-bottom: 1rem;
 }
+
 .visitor-identification__submit {
-  margin-top: auto;
+  margin-top: 40px;
   align-self: stretch;
 }
+
 .visitor-identification__error {
   background-color: #ffe8e8;
   color: #d32f2f;
@@ -30844,7 +31021,7 @@ var ChatWidgetApp = (() => {
       {
         id: "visitor-email",
         type: "email",
-        label: "Email",
+        placeholder: "Email",
         value: visitorEmail,
         onChange: (e) => setVisitorEmail(e.target.value),
         required: true
@@ -30854,7 +31031,7 @@ var ChatWidgetApp = (() => {
       {
         id: "visitor-name",
         type: "text",
-        label: "Name (optional)",
+        placeholder: "Name (optional)",
         value: visitorName,
         onChange: (e) => setVisitorName(e.target.value)
       }
@@ -31209,6 +31386,11 @@ var ChatWidgetApp = (() => {
       }
     }, [sessionId]);
     (0, import_react11.useEffect)(() => {
+      if (isOpen && messagesEndRef && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, [isOpen, messagesEndRef]);
+    (0, import_react11.useEffect)(() => {
       if (!showUnreadBadge || isOpen) return;
       if (messages.length > 0) {
         const lastMessageIndex = messages.length - 1;
@@ -31254,6 +31436,7 @@ var ChatWidgetApp = (() => {
     };
     const handleOpenWidget = () => __async(void 0, null, function* () {
       console.log("Opening widget");
+      setIsMenuOpen(false);
       if (activeWorkspace) {
         checkOnlineStatus();
       }
@@ -31295,25 +31478,44 @@ var ChatWidgetApp = (() => {
       }
       if (!isOnline || !isWithinOperatingHours) {
         if (offlineFormSubmitted) {
-          return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-thanks" }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Thanks for your message!"), /* @__PURE__ */ import_react11.default.createElement("p", null, "We will be in touch soon."));
+          return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline" }, /* @__PURE__ */ import_react11.default.createElement(
+            "div",
+            {
+              onClick: () => hide(),
+              className: "chat-widget__close-button chat-widget__close-button--offline"
+            }
+          ), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-thanks" }, /* @__PURE__ */ import_react11.default.createElement(
+            "img",
+            {
+              src: "https://w.chatlio.com/v5/images/offline-message-sent.e0d81f76.svg",
+              alt: "Offline Message Sent"
+            }
+          ), /* @__PURE__ */ import_react11.default.createElement("p", null, "Thanks for your message. We will be in touch soon!")));
         }
-        return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form" }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Sorry, we are away"), !isWithinOperatingHours && nextOpenTime && /* @__PURE__ */ import_react11.default.createElement("p", null, "We'll be back ", nextOpenTime), /* @__PURE__ */ import_react11.default.createElement("p", null, "But we would love to hear from you and chat soon!"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react11.default.createElement(
+        return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline" }, /* @__PURE__ */ import_react11.default.createElement(
+          "div",
+          {
+            onClick: () => hide(),
+            className: "chat-widget__close-button chat-widget__close-button--offline"
+          }
+        ), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form" }, !isWithinOperatingHours && nextOpenTime && /* @__PURE__ */ import_react11.default.createElement("p", { className: "chat-widget__offline-form-message" }, "We'll be back ", nextOpenTime), /* @__PURE__ */ import_react11.default.createElement("p", { className: "chat-widget__offline-form-message" }, "Sorry we are away, but we would love to hear from you and chat soon!"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react11.default.createElement(
           Input_default,
           {
             id: "offline-email",
             type: "email",
-            label: "Email",
+            placeholder: "Email",
             value: offlineEmail,
             onChange: (e) => setOfflineEmail(e.target.value),
-            required: true
+            required: true,
+            className: "chat-widget__offline-form-input"
           }
-        )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react11.default.createElement("label", { htmlFor: "offline-message" }, "Your message here"), /* @__PURE__ */ import_react11.default.createElement(
+        )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react11.default.createElement(
           "textarea",
           {
             id: "offline-message",
             value: offlineMessage,
+            placeholder: "Your message here",
             onChange: (e) => setOfflineMessage(e.target.value),
-            rows: 4,
             required: true
           }
         )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__offline-form-field" }, /* @__PURE__ */ import_react11.default.createElement(
@@ -31321,9 +31523,10 @@ var ChatWidgetApp = (() => {
           {
             id: "offline-name",
             type: "text",
-            label: "Name (optional but helpful)",
+            placeholder: "Name (optional but helpful)",
             value: offlineName,
-            onChange: (e) => setOfflineName(e.target.value)
+            onChange: (e) => setOfflineName(e.target.value),
+            className: "chat-widget__offline-form-input"
           }
         )), /* @__PURE__ */ import_react11.default.createElement(
           Button_default,
@@ -31333,16 +31536,22 @@ var ChatWidgetApp = (() => {
             disabled: !offlineEmail.trim() || !offlineMessage.trim(),
             className: "chat-widget__offline-form-submit"
           }
-        ));
+        )));
       }
       if (needsIdentification && isOnline) {
-        return /* @__PURE__ */ import_react11.default.createElement(
+        return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__visitor-identification" }, /* @__PURE__ */ import_react11.default.createElement(
+          "div",
+          {
+            onClick: () => hide(),
+            className: "chat-widget__close-button chat-widget__close-button--offline"
+          }
+        ), /* @__PURE__ */ import_react11.default.createElement(
           VisitorIdentificationForm_default,
           {
             workspaceId: activeWorkspace,
             onComplete: handleIdentificationComplete
           }
-        );
+        ));
       }
       if (isConfirmingEnd) {
         return /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__confirmation" }, /* @__PURE__ */ import_react11.default.createElement("p", null, "Are you sure you want to end this chat session?"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__confirmation-actions" }, /* @__PURE__ */ import_react11.default.createElement(
@@ -31351,7 +31560,8 @@ var ChatWidgetApp = (() => {
             label: "Yes",
             onClick: confirmEndChat,
             variant: "primary",
-            size: "small"
+            size: "small",
+            className: "chat-widget__confirmation-yes"
           }
         ), /* @__PURE__ */ import_react11.default.createElement(
           Button_default,
@@ -31359,18 +31569,30 @@ var ChatWidgetApp = (() => {
             label: "No",
             onClick: cancelEndChat,
             variant: "secondary",
-            size: "small"
+            size: "small",
+            className: "chat-widget__confirmation-no"
           }
         )));
       }
-      return /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__messages" }, messages.map((msg, index) => /* @__PURE__ */ import_react11.default.createElement(
+      return /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__messages" }, messages.map((msg, index) => /* @__PURE__ */ import_react11.default.createElement("div", { key: index, className: "chat-widget__message-container" }, !msg.isUser && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__avatar" }, /* @__PURE__ */ import_react11.default.createElement(
+        "img",
+        {
+          src: "https://w.chatlio.com/v5/images/agent.a07867cf.png",
+          alt: "Support Agent"
+        }
+      )), /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
           key: index,
-          className: `chat-widget__message ${msg.isUser ? "chat-widget__message--user" : "chat-widget__message--support"}`
+          className: `chat-widget__message ${msg.isUser ? "chat-widget__message--user" : "chat-widget__message--support"}`,
+          style: {
+            display: "flex",
+            flexDirection: msg.isUser ? "row-reverse" : "row",
+            alignItems: "flex-end"
+          }
         },
-        msg.text
-      )), /* @__PURE__ */ import_react11.default.createElement("div", { ref: messagesEndRef })), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__input" }, /* @__PURE__ */ import_react11.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("div", null, msg.text)
+      ))), /* @__PURE__ */ import_react11.default.createElement("div", { ref: messagesEndRef })), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__input" }, /* @__PURE__ */ import_react11.default.createElement(
         "textarea",
         {
           className: "chat-widget__textarea",
@@ -31381,54 +31603,218 @@ var ChatWidgetApp = (() => {
           disabled: !sessionId
         }
       ), /* @__PURE__ */ import_react11.default.createElement(
-        Button_default,
+        "button",
         {
-          label: "Send",
           onClick: handleSendMessage,
           disabled: !messageText.trim() || !sessionId,
           className: "chat-widget__send-button"
-        }
+        },
+        /* @__PURE__ */ import_react11.default.createElement(
+          "svg",
+          {
+            xmlns: "http://www.w3.org/2000/svg",
+            xmlnsXlink: "http://www.w3.org/1999/xlink",
+            version: "1.1",
+            width: "20",
+            height: "20",
+            viewBox: "0 0 256 256",
+            xmlSpace: "preserve"
+          },
+          /* @__PURE__ */ import_react11.default.createElement(
+            "g",
+            {
+              style: {
+                stroke: "none",
+                strokeWidth: 0,
+                strokeDasharray: "none",
+                strokeLinecap: "butt",
+                strokeLinejoin: "miter",
+                strokeMiterlimit: 10,
+                fill: "none",
+                fillRule: "nonzero",
+                opacity: 1
+              },
+              transform: "translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)"
+            },
+            /* @__PURE__ */ import_react11.default.createElement(
+              "path",
+              {
+                d: "M 89.999 3.075 C 90 3.02 90 2.967 89.999 2.912 c -0.004 -0.134 -0.017 -0.266 -0.038 -0.398 c -0.007 -0.041 -0.009 -0.081 -0.018 -0.122 c -0.034 -0.165 -0.082 -0.327 -0.144 -0.484 c -0.018 -0.046 -0.041 -0.089 -0.061 -0.134 c -0.053 -0.119 -0.113 -0.234 -0.182 -0.346 C 89.528 1.382 89.5 1.336 89.469 1.29 c -0.102 -0.147 -0.212 -0.288 -0.341 -0.417 c -0.13 -0.13 -0.273 -0.241 -0.421 -0.344 c -0.042 -0.029 -0.085 -0.056 -0.129 -0.082 c -0.118 -0.073 -0.239 -0.136 -0.364 -0.191 c -0.039 -0.017 -0.076 -0.037 -0.116 -0.053 c -0.161 -0.063 -0.327 -0.113 -0.497 -0.147 c -0.031 -0.006 -0.063 -0.008 -0.094 -0.014 c -0.142 -0.024 -0.285 -0.038 -0.429 -0.041 C 87.03 0 86.983 0 86.936 0.001 c -0.141 0.003 -0.282 0.017 -0.423 0.041 c -0.035 0.006 -0.069 0.008 -0.104 0.015 c -0.154 0.031 -0.306 0.073 -0.456 0.129 L 1.946 31.709 c -1.124 0.422 -1.888 1.473 -1.943 2.673 c -0.054 1.199 0.612 2.316 1.693 2.838 l 34.455 16.628 l 16.627 34.455 C 53.281 89.344 54.334 90 55.481 90 c 0.046 0 0.091 -0.001 0.137 -0.003 c 1.199 -0.055 2.251 -0.819 2.673 -1.943 L 89.815 4.048 c 0.056 -0.149 0.097 -0.3 0.128 -0.453 c 0.008 -0.041 0.011 -0.081 0.017 -0.122 C 89.982 3.341 89.995 3.208 89.999 3.075 z M 75.086 10.672 L 37.785 47.973 L 10.619 34.864 L 75.086 10.672 z M 55.136 79.381 L 42.027 52.216 l 37.302 -37.302 L 55.136 79.381 z",
+                style: {
+                  stroke: "none",
+                  strokeWidth: 1,
+                  strokeDasharray: "none",
+                  strokeLinecap: "butt",
+                  strokeLinejoin: "miter",
+                  strokeMiterlimit: 10,
+                  fill: "rgb(0,0,0)",
+                  fillRule: "nonzero",
+                  opacity: 1
+                },
+                transform: " matrix(1 0 0 1 0 0) ",
+                strokeLinecap: "round"
+              }
+            )
+          )
+        )
       )));
     };
     return /* @__PURE__ */ import_react11.default.createElement("div", { id: "chat-widget-root" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget" }, isOpen && /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
-        className: isOnline && isWithinOperatingHours || offlineFormSubmitted && !offlineFormLoading ? "chat-widget__panel" : "chat-widget__panel--offline"
+        className: `
+          ${isOnline && isWithinOperatingHours || offlineFormSubmitted && !offlineFormLoading || offlineFormLoading ? "chat-widget__panel" : "chat-widget__panel--offline"}
+          ${!isOpen ? "chat-widget__panel--closed" : ""}
+        `
       },
-      /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header" }, /* @__PURE__ */ import_react11.default.createElement("h3", { className: "chat-widget__title" }, !isOnline ? "Leave a Message" : needsIdentification ? "Welcome" : "Live Chat Support"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header-actions" }, isOnline && !needsIdentification && /* @__PURE__ */ import_react11.default.createElement(
-        Button_default,
+      /* @__PURE__ */ import_react11.default.createElement(
+        "div",
         {
-          label: "\u22EE",
-          onClick: toggleMenu,
-          variant: "text",
-          className: "chat-widget__menu-button"
-        }
-      ), /* @__PURE__ */ import_react11.default.createElement(
-        Button_default,
-        {
-          label: "\xD7",
-          onClick: () => hide(),
-          variant: "text",
-          className: "chat-widget__close-button"
-        }
-      ), isMenuOpen && isOnline && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__menu-dropdown" }, /* @__PURE__ */ import_react11.default.createElement(
-        Button_default,
-        {
-          label: "End chat",
-          onClick: showEndChatConfirmation,
-          variant: "text",
-          className: "chat-widget__menu-item"
-        }
-      )))),
+          className: `chat-widget__header ${!isOnline || !isWithinOperatingHours || needsIdentification ? "chat-widget__header--offline" : ""}`
+        },
+        /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header-with-avatar" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__avatar" }, /* @__PURE__ */ import_react11.default.createElement(
+          "img",
+          {
+            src: "https://w.chatlio.com/v5/images/agent.a07867cf.png",
+            alt: "Support Agent"
+          }
+        ), isOnline && !needsIdentification && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__status" })), /* @__PURE__ */ import_react11.default.createElement("h3", { className: "chat-widget__title" }, !isOnline ? "Leave a Message" : needsIdentification ? "Welcome" : "Support")),
+        /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__header-actions", onClick: toggleMenu }, isOnline && !needsIdentification && /* @__PURE__ */ import_react11.default.createElement("svg", null, /* @__PURE__ */ import_react11.default.createElement(
+          "path",
+          {
+            fill: "#677583",
+            d: "M9,4 C7.8954305,4 7,3.1045695 7,2 C7,0.8954305 7.8954305,0 9,0 C10.1045695,0 11,0.8954305 11,2 C11,3.1045695 10.1045695,4 9,4 Z M9,-3 C7.8954305,-3 7,-3.8954305 7,-5 C7,-6.1045695 7.8954305,-7 9,-7 C10.1045695,-7 11,-6.1045695 11,-5 C11,-3.8954305 10.1045695,-3 9,-3 Z M9,11 C7.8954305,11 7,10.1045695 7,9 C7,7.8954305 7.8954305,7 9,7 C10.1045695,7 11,7.8954305 11,9 C11,10.1045695 10.1045695,11 9,11 Z",
+            id: "Icon",
+            transform: "translate(9.000000, 2.000000) rotate(-270.000000) translate(-9.000000, -2.000000) "
+          }
+        )), /* @__PURE__ */ import_react11.default.createElement(
+          "div",
+          {
+            onClick: () => hide(),
+            className: "chat-widget__close-button"
+          }
+        ), isOnline && /* @__PURE__ */ import_react11.default.createElement(
+          "div",
+          {
+            className: `chat-widget__menu-dropdown ${isMenuOpen ? "is-open" : ""}`,
+            onClick: showEndChatConfirmation
+          },
+          /* @__PURE__ */ import_react11.default.createElement(
+            "svg",
+            {
+              xmlns: "http://www.w3.org/2000/svg",
+              xmlnsXlink: "http://www.w3.org/1999/xlink",
+              version: "1.1",
+              style: {
+                width: 28,
+                height: 28
+              },
+              viewBox: "0 0 256 256",
+              xmlSpace: "preserve"
+            },
+            /* @__PURE__ */ import_react11.default.createElement(
+              "g",
+              {
+                style: {
+                  stroke: "none",
+                  strokeWidth: 0,
+                  strokeDasharray: "none",
+                  strokeLinecap: "butt",
+                  strokeLinejoin: "miter",
+                  strokeMiterlimit: 10,
+                  fill: "none",
+                  fillRule: "nonzero",
+                  opacity: 1
+                },
+                transform: "translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)"
+              },
+              /* @__PURE__ */ import_react11.default.createElement(
+                "path",
+                {
+                  d: "M 45 47.468 c -1.104 0 -2 -0.896 -2 -2 v -30.04 c 0 -1.104 0.896 -2 2 -2 s 2 0.896 2 2 v 30.04 C 47 46.572 46.104 47.468 45 47.468 z",
+                  style: {
+                    stroke: "none",
+                    strokeWidth: 1,
+                    strokeDasharray: "none",
+                    strokeLinecap: "butt",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 10,
+                    fill: "rgb(0,0,0)",
+                    fillRule: "nonzero",
+                    opacity: 1
+                  },
+                  transform: " matrix(1 0 0 1 0 0) ",
+                  strokeLinecap: "round"
+                }
+              ),
+              /* @__PURE__ */ import_react11.default.createElement(
+                "path",
+                {
+                  d: "M 45 73.153 c -15.32 0 -27.784 -12.464 -27.784 -27.785 c 0 -10.221 5.606 -19.592 14.631 -24.455 c 0.973 -0.524 2.186 -0.16 2.709 0.812 c 0.524 0.972 0.16 2.186 -0.812 2.709 C 26.017 28.6 21.216 36.621 21.216 45.369 c 0 13.115 10.669 23.785 23.784 23.785 c 13.114 0 23.784 -10.67 23.784 -23.785 c 0 -8.748 -4.801 -16.77 -12.528 -20.933 c -0.973 -0.524 -1.336 -1.737 -0.813 -2.709 c 0.524 -0.972 1.736 -1.336 2.709 -0.812 c 9.025 4.863 14.632 14.233 14.632 24.455 C 72.784 60.689 60.32 73.153 45 73.153 z",
+                  style: {
+                    stroke: "none",
+                    strokeWidth: 1,
+                    strokeDasharray: "none",
+                    strokeLinecap: "butt",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 10,
+                    fill: "rgb(0,0,0)",
+                    fillRule: "nonzero",
+                    opacity: 1
+                  },
+                  transform: " matrix(1 0 0 1 0 0) ",
+                  strokeLinecap: "round"
+                }
+              ),
+              /* @__PURE__ */ import_react11.default.createElement(
+                "path",
+                {
+                  d: "M 45 90 C 20.187 90 0 69.813 0 45 C 0 20.187 20.187 0 45 0 c 24.813 0 45 20.187 45 45 C 90 69.813 69.813 90 45 90 z M 45 4 C 22.393 4 4 22.393 4 45 s 18.393 41 41 41 s 41 -18.393 41 -41 S 67.607 4 45 4 z",
+                  style: {
+                    stroke: "none",
+                    strokeWidth: 1,
+                    strokeDasharray: "none",
+                    strokeLinecap: "butt",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 10,
+                    fill: "rgb(0,0,0)",
+                    fillRule: "nonzero",
+                    opacity: 1
+                  },
+                  transform: " matrix(1 0 0 1 0 0) ",
+                  strokeLinecap: "round"
+                }
+              )
+            )
+          ),
+          /* @__PURE__ */ import_react11.default.createElement(
+            Button_default,
+            {
+              label: "End chat",
+              variant: "text",
+              className: "chat-widget__menu-item"
+            }
+          )
+        ))
+      ),
       renderContent()
-    ), !isOpen && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__toggle-container" }, /* @__PURE__ */ import_react11.default.createElement(
-      Button_default,
+    ), /* @__PURE__ */ import_react11.default.createElement(
+      "div",
       {
-        label: "Chat Support",
-        onClick: handleOpenWidget,
-        className: "chat-widget__toggle"
-      }
-    ), showUnreadBadge && unreadCount > 0 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__unread-badge" }, unreadCount))));
+        className: `chat-widget__toggle-container 
+          ${isOpen ? "chat-widget__toggle-container--hidden" : ""}`
+      },
+      /* @__PURE__ */ import_react11.default.createElement(
+        Button_default,
+        {
+          label: isOnline && isWithinOperatingHours ? "How can we help you?" : "Contact us",
+          onClick: handleOpenWidget,
+          className: `chat-widget__toggle ${!isOnline || !isWithinOperatingHours ? "chat-widget__toggle--offline" : ""}`
+        }
+      ),
+      isOnline && isWithinOperatingHours && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__status chat-widget__status--not-open" }),
+      showUnreadBadge && unreadCount > 0 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "chat-widget__unread-badge" }, unreadCount)
+    )));
   };
   var ChatWidget_default = ChatWidget;
 
@@ -31440,6 +31826,7 @@ var ChatWidgetApp = (() => {
 body {
   font-family: "Inter", sans-serif;
   color: #FFFFFF;
+  margin: 0;
 }
 
 a {

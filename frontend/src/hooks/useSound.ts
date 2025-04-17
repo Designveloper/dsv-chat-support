@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react';
+// import sound from '../assets/sounds/message-notification.mp3';
 
 export function useSound() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -8,12 +9,13 @@ export function useSound() {
             console.log("Attempting to play notification sound");
 
             if (!audioRef.current) {
-                audioRef.current = new Audio('/frontend/public/sounds/message-notification.mp3');
+                audioRef.current = new Audio('/frontend/src/assets/sounds/message-notification.mp3');
                 audioRef.current.volume = 0.5;
             }
 
             const audio = audioRef.current;
             audio.currentTime = 0;
+            // audio.muted = true;
 
             audio.play().then(() => {
                 console.log("Notification sound played successfully");

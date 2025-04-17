@@ -108,6 +108,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     }
   }, [sessionId]);
 
+  useEffect(() => {
+    if (isOpen && messagesEndRef && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isOpen, messagesEndRef]);
+
   // Update unread count based on new messages
   useEffect(() => {
     if (!showUnreadBadge || isOpen) return;
@@ -304,10 +310,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
 
     if (needsIdentification && isOnline) {
       return (
-        <VisitorIdentificationForm
-          workspaceId={activeWorkspace}
-          onComplete={handleIdentificationComplete}
-        />
+        <div className="chat-widget__visitor-identification">
+          <div
+            onClick={() => hide()}
+            className="chat-widget__close-button chat-widget__close-button--offline"
+          />
+          <VisitorIdentificationForm
+            workspaceId={activeWorkspace}
+            onComplete={handleIdentificationComplete}
+          />
+        </div>
       );
     }
 
@@ -421,7 +433,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
                     opacity: 1,
                   }}
                   transform=" matrix(1 0 0 1 0 0) "
-                  stroke-linecap="round"
+                  strokeLinecap="round"
                 />
               </g>
             </svg>
@@ -449,7 +461,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
           >
             <div
               className={`chat-widget__header ${
-                !isOnline || !isWithinOperatingHours
+                !isOnline || !isWithinOperatingHours || needsIdentification
                   ? "chat-widget__header--offline"
                   : ""
               }`}
@@ -533,7 +545,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
                             opacity: 1,
                           }}
                           transform=" matrix(1 0 0 1 0 0) "
-                          stroke-linecap="round"
+                          strokeLinecap="round"
                         />
                         <path
                           d="M 45 73.153 c -15.32 0 -27.784 -12.464 -27.784 -27.785 c 0 -10.221 5.606 -19.592 14.631 -24.455 c 0.973 -0.524 2.186 -0.16 2.709 0.812 c 0.524 0.972 0.16 2.186 -0.812 2.709 C 26.017 28.6 21.216 36.621 21.216 45.369 c 0 13.115 10.669 23.785 23.784 23.785 c 13.114 0 23.784 -10.67 23.784 -23.785 c 0 -8.748 -4.801 -16.77 -12.528 -20.933 c -0.973 -0.524 -1.336 -1.737 -0.813 -2.709 c 0.524 -0.972 1.736 -1.336 2.709 -0.812 c 9.025 4.863 14.632 14.233 14.632 24.455 C 72.784 60.689 60.32 73.153 45 73.153 z"
@@ -549,7 +561,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
                             opacity: 1,
                           }}
                           transform=" matrix(1 0 0 1 0 0) "
-                          stroke-linecap="round"
+                          strokeLinecap="round"
                         />
                         <path
                           d="M 45 90 C 20.187 90 0 69.813 0 45 C 0 20.187 20.187 0 45 0 c 24.813 0 45 20.187 45 45 C 90 69.813 69.813 90 45 90 z M 45 4 C 22.393 4 4 22.393 4 45 s 18.393 41 41 41 s 41 -18.393 41 -41 S 67.607 4 45 4 z"
@@ -565,7 +577,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
                             opacity: 1,
                           }}
                           transform=" matrix(1 0 0 1 0 0) "
-                          stroke-linecap="round"
+                          strokeLinecap="round"
                         />
                       </g>
                     </svg>

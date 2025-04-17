@@ -29,9 +29,7 @@ build({
   },
   define: {
     'global': 'window',
-    // Replace import.meta.env with process.env values
     'import.meta.env.VITE_API_URL': JSON.stringify(API_URL),
-    // Add any other environment variables you might be using
   },
 }).catch((error) => {
   console.error("Build failed:", error);
