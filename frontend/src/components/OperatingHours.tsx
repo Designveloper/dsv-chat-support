@@ -62,6 +62,7 @@ const OperatingHours = () => {
   const [schedule, setSchedule] = useState<ScheduleItem[]>(initialSchedule);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const OperatingHours = () => {
   };
 
   const loadScheduleSettings = async (workspaceId: string) => {
+    setIsLoading(true);
     try {
       const settings = await workspaceSettingsService.getSettings(workspaceId);
       console.log("Loaded settings:", settings);
@@ -147,6 +149,8 @@ const OperatingHours = () => {
       }
     } catch (error) {
       console.error("Error loading schedule settings:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -264,6 +268,14 @@ const OperatingHours = () => {
     }
     return options;
   };
+
+  if (isLoading) {
+    return (
+      <div className="loading">
+        <div className="loading__spinner"></div>
+      </div>
+    );
+  }
 
   if (showScheduleSetup) {
     return (

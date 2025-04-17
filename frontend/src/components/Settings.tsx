@@ -70,7 +70,9 @@ const Settings = () => {
     return (
       <Layout>
         <div className="settings__content">
-          <div className="loading">Loading workspace settings...</div>
+          <div className="loading">
+            <div className="loading__spinner"></div>
+          </div>
         </div>
       </Layout>
     );

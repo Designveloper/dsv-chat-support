@@ -148,11 +148,27 @@ const BehaviorSettings = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="behavior-settings__loading">
+        <div className="loading">
+          <div className="loading__spinner"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="behavior-settings__error">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="behavior-settings">
       <h2>Widget behavior</h2>
-      {loading && <div className="behavior-settings__loading">Loading...</div>}
-      {error && <div className="behavior-settings__error">{error}</div>}
 
       <div className="behavior-settings__section">
         <h3>Presence detection</h3>

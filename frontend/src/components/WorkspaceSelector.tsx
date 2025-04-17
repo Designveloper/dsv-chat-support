@@ -52,15 +52,6 @@ const WorkspaceSelector = ({ onSelect, onClose }: WorkspaceSelectorProps) => {
         {!loading && !error && workspaces.length === 0 && (
           <div className="workspace-selector__empty">
             <p>You don't have any workspaces yet.</p>
-            <button
-              className="workspace-selector__create-btn"
-              onClick={() => {
-                onClose();
-                window.location.href = "/dashboard";
-              }}
-            >
-              Create a Workspace
-            </button>
           </div>
         )}
 

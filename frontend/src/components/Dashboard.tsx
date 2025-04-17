@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { workspaceService, Workspace } from "../services/workspaceService";
 import Button from "./Button";
 import Layout from "./Layout";
-import ChatWidget from "./ChatWidget";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -71,7 +70,9 @@ const Dashboard = () => {
     return (
       <Layout>
         <div className="settings__content">
-          <div className="loading">Loading...</div>
+          <div className="loading">
+            <div className="loading__spinner"></div>
+          </div>
         </div>
       </Layout>
     );
@@ -213,9 +214,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <ChatWidget workspaceId="6821af37-8d27-4b1f-8741-4a451a529104" />
-      {/* <script src="https://js.chatlio.com/widget.js" async></script>
-      <chatlio-widget widgetid="123a30e7-c75e-4386-6a08-c317678a891d"></chatlio-widget> */}
     </Layout>
   );
 };

@@ -146,7 +146,9 @@ const SlackChannelSelector = () => {
   if (loading) {
     return (
       <div className="channel-selector__loading">
-        Loading available channels...
+        <div className="loading">
+          <div className="loading__spinner"></div>
+        </div>
       </div>
     );
   }
