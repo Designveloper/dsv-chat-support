@@ -43,7 +43,9 @@ const WorkspaceSelector = ({ onSelect, onClose }: WorkspaceSelectorProps) => {
 
         {loading && (
           <div className="workspace-selector__loading">
-            Loading workspaces...
+            <div className="loading">
+              <div className="loading__spinner"></div>
+            </div>
           </div>
         )}
 

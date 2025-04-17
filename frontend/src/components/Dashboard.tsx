@@ -32,6 +32,7 @@ const Dashboard = () => {
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await workspaceService.fetchWorkspaces();
       setWorkspaces(data);
       setSlackConnected(workspaceService.hasSlackIntegration(data));
@@ -46,6 +47,7 @@ const Dashboard = () => {
   const handleAddToSlack = async () => {
     try {
       setIsSlackLoading(true);
+      setError(null);
       const { url } = await workspaceService.getSlackAuthUrl();
       window.location.href = url;
     } catch (error) {

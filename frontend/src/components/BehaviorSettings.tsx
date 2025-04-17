@@ -148,16 +148,6 @@ const BehaviorSettings = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="behavior-settings__loading">
-        <div className="loading">
-          <div className="loading__spinner"></div>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="behavior-settings__error">
