@@ -2,12 +2,17 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Settings.scss";
 import WorkspaceSelector from "./WorkspaceSelector";
+import Header from "./Header"; // Import the Header component
 
 type LayoutProps = {
   children: React.ReactNode;
+  showHeaderAnimation?: boolean;
 };
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({
+  children,
+  showHeaderAnimation = false,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
@@ -35,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="settings">
+      <Header showAnimation={showHeaderAnimation} />
       <div className="settings__sidebar">
         <nav className="settings__nav">
           <ul className="settings__nav-list">
@@ -110,7 +116,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
       </div>
       {children}
-
       {/* Workspace Selector Modal */}
       {showWorkspaceSelector && (
         <WorkspaceSelector

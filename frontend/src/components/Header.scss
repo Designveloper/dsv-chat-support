@@ -2,8 +2,21 @@
 @use '../styles/variables' as vars;
 @use '../styles/mixins' as mix;
 
+@keyframes headerSlideIn {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .header {
   position: fixed;
+  max-height: 80px;
   top: 0;
   left: 0;
   width: 100%;
@@ -11,8 +24,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 40px 40px;
-  background-color: vars.$primary-color;
   z-index: 10;
+  background-image: linear-gradient(to left, #7766ff, #554fe8);
+
+  &.header--animated {
+    animation: headerSlideIn 0.8s ease-out forwards;
+  }
+
+  @include mix.mobile {
+    background-color: #5c4bff;
+  }
 }
 
 .header__logo {
@@ -20,6 +41,7 @@
   font-size: 30px;
   color: vars.$white;
   flex: 0 0 auto;
+  cursor: pointer;
 }
 
 .header__mobile-menu {
@@ -166,7 +188,7 @@
   background-color: vars.$white;
   color: vars.$primary-color;
   border: none;
-  border-radius: 20px;
+  border-radius: 20px 20px 0px 20px;
   padding: 8px 16px;
   font-size: 20px;
   font-weight: 500;
@@ -203,19 +225,19 @@
   margin: 3px 0;
 }
 
-.header__auth-dashboard {
-  background-color: #4CAF50;
-  color: white;
+.header__auth .header__auth-dashboard {
+  background-color: #fff;
+  color: #554fe8;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 12px 20px;
+  border-radius: 24px 24px 0px 24px;
   cursor: pointer;
   font-weight: 600;
   transition: background-color 0.2s;
   white-space: nowrap;
 
   &:hover {
-    background-color: #3e8e41;
+    background-color: #e8eae8;
     cursor: pointer;
   }
 }

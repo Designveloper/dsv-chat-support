@@ -16,7 +16,6 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
-  // State hooks with proper initialization
   const isOpen = useChatStore((state) => state.isOpen);
   const open = useChatStore((state) => state.open);
   const hide = useChatStore((state) => state.hide);

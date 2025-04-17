@@ -5,7 +5,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import Header from "./components/Header";
+// import Header from "./components/Header";
+import Home from "./components/Home";
 import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
 import Signup from "./components/Signup";
@@ -27,7 +28,7 @@ const App = () => {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Header />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<Signup />} />
