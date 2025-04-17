@@ -271,6 +271,7 @@
         font-size: 15px;
         border: none;
         background-color: #fff;
+        color: #333;
 
         &:focus {
             border-color: #511252;
@@ -451,6 +452,7 @@
             font-family: inherit;
             border: none;
             background-color: #f9fbfc;
+            color: #000;
             font-size: 14px;
 
             &:focus {
@@ -476,6 +478,7 @@
         border-radius: 4px;
         padding: 8px;
         font-size: 14px;
+        box-shadow: none;
     }
 
     .chat-widget__offline-form-submit {

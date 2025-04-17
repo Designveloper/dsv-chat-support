@@ -23914,6 +23914,7 @@ var ChatWidgetApp = (() => {
   font-size: 15px;
   border: none;
   background-color: #fff;
+  color: #218838;
 }
 #chat-widget-root .chat-widget__textarea:focus {
   border-color: #511252;
@@ -24069,6 +24070,7 @@ var ChatWidgetApp = (() => {
   font-family: inherit;
   border: none;
   background-color: #f9fbfc;
+  color: #000;
   font-size: 14px;
 }
 #chat-widget-root .chat-widget__offline-form-field input:focus,
@@ -24090,6 +24092,7 @@ var ChatWidgetApp = (() => {
   border-radius: 4px;
   padding: 8px;
   font-size: 14px;
+  box-shadow: none;
 }
 #chat-widget-root .chat-widget__offline-form-submit {
   background-color: #4050b5;
