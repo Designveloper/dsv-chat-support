@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { chatService } from '../services/chatService';
 import { useSound } from './useSound';
+import { useChatStore } from '../stores/useChatStore';
 
 export function useChatMessages(sessionId: string | null, setIsOnline: (status: boolean) => void, playSoundEnabled?: boolean) {
     const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
     const [messageText, setMessageText] = useState<string>("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { playNotificationSound } = useSound();
+    const { visitorData } = useChatStore((state) => state);
 
     // Load saved messages when session ID changes
     useEffect(() => {
@@ -61,14 +63,25 @@ export function useChatMessages(sessionId: string | null, setIsOnline: (status: 
     // Send a message
     const sendMessage = async () => {
         if (!messageText.trim() || !sessionId) return;
-
-        const visitorEmail = localStorage.getItem('chat_visitor_email');
-        const visitorName = localStorage.getItem('chat_visitor_name');
-
         const userInfo = {
-            email: visitorEmail || '',
-            userId: visitorName || undefined
+            email: "",
+            userId: undefined as string | undefined
         };
+
+        console.log("🚀 ~ sendMessage ~ visitorData:", visitorData)
+        if (visitorData?.email) {
+            userInfo.email = String(visitorData.email);
+        } else {
+            const visitorEmail = localStorage.getItem('chat_visitor_email');
+            userInfo.email = visitorEmail || '';
+        }
+
+        if (visitorData?.name) {
+            userInfo.userId = String(visitorData.name);
+        } else {
+            const visitorName = localStorage.getItem('chat_visitor_name');
+            userInfo.userId = visitorName || undefined;
+        }
 
         const newMessage = { text: messageText, isUser: true };
         setMessages((prev) => [...prev, newMessage]);

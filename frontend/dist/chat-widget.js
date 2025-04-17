@@ -23855,7 +23855,7 @@ var ChatWidgetApp = (() => {
   font-weight: 200;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 16px;
   padding: 0;
   margin-left: 10px;
 }
@@ -23914,7 +23914,7 @@ var ChatWidgetApp = (() => {
   font-size: 15px;
   border: none;
   background-color: #fff;
-  color: #218838;
+  color: #333;
 }
 #chat-widget-root .chat-widget__textarea:focus {
   border-color: #511252;
@@ -24129,6 +24129,7 @@ var ChatWidgetApp = (() => {
   line-height: 1.4;
   text-align: center;
   margin: 0;
+  color: #000;
 }
 #chat-widget-root .chat-widget__operating-hours-message {
   font-style: italic;
@@ -30401,7 +30402,7 @@ var ChatWidgetApp = (() => {
   }
 
   // src/hooks/useChatMessages.ts
-  var import_react4 = __toESM(require_react(), 1);
+  var import_react5 = __toESM(require_react(), 1);
 
   // src/hooks/useSound.ts
   var import_react3 = __toESM(require_react(), 1);
@@ -30426,95 +30427,6 @@ var ChatWidgetApp = (() => {
       }
     }, []);
     return { playNotificationSound };
-  }
-
-  // src/hooks/useChatMessages.ts
-  function useChatMessages(sessionId, setIsOnline, playSoundEnabled) {
-    const [messages, setMessages] = (0, import_react4.useState)([]);
-    const [messageText, setMessageText] = (0, import_react4.useState)("");
-    const messagesEndRef = (0, import_react4.useRef)(null);
-    const { playNotificationSound } = useSound();
-    (0, import_react4.useEffect)(() => {
-      if (sessionId) {
-        const savedMessages = chatService.getSavedMessages(sessionId);
-        if (savedMessages && savedMessages.length > 0) {
-          setMessages(savedMessages);
-        } else {
-          setMessages([{
-            text: "Question? Just type it below and we are online and ready to answer.",
-            isUser: false
-          }]);
-        }
-        const socket = chatService.setupWebSocketConnection(
-          sessionId,
-          (text) => {
-            setMessages((prev) => [...prev, { text, isUser: false }]);
-            console.log("\u{1F680} ~ useEffect ~ playSoundEnabled:", playSoundEnabled);
-            if (playSoundEnabled) {
-              console.log("Playing notification sound");
-              playNotificationSound();
-            }
-          },
-          (online) => {
-            setIsOnline(online);
-          }
-        );
-        return () => {
-          if (socket) {
-            socket.disconnect();
-          }
-        };
-      } else {
-        setMessages([]);
-      }
-    }, [sessionId, setIsOnline, playSoundEnabled]);
-    (0, import_react4.useEffect)(() => {
-      if (sessionId && messages.length > 0) {
-        chatService.saveMessages(sessionId, messages);
-      }
-    }, [messages, sessionId]);
-    (0, import_react4.useEffect)(() => {
-      var _a;
-      (_a = messagesEndRef.current) == null ? void 0 : _a.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-    const sendMessage = () => __async(this, null, function* () {
-      if (!messageText.trim() || !sessionId) return;
-      const visitorEmail = localStorage.getItem("chat_visitor_email");
-      const visitorName = localStorage.getItem("chat_visitor_name");
-      const userInfo = {
-        email: visitorEmail || "",
-        userId: visitorName || void 0
-      };
-      const newMessage = { text: messageText, isUser: true };
-      setMessages((prev) => [...prev, newMessage]);
-      const messageToSend = messageText;
-      setMessageText("");
-      try {
-        yield chatService.sendMessage({
-          sessionId,
-          message: messageToSend,
-          userInfo,
-          currentPage: window.location.href
-        });
-      } catch (error) {
-        console.error("Error sending message:", error);
-      }
-    });
-    const setEndChatMessage = () => {
-      setMessages((prev) => [...prev, {
-        text: "Chat session ended. Thank you for chatting with us!",
-        isUser: false
-      }]);
-    };
-    return {
-      messages,
-      messageText,
-      setMessageText,
-      sendMessage,
-      messagesEndRef,
-      setMessages,
-      setEndChatMessage
-    };
   }
 
   // node_modules/zustand/esm/vanilla.mjs
@@ -30542,15 +30454,15 @@ var ChatWidgetApp = (() => {
   var createStore = (createState) => createState ? createStoreImpl(createState) : createStoreImpl;
 
   // node_modules/zustand/esm/react.mjs
-  var import_react5 = __toESM(require_react(), 1);
+  var import_react4 = __toESM(require_react(), 1);
   var identity = (arg) => arg;
   function useStore(api, selector = identity) {
-    const slice = import_react5.default.useSyncExternalStore(
+    const slice = import_react4.default.useSyncExternalStore(
       api.subscribe,
       () => selector(api.getState()),
       () => selector(api.getInitialState())
     );
-    import_react5.default.useDebugValue(slice);
+    import_react4.default.useDebugValue(slice);
     return slice;
   }
   var createImpl = (createState) => {
@@ -30604,6 +30516,107 @@ var ChatWidgetApp = (() => {
       }
     }
   }));
+
+  // src/hooks/useChatMessages.ts
+  function useChatMessages(sessionId, setIsOnline, playSoundEnabled) {
+    const [messages, setMessages] = (0, import_react5.useState)([]);
+    const [messageText, setMessageText] = (0, import_react5.useState)("");
+    const messagesEndRef = (0, import_react5.useRef)(null);
+    const { playNotificationSound } = useSound();
+    const { visitorData } = useChatStore((state) => state);
+    (0, import_react5.useEffect)(() => {
+      if (sessionId) {
+        const savedMessages = chatService.getSavedMessages(sessionId);
+        if (savedMessages && savedMessages.length > 0) {
+          setMessages(savedMessages);
+        } else {
+          setMessages([{
+            text: "Question? Just type it below and we are online and ready to answer.",
+            isUser: false
+          }]);
+        }
+        const socket = chatService.setupWebSocketConnection(
+          sessionId,
+          (text) => {
+            setMessages((prev) => [...prev, { text, isUser: false }]);
+            console.log("\u{1F680} ~ useEffect ~ playSoundEnabled:", playSoundEnabled);
+            if (playSoundEnabled) {
+              console.log("Playing notification sound");
+              playNotificationSound();
+            }
+          },
+          (online) => {
+            setIsOnline(online);
+          }
+        );
+        return () => {
+          if (socket) {
+            socket.disconnect();
+          }
+        };
+      } else {
+        setMessages([]);
+      }
+    }, [sessionId, setIsOnline, playSoundEnabled]);
+    (0, import_react5.useEffect)(() => {
+      if (sessionId && messages.length > 0) {
+        chatService.saveMessages(sessionId, messages);
+      }
+    }, [messages, sessionId]);
+    (0, import_react5.useEffect)(() => {
+      var _a;
+      (_a = messagesEndRef.current) == null ? void 0 : _a.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+    const sendMessage = () => __async(this, null, function* () {
+      if (!messageText.trim() || !sessionId) return;
+      const userInfo = {
+        email: "",
+        userId: void 0
+      };
+      console.log("\u{1F680} ~ sendMessage ~ visitorData:", visitorData);
+      if (visitorData == null ? void 0 : visitorData.email) {
+        userInfo.email = String(visitorData.email);
+      } else {
+        const visitorEmail = localStorage.getItem("chat_visitor_email");
+        userInfo.email = visitorEmail || "";
+      }
+      if (visitorData == null ? void 0 : visitorData.name) {
+        userInfo.userId = String(visitorData.name);
+      } else {
+        const visitorName = localStorage.getItem("chat_visitor_name");
+        userInfo.userId = visitorName || void 0;
+      }
+      const newMessage = { text: messageText, isUser: true };
+      setMessages((prev) => [...prev, newMessage]);
+      const messageToSend = messageText;
+      setMessageText("");
+      try {
+        yield chatService.sendMessage({
+          sessionId,
+          message: messageToSend,
+          userInfo,
+          currentPage: window.location.href
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    });
+    const setEndChatMessage = () => {
+      setMessages((prev) => [...prev, {
+        text: "Chat session ended. Thank you for chatting with us!",
+        isUser: false
+      }]);
+    };
+    return {
+      messages,
+      messageText,
+      setMessageText,
+      sendMessage,
+      messagesEndRef,
+      setMessages,
+      setEndChatMessage
+    };
+  }
 
   // src/hooks/useOfflineForm.ts
   var import_react6 = __toESM(require_react(), 1);
