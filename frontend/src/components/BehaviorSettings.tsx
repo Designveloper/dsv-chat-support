@@ -25,6 +25,7 @@ const BehaviorSettings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   const [settings, setSettings] = useState<SettingsState>({} as SettingsState);
 
@@ -79,13 +80,13 @@ const BehaviorSettings = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaveLoading(true);
     setError(null);
     setSuccessMessage(null);
 
     if (!currentWorkspace) {
       setError("No workspace selected");
-      setLoading(false);
+      setSaveLoading(false);
       return;
     }
 
@@ -97,7 +98,7 @@ const BehaviorSettings = () => {
         setError(
           "Unable to determine changed settings. Please reload the page."
         );
-        setLoading(false);
+        setSaveLoading(false);
         return;
       }
 
@@ -122,7 +123,7 @@ const BehaviorSettings = () => {
 
       if (Object.keys(changedSettings).length === 0) {
         setSuccessMessage("No changes detected");
-        setLoading(false);
+        setSaveLoading(false);
         return;
       }
 
@@ -144,9 +145,19 @@ const BehaviorSettings = () => {
       console.error("Error saving settings:", error);
       setError("Failed to save settings. Please try again.");
     } finally {
-      setLoading(false);
+      setSaveLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="behavior-settings__loading">
+        <div className="loading">
+          <div className="loading__spinner"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -358,7 +369,7 @@ const BehaviorSettings = () => {
           type="button"
           disabled={loading}
         >
-          {loading ? "Saving..." : "Save Changes"}
+          {saveLoading ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>
