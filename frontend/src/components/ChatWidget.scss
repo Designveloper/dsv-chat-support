@@ -19,7 +19,7 @@
     .chat-widget__toggle {
         width: 240px;
         height: 60px;
-        border-radius: 28px 28px 28px 0px;
+        border-radius: 28px 28px 0px 28px;
         background-color: #4050b5;
         color: white;
         border: none;
@@ -202,7 +202,7 @@
         font-weight: 200;
         border: none;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 18px;
         padding: 0;
         margin-left: 10px;
     }
@@ -265,29 +265,48 @@
     .chat-widget__textarea {
         flex: 1;
         height: 40px;
-        padding: 10px 12px;
+        padding: 4px 12px;
         resize: none;
         font-family: inherit;
         font-size: 15px;
         border: none;
         background-color: #fff;
         color: #333;
+        line-height: 32px;
+        vertical-align: middle;
 
         &:focus {
             border-color: #511252;
             outline: none;
         }
+
+        &::placeholder {
+            line-height: 32px;
+        }
+
+        &::-webkit-input-placeholder {
+            line-height: 32px;
+        }
+
+        &::-moz-placeholder {
+            line-height: 32px;
+        }
+
+        &:-ms-input-placeholder {
+            line-height: 32px;
+        }
     }
 
     .chat-widget__send-button {
-        margin-left: 8px;
-        color: #333;
         border: none;
-        border-radius: 4px;
-        font-weight: 500;
         cursor: pointer;
-        height: 40px;
         background-color: #fff;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .chat-widget__send-button:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
     }
 
     .btn.chat-widget__send-button:hover {
@@ -296,6 +315,8 @@
 
     .btn.chat-widget__send-button:disabled {
         cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
     }
 
     .chat-widget__loading {

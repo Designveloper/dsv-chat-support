@@ -24194,7 +24194,7 @@ var ChatWidgetApp = (() => {
   document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css));
 
   // src/hooks/useChatSession.ts
-  var import_react2 = __toESM(require_react(), 1);
+  var import_react = __toESM(require_react(), 1);
 
   // node_modules/axios/lib/helpers/bind.js
   function bind(fn, thisArg) {
@@ -30241,91 +30241,19 @@ var ChatWidgetApp = (() => {
     }
   };
 
-  // src/hooks/useOperatingHours.ts
-  var import_react = __toESM(require_react(), 1);
-  function useOperatingHours(operatingHoursJson) {
-    const [isWithinOperatingHours, setIsWithinOperatingHours] = (0, import_react.useState)(true);
-    const [nextOpenTime, setNextOpenTime] = (0, import_react.useState)(null);
-    const [timezone, setTimezone] = (0, import_react.useState)("UTC");
-    const [isLoading, setIsLoading] = (0, import_react.useState)(true);
-    (0, import_react.useEffect)(() => {
-      if (!operatingHoursJson || operatingHoursJson === "none") {
-        setIsWithinOperatingHours(true);
-        setNextOpenTime(null);
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const operatingHours = JSON.parse(operatingHoursJson);
-        const { schedule, timezone: timezone2 } = operatingHours;
-        if (timezone2) {
-          setTimezone(timezone2);
-        }
-        const now = /* @__PURE__ */ new Date();
-        const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
-        const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-        const currentDayIndex = daysOfWeek.indexOf(dayOfWeek);
-        const findNextOpenTimeSlot = () => {
-          const todaySchedule2 = schedule.find((item) => item.day === dayOfWeek);
-          if (todaySchedule2 && todaySchedule2.enabled) {
-            for (const timeRange of todaySchedule2.timeRanges) {
-              if (currentTimeStr < timeRange.startTime) {
-                return `Today at ${timeRange.startTime}`;
-              }
-            }
-          }
-          for (let i = 1; i <= 7; i++) {
-            const nextDayIndex = (currentDayIndex + i) % 7;
-            const nextDay = daysOfWeek[nextDayIndex];
-            const nextDaySchedule = schedule.find((item) => item.day === nextDay && item.enabled);
-            if (nextDaySchedule && nextDaySchedule.timeRanges.length > 0) {
-              const earliestSlot = [...nextDaySchedule.timeRanges].sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
-              return `${nextDay} at ${earliestSlot.startTime}`;
-            }
-          }
-          return null;
-        };
-        const todaySchedule = schedule.find((item) => item.day === dayOfWeek);
-        let isWithinAnyTimeSlot = false;
-        if (todaySchedule && todaySchedule.enabled && todaySchedule.timeRanges.length > 0) {
-          isWithinAnyTimeSlot = todaySchedule.timeRanges.some(
-            (timeRange) => currentTimeStr >= timeRange.startTime && currentTimeStr <= timeRange.endTime
-          );
-        }
-        setIsWithinOperatingHours(isWithinAnyTimeSlot);
-        if (!isWithinAnyTimeSlot) {
-          setNextOpenTime(findNextOpenTimeSlot());
-        } else {
-          setNextOpenTime(null);
-        }
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error parsing operating hours data:", err);
-        setIsWithinOperatingHours(true);
-        setNextOpenTime(null);
-        setIsLoading(false);
-      }
-    }, [operatingHoursJson]);
-    return { isWithinOperatingHours, nextOpenTime, timezone, isLoading };
-  }
-
   // src/hooks/useChatSession.ts
   function useChatSession(workspaceId) {
-    const [sessionId, setSessionId] = (0, import_react2.useState)(null);
-    const [activeWorkspace, setActiveWorkspace] = (0, import_react2.useState)(null);
-    const [isOnline, setIsOnline] = (0, import_react2.useState)(true);
-    const [loading, setLoading] = (0, import_react2.useState)(false);
-    const [error, setError] = (0, import_react2.useState)(null);
-    const { isWithinOperatingHours } = useOperatingHours(activeWorkspace);
-    (0, import_react2.useEffect)(() => {
+    const [sessionId, setSessionId] = (0, import_react.useState)(null);
+    const [activeWorkspace, setActiveWorkspace] = (0, import_react.useState)(null);
+    const [isOnline, setIsOnline] = (0, import_react.useState)(true);
+    const [loading, setLoading] = (0, import_react.useState)(false);
+    const [error, setError] = (0, import_react.useState)(null);
+    (0, import_react.useEffect)(() => {
       if (workspaceId) {
         setActiveWorkspace(workspaceId);
       }
     }, [workspaceId]);
-    (0, import_react2.useEffect)(() => {
+    (0, import_react.useEffect)(() => {
       const existingSessionId = chatService.getSavedSession();
       if (existingSessionId) {
         setSessionId(existingSessionId);
@@ -30333,10 +30261,6 @@ var ChatWidgetApp = (() => {
     }, []);
     const checkOnlineStatus = () => __async(this, null, function* () {
       if (!activeWorkspace) return;
-      if (!isWithinOperatingHours) {
-        setIsOnline(false);
-        return;
-      }
       try {
         const online = yield chatService.checkOnlineStatus(activeWorkspace);
         setIsOnline(online);
@@ -30402,13 +30326,13 @@ var ChatWidgetApp = (() => {
   }
 
   // src/hooks/useChatMessages.ts
-  var import_react5 = __toESM(require_react(), 1);
+  var import_react4 = __toESM(require_react(), 1);
 
   // src/hooks/useSound.ts
-  var import_react3 = __toESM(require_react(), 1);
+  var import_react2 = __toESM(require_react(), 1);
   function useSound() {
-    const audioRef = (0, import_react3.useRef)(null);
-    const playNotificationSound = (0, import_react3.useCallback)(() => {
+    const audioRef = (0, import_react2.useRef)(null);
+    const playNotificationSound = (0, import_react2.useCallback)(() => {
       try {
         console.log("Attempting to play notification sound");
         if (!audioRef.current) {
@@ -30454,15 +30378,15 @@ var ChatWidgetApp = (() => {
   var createStore = (createState) => createState ? createStoreImpl(createState) : createStoreImpl;
 
   // node_modules/zustand/esm/react.mjs
-  var import_react4 = __toESM(require_react(), 1);
+  var import_react3 = __toESM(require_react(), 1);
   var identity = (arg) => arg;
   function useStore(api, selector = identity) {
-    const slice = import_react4.default.useSyncExternalStore(
+    const slice = import_react3.default.useSyncExternalStore(
       api.subscribe,
       () => selector(api.getState()),
       () => selector(api.getInitialState())
     );
-    import_react4.default.useDebugValue(slice);
+    import_react3.default.useDebugValue(slice);
     return slice;
   }
   var createImpl = (createState) => {
@@ -30519,12 +30443,12 @@ var ChatWidgetApp = (() => {
 
   // src/hooks/useChatMessages.ts
   function useChatMessages(sessionId, setIsOnline, playSoundEnabled) {
-    const [messages, setMessages] = (0, import_react5.useState)([]);
-    const [messageText, setMessageText] = (0, import_react5.useState)("");
-    const messagesEndRef = (0, import_react5.useRef)(null);
+    const [messages, setMessages] = (0, import_react4.useState)([]);
+    const [messageText, setMessageText] = (0, import_react4.useState)("");
+    const messagesEndRef = (0, import_react4.useRef)(null);
     const { playNotificationSound } = useSound();
     const { visitorData } = useChatStore((state) => state);
-    (0, import_react5.useEffect)(() => {
+    (0, import_react4.useEffect)(() => {
       if (sessionId) {
         const savedMessages = chatService.getSavedMessages(sessionId);
         if (savedMessages && savedMessages.length > 0) {
@@ -30558,12 +30482,12 @@ var ChatWidgetApp = (() => {
         setMessages([]);
       }
     }, [sessionId, setIsOnline, playSoundEnabled]);
-    (0, import_react5.useEffect)(() => {
+    (0, import_react4.useEffect)(() => {
       if (sessionId && messages.length > 0) {
         chatService.saveMessages(sessionId, messages);
       }
     }, [messages, sessionId]);
-    (0, import_react5.useEffect)(() => {
+    (0, import_react4.useEffect)(() => {
       var _a;
       (_a = messagesEndRef.current) == null ? void 0 : _a.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -30619,16 +30543,16 @@ var ChatWidgetApp = (() => {
   }
 
   // src/hooks/useOfflineForm.ts
-  var import_react6 = __toESM(require_react(), 1);
+  var import_react5 = __toESM(require_react(), 1);
   function useOfflineForm(workspaceId) {
-    const [offlineEmail, setOfflineEmail] = (0, import_react6.useState)("");
-    const [offlineMessage, setOfflineMessage] = (0, import_react6.useState)("");
-    const [offlineName, setOfflineName] = (0, import_react6.useState)("");
-    const [offlineFormSubmitted, setOfflineFormSubmitted] = (0, import_react6.useState)(
+    const [offlineEmail, setOfflineEmail] = (0, import_react5.useState)("");
+    const [offlineMessage, setOfflineMessage] = (0, import_react5.useState)("");
+    const [offlineName, setOfflineName] = (0, import_react5.useState)("");
+    const [offlineFormSubmitted, setOfflineFormSubmitted] = (0, import_react5.useState)(
       chatService.hasSubmittedOfflineForm()
     );
-    const [offlineFormLoading, setOfflineFormLoading] = (0, import_react6.useState)(false);
-    (0, import_react6.useEffect)(() => {
+    const [offlineFormLoading, setOfflineFormLoading] = (0, import_react5.useState)(false);
+    (0, import_react5.useEffect)(() => {
       localStorage.removeItem("chat_offline_submitted");
       setOfflineFormSubmitted(false);
     }, []);
@@ -30663,13 +30587,13 @@ var ChatWidgetApp = (() => {
   }
 
   // src/hooks/useVisitorIdentification.ts
-  var import_react7 = __toESM(require_react(), 1);
+  var import_react6 = __toESM(require_react(), 1);
   function useVisitorIdentification(workspaceId) {
-    const [visitorEmail, setVisitorEmail] = (0, import_react7.useState)("");
-    const [visitorName, setVisitorName] = (0, import_react7.useState)("");
-    const [identificationSubmitted, setIdentificationSubmitted] = (0, import_react7.useState)(false);
-    const [identificationLoading, setIdentificationLoading] = (0, import_react7.useState)(false);
-    const [error, setError] = (0, import_react7.useState)(null);
+    const [visitorEmail, setVisitorEmail] = (0, import_react6.useState)("");
+    const [visitorName, setVisitorName] = (0, import_react6.useState)("");
+    const [identificationSubmitted, setIdentificationSubmitted] = (0, import_react6.useState)(false);
+    const [identificationLoading, setIdentificationLoading] = (0, import_react6.useState)(false);
+    const [error, setError] = (0, import_react6.useState)(null);
     const submitVisitorIdentification = () => __async(this, null, function* () {
       if (!workspaceId || !visitorEmail.trim()) {
         setError("Email is required");
@@ -30733,10 +30657,10 @@ var ChatWidgetApp = (() => {
   }
 
   // src/components/VisitorIdentificationForm.tsx
-  var import_react10 = __toESM(require_react(), 1);
+  var import_react9 = __toESM(require_react(), 1);
 
   // src/components/Input.tsx
-  var import_react8 = __toESM(require_react(), 1);
+  var import_react7 = __toESM(require_react(), 1);
 
   // src/components/Input.scss
   var css2 = `/* Base input container */
@@ -30847,7 +30771,7 @@ var ChatWidgetApp = (() => {
     helperText,
     size = "medium"
   }) => {
-    const [isFocused, setIsFocused] = (0, import_react8.useState)(false);
+    const [isFocused, setIsFocused] = (0, import_react7.useState)(false);
     const inputClasses = [
       "input__field",
       `input__field--${size}`,
@@ -30857,7 +30781,7 @@ var ChatWidgetApp = (() => {
       className
     ].filter(Boolean).join(" ");
     const containerClasses = ["input", "input--full-width", className].filter(Boolean).join(" ");
-    return /* @__PURE__ */ import_react8.default.createElement("div", { className: containerClasses }, label && /* @__PURE__ */ import_react8.default.createElement("label", { htmlFor: id, className: "input__label" }, label, required && /* @__PURE__ */ import_react8.default.createElement("span", { className: "input__required" }, "*")), /* @__PURE__ */ import_react8.default.createElement(
+    return /* @__PURE__ */ import_react7.default.createElement("div", { className: containerClasses }, label && /* @__PURE__ */ import_react7.default.createElement("label", { htmlFor: id, className: "input__label" }, label, required && /* @__PURE__ */ import_react7.default.createElement("span", { className: "input__required" }, "*")), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         id,
@@ -30871,12 +30795,12 @@ var ChatWidgetApp = (() => {
         onFocus: () => setIsFocused(true),
         onBlur: () => setIsFocused(false)
       }
-    ), helperText && !error && /* @__PURE__ */ import_react8.default.createElement("div", { className: "input__helper" }, helperText), error && /* @__PURE__ */ import_react8.default.createElement("div", { className: "input__error" }, error));
+    ), helperText && !error && /* @__PURE__ */ import_react7.default.createElement("div", { className: "input__helper" }, helperText), error && /* @__PURE__ */ import_react7.default.createElement("div", { className: "input__error" }, error));
   };
   var Input_default = Input;
 
   // src/components/Button.tsx
-  var import_react9 = __toESM(require_react(), 1);
+  var import_react8 = __toESM(require_react(), 1);
 
   // src/components/Button.scss
   var css3 = `.btn {
@@ -30951,7 +30875,7 @@ var ChatWidgetApp = (() => {
       `${fullWidth ? "btn--full" : ""}`,
       className
     ].filter(Boolean).join(" ");
-    return /* @__PURE__ */ import_react9.default.createElement(
+    return /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         type,
@@ -31032,7 +30956,7 @@ var ChatWidgetApp = (() => {
         onComplete();
       }
     });
-    return /* @__PURE__ */ import_react10.default.createElement("div", { className: "visitor-identification" }, /* @__PURE__ */ import_react10.default.createElement("h3", null, "Before we start chatting"), /* @__PURE__ */ import_react10.default.createElement("p", null, "Please let us know who you are so we can better assist you."), error && /* @__PURE__ */ import_react10.default.createElement("div", { className: "visitor-identification__error" }, error), /* @__PURE__ */ import_react10.default.createElement("form", { onSubmit: handleSubmit, className: "visitor-identification__form" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react10.default.createElement(
+    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "visitor-identification" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, "Before we start chatting"), /* @__PURE__ */ import_react9.default.createElement("p", null, "Please let us know who you are so we can better assist you."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "visitor-identification__error" }, error), /* @__PURE__ */ import_react9.default.createElement("form", { onSubmit: handleSubmit, className: "visitor-identification__form" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react9.default.createElement(
       Input_default,
       {
         id: "visitor-email",
@@ -31042,7 +30966,7 @@ var ChatWidgetApp = (() => {
         onChange: (e) => setVisitorEmail(e.target.value),
         required: true
       }
-    )), /* @__PURE__ */ import_react10.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react10.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react9.default.createElement(
       Input_default,
       {
         id: "visitor-name",
@@ -31051,7 +30975,7 @@ var ChatWidgetApp = (() => {
         value: visitorName,
         onChange: (e) => setVisitorName(e.target.value)
       }
-    )), /* @__PURE__ */ import_react10.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement(
       Button_default,
       {
         label: identificationLoading ? "Processing..." : "Start Chat",
@@ -31326,6 +31250,81 @@ var ChatWidgetApp = (() => {
       });
     }
   };
+
+  // src/hooks/useOperatingHours.ts
+  var import_react10 = __toESM(require_react(), 1);
+  function useOperatingHours(operatingHoursJson) {
+    const [isWithinOperatingHours, setIsWithinOperatingHours] = (0, import_react10.useState)(true);
+    const [nextOpenTime, setNextOpenTime] = (0, import_react10.useState)(null);
+    const [timezone, setTimezone] = (0, import_react10.useState)("UTC");
+    const [isLoading, setIsLoading] = (0, import_react10.useState)(true);
+    (0, import_react10.useEffect)(() => {
+      if (!operatingHoursJson || operatingHoursJson === "none") {
+        setIsWithinOperatingHours(true);
+        setNextOpenTime(null);
+        setIsLoading(false);
+        return;
+      }
+      try {
+        console.log("\u{1F680} ~ useEffect ~ operatingHoursJson:", operatingHoursJson);
+        const operatingHours = JSON.parse(operatingHoursJson);
+        console.log("\u{1F680} ~ useEffect ~ operatingHours:", operatingHours);
+        const { schedule, timezone: timezone2 } = operatingHours;
+        console.log("\u{1F680} ~ useEffect ~ schedule:", schedule);
+        console.log("\u{1F680} ~ useEffect ~ timezone:", timezone2);
+        if (timezone2) {
+          setTimezone(timezone2);
+        }
+        const now = /* @__PURE__ */ new Date();
+        const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+        const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const currentDayIndex = daysOfWeek.indexOf(dayOfWeek);
+        const findNextOpenTimeSlot = () => {
+          const todaySchedule2 = schedule.find((item) => item.day === dayOfWeek);
+          if (todaySchedule2 && todaySchedule2.enabled) {
+            for (const timeRange of todaySchedule2.timeRanges) {
+              if (currentTimeStr < timeRange.startTime) {
+                return `Today at ${timeRange.startTime}`;
+              }
+            }
+          }
+          for (let i = 1; i <= 7; i++) {
+            const nextDayIndex = (currentDayIndex + i) % 7;
+            const nextDay = daysOfWeek[nextDayIndex];
+            const nextDaySchedule = schedule.find((item) => item.day === nextDay && item.enabled);
+            if (nextDaySchedule && nextDaySchedule.timeRanges.length > 0) {
+              const earliestSlot = [...nextDaySchedule.timeRanges].sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+              return `${nextDay} at ${earliestSlot.startTime}`;
+            }
+          }
+          return null;
+        };
+        const todaySchedule = schedule.find((item) => item.day === dayOfWeek);
+        let isWithinAnyTimeSlot = false;
+        if (todaySchedule && todaySchedule.enabled && todaySchedule.timeRanges.length > 0) {
+          isWithinAnyTimeSlot = todaySchedule.timeRanges.some(
+            (timeRange) => currentTimeStr >= timeRange.startTime && currentTimeStr <= timeRange.endTime
+          );
+        }
+        setIsWithinOperatingHours(isWithinAnyTimeSlot);
+        if (!isWithinAnyTimeSlot) {
+          setNextOpenTime(findNextOpenTimeSlot());
+        } else {
+          setNextOpenTime(null);
+        }
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error parsing operating hours data:", err);
+        setIsWithinOperatingHours(true);
+        setNextOpenTime(null);
+        setIsLoading(false);
+      }
+    }, [operatingHoursJson]);
+    return { isWithinOperatingHours, nextOpenTime, timezone, isLoading };
+  }
 
   // src/components/ChatWidget.tsx
   var ChatWidget = ({ workspaceId }) => {
@@ -31880,6 +31879,36 @@ a {
   // src/embed.tsx
   window.useChatStore = useChatStore;
   window._chatSupport = {
+    initChat: function(widgetId) {
+      if (!widgetId) {
+        console.error("No widgetId provided to initChat");
+        return false;
+      }
+      console.log("Initializing chat widget with ID:", widgetId);
+      try {
+        if (!customElements.get("chat-support-widget")) {
+          customElements.define("chat-support-widget", ChatSupportWidget);
+        }
+        let widget = document.querySelector(
+          "chat-support-widget"
+        );
+        if (!widget) {
+          console.log("Creating new chat-support-widget element");
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = "<chat-support-widget></chat-support-widget>";
+          widget = tempDiv.firstChild;
+          document.body.appendChild(widget);
+        }
+        widget.setAttribute("widgetid", widgetId);
+        widget.style.display = "block";
+        useChatStore.getState().initialize();
+        console.log("Widget mounted in DOM:", widget.isConnected);
+        return true;
+      } catch (error) {
+        console.error("Error initializing chat widget:", error);
+        return false;
+      }
+    },
     open: function() {
       const store = window.useChatStore;
       if (!store) {
@@ -31933,18 +31962,50 @@ a {
       __publicField(this, "workspaceId", null);
       this.mountPoint = document.createElement("div");
       this.appendChild(this.mountPoint);
-      this.style.display = "contents";
+      this.style.display = "block";
       if (!this.initialized) {
         useChatStore.getState().initialize();
         this.initialized = true;
+      }
+      this.addEventListener("chat-widget-init", this.handleWidgetInit.bind(this));
+    }
+    // Add a new method to force initialization
+    forceInitialize(widgetId) {
+      console.log("Forcing widget initialization with ID:", widgetId);
+      this.workspaceId = widgetId;
+      this.renderWidget();
+      setTimeout(() => {
+        this.renderWidget();
+        console.log("Widget re-rendered after forced initialization");
+      }, 100);
+    }
+    handleWidgetInit() {
+      console.log("Widget init event received");
+      this.workspaceId = this.getAttribute("widgetid");
+      if (this.workspaceId) {
+        console.log("About to render widget with ID:", this.workspaceId);
+        this.renderWidget();
+        setTimeout(() => {
+          if (this.workspaceId) {
+            this.renderWidget();
+            console.log("Widget re-rendered after init event");
+          }
+        }, 100);
+      } else {
+        console.error("Cannot initialize widget: No widgetid attribute");
       }
     }
     connectedCallback() {
       this.workspaceId = this.getAttribute("widgetid");
       if (!this.workspaceId) {
         console.error("No widgetid attribute provided to chat-support-widget");
+        this.mountPoint.innerHTML = '<div style="color: red; padding: 10px;">Widget ID missing</div>';
         return;
       }
+      console.log(
+        "Connected callback - rendering widget with ID:",
+        this.workspaceId
+      );
       this.renderWidget();
       document.addEventListener(
         "chatSupport.stateChanged",
@@ -31968,12 +32029,17 @@ a {
     renderWidget() {
       if (!this.workspaceId) return;
       try {
+        console.log("Rendering widget with ID:", this.workspaceId);
         if (!this.root) {
+          console.log("Creating new React root");
           this.root = (0, import_client.createRoot)(this.mountPoint);
         }
+        console.log("Rendering ChatWidget component");
         this.root.render(/* @__PURE__ */ import_react12.default.createElement(ChatWidget_default, { workspaceId: this.workspaceId }));
+        console.log("React render complete");
       } catch (error) {
         console.error("Error rendering chat widget:", error);
+        this.mountPoint.innerHTML = `<div style="color: red; padding: 10px;">Error rendering chat: ${error}</div>`;
       }
     }
     attributeChangedCallback(name, oldValue, newValue) {

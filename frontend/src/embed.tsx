@@ -12,6 +12,7 @@ declare global {
     initChatWidget: (container: HTMLElement, workspaceId: string) => void;
     useChatStore: typeof useChatStore;
     _chatSupport: {
+      initChat: (widgetId: string) => boolean;
       open: () => boolean;
       hide: () => boolean;
       identify: (userId: string, userData: VisitorData) => boolean;
@@ -25,6 +26,44 @@ window.useChatStore = useChatStore;
 
 // Define the chat support API
 window._chatSupport = {
+  initChat: function (widgetId: string) {
+    if (!widgetId) {
+      console.error("No widgetId provided to initChat");
+      return false;
+    }
+
+    console.log("Initializing chat widget with ID:", widgetId);
+
+    try {
+      if (!customElements.get("chat-support-widget")) {
+        customElements.define("chat-support-widget", ChatSupportWidget);
+      }
+
+      let widget: HTMLElement | null = document.querySelector(
+        "chat-support-widget"
+      );
+
+      if (!widget) {
+        console.log("Creating new chat-support-widget element");
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = "<chat-support-widget></chat-support-widget>";
+        widget = tempDiv.firstChild as HTMLElement;
+        document.body.appendChild(widget);
+      }
+
+      widget.setAttribute("widgetid", widgetId);
+      widget.style.display = "block";
+
+      useChatStore.getState().initialize();
+
+      console.log("Widget mounted in DOM:", widget.isConnected);
+      return true;
+    } catch (error) {
+      console.error("Error initializing chat widget:", error);
+      return false;
+    }
+  },
+
   open: function () {
     const store = window.useChatStore;
     if (!store) {
@@ -90,13 +129,48 @@ class ChatSupportWidget extends HTMLElement {
     this.mountPoint = document.createElement("div");
     this.appendChild(this.mountPoint);
 
-    // Style the container
-    this.style.display = "contents"; // This makes the element itself invisible but shows its children
+    // Style the container to be visible
+    this.style.display = "block";
 
     // Initialize the store
     if (!this.initialized) {
       useChatStore.getState().initialize();
       this.initialized = true;
+    }
+
+    this.addEventListener("chat-widget-init", this.handleWidgetInit.bind(this));
+  }
+
+  // Add a new method to force initialization
+  forceInitialize(widgetId: string) {
+    console.log("Forcing widget initialization with ID:", widgetId);
+    this.workspaceId = widgetId;
+    this.renderWidget();
+
+    // Ensure the chat toggle button is visible
+    setTimeout(() => {
+      this.renderWidget();
+      console.log("Widget re-rendered after forced initialization");
+    }, 100);
+  }
+
+  handleWidgetInit() {
+    console.log("Widget init event received");
+    this.workspaceId = this.getAttribute("widgetid");
+    if (this.workspaceId) {
+      // Log before render
+      console.log("About to render widget with ID:", this.workspaceId);
+      this.renderWidget();
+
+      // Force a second render after a short delay for stability
+      setTimeout(() => {
+        if (this.workspaceId) {
+          this.renderWidget();
+          console.log("Widget re-rendered after init event");
+        }
+      }, 100);
+    } else {
+      console.error("Cannot initialize widget: No widgetid attribute");
     }
   }
 
@@ -106,8 +180,15 @@ class ChatSupportWidget extends HTMLElement {
 
     if (!this.workspaceId) {
       console.error("No widgetid attribute provided to chat-support-widget");
+      this.mountPoint.innerHTML =
+        '<div style="color: red; padding: 10px;">Widget ID missing</div>';
       return;
     }
+
+    console.log(
+      "Connected callback - rendering widget with ID:",
+      this.workspaceId
+    );
     this.renderWidget();
 
     // Set up event listeners for API interactions
@@ -137,13 +218,23 @@ class ChatSupportWidget extends HTMLElement {
 
   renderWidget() {
     if (!this.workspaceId) return;
+
     try {
+      console.log("Rendering widget with ID:", this.workspaceId);
       if (!this.root) {
+        console.log("Creating new React root");
         this.root = createRoot(this.mountPoint);
       }
+
+      console.log("Rendering ChatWidget component");
       this.root.render(<ChatWidget workspaceId={this.workspaceId} />);
+
+      // Add a visual indicator that React has rendered something
+      console.log("React render complete");
     } catch (error) {
       console.error("Error rendering chat widget:", error);
+      // Display error to help with debugging
+      this.mountPoint.innerHTML = `<div style="color: red; padding: 10px;">Error rendering chat: ${error}</div>`;
     }
   }
 

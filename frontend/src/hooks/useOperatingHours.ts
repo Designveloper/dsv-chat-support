@@ -34,8 +34,13 @@ export function useOperatingHours(operatingHoursJson: string | null | undefined)
         }
 
         try {
+
+            console.log("🚀 ~ useEffect ~ operatingHoursJson:", operatingHoursJson)
             const operatingHours = JSON.parse(operatingHoursJson);
+            console.log("🚀 ~ useEffect ~ operatingHours:", operatingHours)
             const { schedule, timezone } = operatingHours;
+            console.log("🚀 ~ useEffect ~ schedule:", schedule)
+            console.log("🚀 ~ useEffect ~ timezone:", timezone)
 
             if (timezone) {
                 setTimezone(timezone);
