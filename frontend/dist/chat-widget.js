@@ -30353,7 +30353,7 @@ var ChatWidgetApp = (() => {
       try {
         console.log("Attempting to play notification sound");
         if (!audioRef.current) {
-          audioRef.current = new Audio("/sounds/message-notification.mp3");
+          audioRef.current = new Audio("/message-notification.mp3");
           audioRef.current.volume = 0.5;
         }
         const audio = audioRef.current;
