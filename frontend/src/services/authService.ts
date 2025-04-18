@@ -90,7 +90,6 @@ export const authService = {
     },
 
     async login(email: string, password: string): Promise<AuthResponse> {
-        console.log(`🚀 ~ login ~ ${API_URL}/auth/login:`, `${API_URL}/auth/login`);
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
