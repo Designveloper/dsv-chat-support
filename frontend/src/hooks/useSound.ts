@@ -9,7 +9,7 @@ export function useSound() {
             console.log("Attempting to play notification sound");
 
             if (!audioRef.current) {
-                audioRef.current = new Audio('/message-notification.mp3');
+                audioRef.current = new Audio('https://chat-support-7j2g.onrender.com/message-notification.mp3');
                 audioRef.current.volume = 0.5;
             }
 
