@@ -23693,7 +23693,7 @@ var ChatWidgetApp = (() => {
 #chat-widget-root .chat-widget__toggle {
   width: 240px;
   height: 60px;
-  border-radius: 28px 28px 28px 0px;
+  border-radius: 28px 28px 0px 28px;
   background-color: #4050b5;
   color: white;
   border: none;
@@ -23828,7 +23828,7 @@ var ChatWidgetApp = (() => {
   top: 50px;
   right: 40px;
   background: white;
-  padding: 20px;
+  padding: 12px 20px;
   border-radius: 14px 0 14px 14px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   z-index: 10;
@@ -23878,7 +23878,7 @@ var ChatWidgetApp = (() => {
   max-width: 270px;
   border-radius: 12px;
   word-break: break-word;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.4;
 }
 #chat-widget-root .chat-widget__message--user {
@@ -23908,33 +23908,49 @@ var ChatWidgetApp = (() => {
 #chat-widget-root .chat-widget__textarea {
   flex: 1;
   height: 40px;
-  padding: 10px 12px;
+  padding: 4px 12px;
   resize: none;
   font-family: inherit;
   font-size: 15px;
   border: none;
   background-color: #fff;
   color: #333;
+  line-height: 32px;
+  vertical-align: middle;
 }
 #chat-widget-root .chat-widget__textarea:focus {
   border-color: #511252;
   outline: none;
 }
+#chat-widget-root .chat-widget__textarea::placeholder {
+  line-height: 32px;
+}
+#chat-widget-root .chat-widget__textarea::-webkit-input-placeholder {
+  line-height: 32px;
+}
+#chat-widget-root .chat-widget__textarea::-moz-placeholder {
+  line-height: 32px;
+}
+#chat-widget-root .chat-widget__textarea:-ms-input-placeholder {
+  line-height: 32px;
+}
 #chat-widget-root .chat-widget__send-button {
-  margin-left: 8px;
-  color: #333;
   border: none;
-  border-radius: 4px;
-  font-weight: 500;
   cursor: pointer;
-  height: 40px;
   background-color: #fff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+#chat-widget-root .chat-widget__send-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 #chat-widget-root .btn.chat-widget__send-button:hover {
   color: #000;
 }
 #chat-widget-root .btn.chat-widget__send-button:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
 }
 #chat-widget-root .chat-widget__loading {
   display: flex;
@@ -23961,7 +23977,7 @@ var ChatWidgetApp = (() => {
 }
 #chat-widget-root .chat-widget__confirmation p {
   margin-bottom: 12px;
-  font-size: 0.9rem;
+  font-size: 16px;
   color: #333;
 }
 #chat-widget-root .chat-widget__confirmation-actions {
@@ -23976,7 +23992,7 @@ var ChatWidgetApp = (() => {
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 16px;
 }
 #chat-widget-root .chat-widget__confirmation-yes:hover {
   background-color: #218838;
@@ -23988,7 +24004,7 @@ var ChatWidgetApp = (() => {
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 16px;
 }
 #chat-widget-root .chat-widget__confirmation-no:hover {
   background-color: #c82333;
@@ -23997,7 +24013,7 @@ var ChatWidgetApp = (() => {
   padding: 5px 15px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 16px;
 }
 #chat-widget-root .chat-widget__confirmation-button--confirm {
   background-color: #dc3545;
@@ -24022,7 +24038,7 @@ var ChatWidgetApp = (() => {
   position: absolute;
   bottom: 70px;
   right: 0;
-  width: 320px;
+  width: 370px;
   background-color: white;
   border-radius: 12px;
   /* Increased border radius */
@@ -24052,10 +24068,10 @@ var ChatWidgetApp = (() => {
   margin-bottom: 15px;
 }
 #chat-widget-root .chat-widget__offline-form-message {
-  max-width: 270px;
+  max-width: 320px;
   border-radius: 12px;
   word-break: break-word;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.4;
   text-align: center;
   margin: 0;
@@ -24071,7 +24087,7 @@ var ChatWidgetApp = (() => {
   border: none;
   background-color: #f9fbfc;
   color: #000;
-  font-size: 14px;
+  font-size: 16px;
 }
 #chat-widget-root .chat-widget__offline-form-field input:focus,
 #chat-widget-root .chat-widget__offline-form-field textarea:focus {
@@ -24103,6 +24119,7 @@ var ChatWidgetApp = (() => {
   cursor: pointer;
   font-weight: 600;
   margin-top: 8px;
+  font-size: 16px;
 }
 #chat-widget-root .btn.chat-widget__offline-form-submit:hover {
   background-color: rgb(50.6775510204, 63.3469387755, 143.3224489796);
@@ -24125,7 +24142,7 @@ var ChatWidgetApp = (() => {
   max-width: 270px;
   border-radius: 12px;
   word-break: break-word;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.4;
   text-align: center;
   margin: 0;
@@ -30336,7 +30353,7 @@ var ChatWidgetApp = (() => {
       try {
         console.log("Attempting to play notification sound");
         if (!audioRef.current) {
-          audioRef.current = new Audio("/frontend/src/assets/sounds/message-notification.mp3");
+          audioRef.current = new Audio("/sounds/message-notification.mp3");
           audioRef.current.volume = 0.5;
         }
         const audio = audioRef.current;
@@ -30890,7 +30907,7 @@ var ChatWidgetApp = (() => {
 
   // src/components/VisitorIdentificationForm.scss
   var css4 = `.visitor-identification {
-  padding: 1.5rem;
+  padding: 20px 32px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -30898,7 +30915,7 @@ var ChatWidgetApp = (() => {
 }
 .visitor-identification h3 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
+  font-size: 20px;
   color: #333;
   text-align: center;
 }
@@ -30906,22 +30923,44 @@ var ChatWidgetApp = (() => {
   margin: 0 0 1.5rem 0;
   color: #666;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 16px;
 }
 
 .visitor-identification__form {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  gap: 20px;
 }
 
-.visitor-identification__form-field {
-  margin-bottom: 1rem;
+.visitor-identification__form-input {
+  margin: 0;
+  background-color: #f9fbfc;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 16px;
+  box-shadow: none;
 }
 
-.visitor-identification__submit {
-  margin-top: 40px;
-  align-self: stretch;
+.visitor-identification__form-submit {
+  background-color: #4050b5;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 32px;
+  font-size: 16px;
+}
+
+.btn.visitor-identification__form-submit:hover {
+  background-color: rgb(50.6775510204, 63.3469387755, 143.3224489796);
+}
+
+.btn.visitor-identification__form-submit:disabled {
+  background-color: #b4c0cc;
+  cursor: not-allowed;
 }
 
 .visitor-identification__error {
@@ -30964,6 +31003,7 @@ var ChatWidgetApp = (() => {
         placeholder: "Email",
         value: visitorEmail,
         onChange: (e) => setVisitorEmail(e.target.value),
+        className: "visitor-identification__form-input",
         required: true
       }
     )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "visitor-identification__form-field" }, /* @__PURE__ */ import_react9.default.createElement(
@@ -30973,7 +31013,8 @@ var ChatWidgetApp = (() => {
         type: "text",
         placeholder: "Name (optional)",
         value: visitorName,
-        onChange: (e) => setVisitorName(e.target.value)
+        onChange: (e) => setVisitorName(e.target.value),
+        className: "visitor-identification__form-input"
       }
     )), /* @__PURE__ */ import_react9.default.createElement(
       Button_default,
@@ -30983,7 +31024,8 @@ var ChatWidgetApp = (() => {
         onClick: () => {
         },
         type: "submit",
-        className: "visitor-identification__submit"
+        fullWidth: true,
+        className: "visitor-identification__form-submit"
       }
     )));
   };
@@ -31721,8 +31763,8 @@ var ChatWidgetApp = (() => {
               xmlnsXlink: "http://www.w3.org/1999/xlink",
               version: "1.1",
               style: {
-                width: 28,
-                height: 28
+                width: 34,
+                height: 34
               },
               viewBox: "0 0 256 256",
               xmlSpace: "preserve"
