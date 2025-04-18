@@ -100,10 +100,8 @@ export class AuthController {
 
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true, // Prevents JavaScript access
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production'
-        ? 'none'
-        : 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: expiresIn,
       path: '/', // Available across the site
     });
