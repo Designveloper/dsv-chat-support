@@ -4,7 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import { workspaceSettingsService } from "../services/workspaceSettingsService";
 // import { chatService } from "../services/chatService";
 import "./BehaviorSettings.scss";
-import ChatWidget from "./ChatWidget";
+// import ChatWidget from "./ChatWidget";
 
 type ContextType = { workspace: Workspace | null };
 
@@ -170,7 +170,7 @@ const BehaviorSettings = () => {
 
   return (
     <div className="behavior-settings">
-      <ChatWidget workspaceId="6821af37-8d27-4b1f-8741-4a451a529104" />
+      {/* <ChatWidget workspaceId="6821af37-8d27-4b1f-8741-4a451a529104" /> */}
       <h2>Widget behavior</h2>
 
       <div className="behavior-settings__section">

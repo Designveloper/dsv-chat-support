@@ -46,6 +46,7 @@ const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
             placeholder="Email"
             value={visitorEmail}
             onChange={(e) => setVisitorEmail(e.target.value)}
+            className="visitor-identification__form-input"
             required
           />
         </div>
@@ -57,6 +58,7 @@ const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
             placeholder="Name (optional)"
             value={visitorName}
             onChange={(e) => setVisitorName(e.target.value)}
+            className="visitor-identification__form-input"
           />
         </div>
 
@@ -65,7 +67,8 @@ const VisitorIdentificationForm: React.FC<VisitorIdentificationFormProps> = ({
           disabled={identificationLoading}
           onClick={() => {}}
           type="submit"
-          className="visitor-identification__submit"
+          fullWidth
+          className="visitor-identification__form-submit"
         />
       </form>
     </div>

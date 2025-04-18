@@ -172,7 +172,7 @@
         top: 50px;
         right: 40px;
         background: white;
-        padding: 20px;
+        padding: 12px 20px;
         border-radius: 14px 0 14px 14px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         z-index: 10;
@@ -202,7 +202,7 @@
         font-weight: 200;
         border: none;
         cursor: pointer;
-        font-size: 18px;
+        font-size: 16px;
         padding: 0;
         margin-left: 10px;
     }
@@ -346,7 +346,7 @@
 
         p {
             margin-bottom: 12px;
-            font-size: 0.9rem;
+            font-size: 16px;
             color: #333;
         }
     }
@@ -364,7 +364,7 @@
         padding: 10px 20px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 16px;
 
         &:hover {
             background-color: #218838;
@@ -378,7 +378,7 @@
         padding: 10px 20px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 16px;
 
         &:hover {
             background-color: #c82333;
@@ -389,7 +389,7 @@
         padding: 5px 15px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 16px;
     }
 
     .chat-widget__confirmation-button--confirm {
@@ -419,7 +419,7 @@
         position: absolute;
         bottom: 70px;
         right: 0;
-        width: 320px;
+        width: 370px;
         background-color: white;
         border-radius: 12px;
         /* Increased border radius */
@@ -454,10 +454,10 @@
     }
 
     .chat-widget__offline-form-message {
-        max-width: 270px;
+        max-width: 320px;
         border-radius: 12px;
         word-break: break-word;
-        font-size: 15px;
+        font-size: 16px;
         line-height: 1.4;
         text-align: center;
         margin: 0;
@@ -474,7 +474,7 @@
             border: none;
             background-color: #f9fbfc;
             color: #000;
-            font-size: 14px;
+            font-size: 16px;
 
             &:focus {
                 outline: none;
@@ -536,7 +536,7 @@
             max-width: 270px;
             border-radius: 12px;
             word-break: break-word;
-            font-size: 15px;
+            font-size: 18px;
             line-height: 1.4;
             text-align: center;
             margin: 0;
