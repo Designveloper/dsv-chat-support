@@ -24207,6 +24207,124 @@ var ChatWidgetApp = (() => {
   100% {
     transform: scale(1);
   }
+}
+@media (max-width: 1024px) {
+  #chat-widget-root .chat-widget__panel,
+  #chat-widget-root .chat-widget__panel--offline {
+    width: 320px;
+    height: 450px;
+    bottom: 65px;
+    right: 0;
+  }
+  #chat-widget-root .chat-widget__title {
+    font-size: 16px;
+  }
+  #chat-widget-root .chat-widget__toggle {
+    width: 200px;
+    height: 50px;
+    font-size: 15px;
+  }
+  #chat-widget-root .chat-widget__message {
+    max-width: 230px;
+    font-size: 15px;
+  }
+}
+@media (max-width: 768px) {
+  #chat-widget-root .chat-widget {
+    bottom: 15px;
+    right: 15px;
+  }
+  #chat-widget-root .chat-widget__panel,
+  #chat-widget-root .chat-widget__panel--offline {
+    width: 90vw;
+    max-width: 300px;
+    height: 70vh;
+    max-height: 400px;
+    bottom: 60px;
+    right: 0;
+  }
+  #chat-widget-root .chat-widget__toggle {
+    width: 160px;
+    height: 45px;
+    font-size: 14px;
+    border-radius: 24px 24px 0px 24px;
+  }
+  #chat-widget-root .chat-widget__toggle--offline {
+    width: 120px;
+  }
+  #chat-widget-root .chat-widget__header {
+    padding: 12px 10px;
+  }
+  #chat-widget-root .chat-widget__title {
+    font-size: 14px;
+  }
+  #chat-widget-root .chat-widget__close-button {
+    background-size: 12px 12px;
+  }
+  #chat-widget-root .chat-widget__message {
+    max-width: 200px;
+    font-size: 14px;
+    padding: 5px 8px;
+    margin-bottom: 8px;
+  }
+  #chat-widget-root .chat-widget__input {
+    padding: 8px 8px 0 8px;
+  }
+  #chat-widget-root .chat-widget__textarea {
+    font-size: 14px;
+    line-height: 28px;
+  }
+  #chat-widget-root .chat-widget__send-button {
+    transform: scale(0.9);
+  }
+  #chat-widget-root .chat-widget__avatar {
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+  }
+  #chat-widget-root .chat-widget__offline-form {
+    padding: 12px 20px 30px;
+  }
+  #chat-widget-root .chat-widget__offline-form-message {
+    font-size: 15px;
+  }
+  #chat-widget-root .chat-widget__offline-form textarea {
+    height: 70px;
+    padding: 12px;
+  }
+  #chat-widget-root .chat-widget__offline-form-submit {
+    padding: 10px;
+    font-size: 14px;
+  }
+  #chat-widget-root .chat-widget__offline-thanks {
+    padding: 20px 15px;
+    margin-top: 40px;
+  }
+  #chat-widget-root .chat-widget__offline-thanks p {
+    font-size: 15px;
+  }
+  #chat-widget-root .chat-widget__offline-thanks img {
+    max-width: 80%;
+  }
+  #chat-widget-root .chat-widget__unread-badge {
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+  #chat-widget-root .chat-widget__menu-dropdown {
+    right: 35px;
+    padding: 10px 15px;
+  }
+}
+@media (max-height: 600px) {
+  #chat-widget-root .chat-widget__panel,
+  #chat-widget-root .chat-widget__panel--offline {
+    height: 60vh;
+    max-height: 350px;
+  }
+  #chat-widget-root .chat-widget__messages {
+    padding: 10px 8px;
+  }
 }`;
   document.head.appendChild(document.createElement("style")).appendChild(document.createTextNode(css));
 
@@ -30353,7 +30471,7 @@ var ChatWidgetApp = (() => {
       try {
         console.log("Attempting to play notification sound");
         if (!audioRef.current) {
-          audioRef.current = new Audio("/message-notification.mp3");
+          audioRef.current = new Audio("https://chat-support-7j2g.onrender.com/message-notification.mp3");
           audioRef.current.volume = 0.5;
         }
         const audio = audioRef.current;
