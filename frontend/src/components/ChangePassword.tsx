@@ -12,7 +12,7 @@ const ChangePassword: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
   if (!isAuthenticated) {
@@ -22,7 +22,7 @@ const ChangePassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    setSuccess("");
+    setSuccess(null);
 
     if (newPassword !== confirmPassword) {
       return;
@@ -37,10 +37,7 @@ const ChangePassword: React.FC = () => {
         setNewPassword("");
         setConfirmPassword("");
 
-        // Redirect to dashboard after successful password change
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
+        navigate("/dashboard");
       }
     } catch (err) {
       console.error("Failed to change password:", err);
@@ -86,13 +83,6 @@ const ChangePassword: React.FC = () => {
         {error && <div className="change-password__error">{error}</div>}
 
         <div className="change-password__buttons">
-          <Button
-            label="Back to Dashboard"
-            type="button"
-            variant="secondary"
-            onClick={() => navigate("/dashboard")}
-          />
-
           <Button
             label={loading ? "Changing..." : "Change Password"}
             type="submit"

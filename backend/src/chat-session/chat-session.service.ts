@@ -183,32 +183,6 @@ export class ChatSessionService {
                     {
                         "type": "divider"
                     },
-                    {
-                        "type": "actions",
-                        "elements": [
-                            {
-                                "type": "button",
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Close Session",
-                                    "emoji": true
-                                },
-                                "value": `close_session:${sessionId}`,
-                                "action_id": "close_session",
-                                "style": "danger"
-                            },
-                            {
-                                "type": "button",
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Transfer",
-                                    "emoji": true
-                                },
-                                "value": `transfer_session:${sessionId}`,
-                                "action_id": "transfer_session"
-                            }
-                        ]
-                    }
                 ];
 
                 await this.slackService.postBlockKitMessage(workspace.bot_token_slack, channelId, welcomeBlocks);

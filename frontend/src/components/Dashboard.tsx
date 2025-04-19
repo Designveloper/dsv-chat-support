@@ -63,6 +63,10 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const handleChangePassword = () => {
+    navigate("/change-password");
+  };
+
   const handleTabClick = (tab: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     setActiveTab(tab);
@@ -91,6 +95,11 @@ const Dashboard = () => {
               <span className="dashboard__welcome-text">
                 Welcome, {user?.email}
               </span>
+              <Button
+                label="Change Password"
+                onClick={handleChangePassword}
+                className="dashboard__change-pwd-btn"
+              />
               <Button
                 label="Logout"
                 onClick={handleLogout}

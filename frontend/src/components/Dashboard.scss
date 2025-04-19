@@ -309,3 +309,20 @@
     display: flex;
     gap: 10px;
 }
+
+.dashboard__change-pwd-btn {
+    background-color: transparent;
+    border: 1px solid #2196f3;
+    color: #2196f3;
+    font-weight: 400;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn.dashboard__change-pwd-btn:hover {
+    background-color: #2196f3;
+    color: white;
+}
