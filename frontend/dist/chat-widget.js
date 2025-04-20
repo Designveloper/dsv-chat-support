@@ -30563,6 +30563,12 @@ var ChatWidgetApp = (() => {
       set({ visitorId: userId, visitorData: userData });
       return true;
     },
+    clearIdentity: () => {
+      set({ visitorId: null, visitorData: null });
+      localStorage.removeItem("chat_visitor_email");
+      localStorage.removeItem("chat_visitor_name");
+      return true;
+    },
     getVisitorInfo: () => {
       const { visitorId, visitorData } = get();
       return { id: visitorId, data: visitorData };
@@ -32107,6 +32113,14 @@ a {
       }
       store.getState().identify(userId, userData);
       return true;
+    },
+    clearIdentity: function() {
+      const store = window.useChatStore;
+      if (!store) {
+        console.error("Chat support store not initialized");
+        return false;
+      }
+      return store.getState().clearIdentity();
     },
     isShown: function() {
       const store = window.useChatStore;

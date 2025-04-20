@@ -17,6 +17,7 @@ export interface ChatState {
     open: () => void;
     hide: () => void;
     identify: (userId: string, userData: VisitorData) => boolean;
+    clearIdentity: () => boolean;
     getVisitorInfo: () => { id: string | null; data: VisitorData | null };
     initialize: () => void;
 
@@ -60,6 +61,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
 
         set({ visitorId: userId, visitorData: userData });
+        return true;
+    },
+
+    clearIdentity: () => {
+        set({ visitorId: null, visitorData: null });
+        localStorage.removeItem('chat_visitor_email');
+        localStorage.removeItem('chat_visitor_name');
         return true;
     },
 

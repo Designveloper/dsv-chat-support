@@ -16,6 +16,7 @@ declare global {
       open: () => boolean;
       hide: () => boolean;
       identify: (userId: string, userData: VisitorData) => boolean;
+      clearIdentity: () => boolean;
       isShown: () => boolean;
     };
   }
@@ -109,6 +110,14 @@ window._chatSupport = {
     store.getState().identify(userId, userData);
 
     return true;
+  },
+  clearIdentity: function () {
+    const store = window.useChatStore;
+    if (!store) {
+      console.error("Chat support store not initialized");
+      return false;
+    }
+    return store.getState().clearIdentity();
   },
   isShown: function () {
     const store = window.useChatStore;

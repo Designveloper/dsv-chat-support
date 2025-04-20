@@ -52,6 +52,12 @@ export class ChatSessionService {
             throw new Error('Chat session not found');
         }
 
+        if (userInfo && userInfo.email === '') {
+            console.log("Empty email detected - clearing stored identity");
+            session.user_email = undefined;
+            await this.chatSessionRepository.save(session);
+        }
+
         const effectiveUserInfo = userInfo?.email
             ? userInfo
             : (session.user_email ? { email: session.user_email } : undefined);
