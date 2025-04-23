@@ -54,9 +54,12 @@ To enable Slack integration:
 **Configure OAuth & Permissions**
 
 - Add the following OAuth scopes:
+  - `channels:history`
+  - `channels:manage`
   - `channels:read`
   - `channels:join`
   - `chat:write`
+  - `chat:write.customize`
   - `users:read`
   - `users:read.email`
   - `commands`
