@@ -477,32 +477,6 @@ export class ChatSessionService {
             {
                 "type": "divider"
             },
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Reply via Email",
-                            "emoji": true
-                        },
-                        "value": `reply_email:${email}`,
-                        "action_id": "reply_email"
-                    },
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Mark as Handled",
-                            "emoji": true
-                        },
-                        "value": `mark_handled:${sessionId}`,
-                        "action_id": "mark_handled",
-                        "style": "primary"
-                    }
-                ]
-            }
         ];
 
         try {
