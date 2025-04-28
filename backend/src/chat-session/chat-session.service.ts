@@ -97,7 +97,7 @@ export class ChatSessionService {
 
                 const referer = request?.headers['referer'] || 'Unknown Page';
                 const location = 'Ho Chi Minh City, Vietnam';
-                const localTime = format(new Date(), 'hh:mma (XXX)');
+                const localTime = format(new Date(), 'hh:mma (0)');
 
                 // Create the user info section
                 const userFields: { type: string; text: string }[] = [];
