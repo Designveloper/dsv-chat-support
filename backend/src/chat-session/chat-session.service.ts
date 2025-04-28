@@ -97,7 +97,8 @@ export class ChatSessionService {
 
                 const referer = request?.headers['referer'] || 'Unknown Page';
                 const location = 'Ho Chi Minh City, Vietnam';
-                const localTime = format(new Date(), 'hh:mm a');
+                const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
+                const localTime = format(vietnamTime, 'hh:mm a');
 
                 // Create the user info section
                 const userFields: { type: string; text: string }[] = [];
@@ -394,7 +395,8 @@ export class ChatSessionService {
         // Get additional context information
         const referer = request?.headers['referer'] || 'Unknown Page';
         const location = 'Ho Chi Minh City, Vietnam';
-        const localTime = format(new Date(), 'hh:mm a');
+        const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
+        const localTime = format(vietnamTime, 'hh:mm a');
 
         // Build the message blocks for Slack
         const messageBlocks = [
