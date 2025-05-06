@@ -14,7 +14,6 @@ import EmailConfirmation from "./components/EmailConfirmation";
 import Dashboard from "./components/Dashboard";
 import ChangePassword from "./components/ChangePassword";
 import SlackChannelSelector from "./components/SlackChannelSelector";
-import VisitorDemo from "./components/VisitorDemo";
 import Settings from "./components/Settings";
 import BehaviorSettings from "./components/BehaviorSettings";
 import AppearanceSettings from "./components/AppearanceSettings";
@@ -33,7 +32,6 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/confirm" element={<EmailConfirmation />} />
-          <Route path="/demo" element={<VisitorDemo />} />
 
           {/* Protected routes */}
           <Route
