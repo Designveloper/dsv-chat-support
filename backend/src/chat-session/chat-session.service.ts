@@ -11,6 +11,8 @@ import { Request } from 'express';
 import { format } from 'date-fns';
 import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-settings.service';
 import { NoResponseTrackerService } from './no-response-tracker.service';
+import { ChatServiceFactory } from '../adapters/chat-service.factory';
+import { ChatServiceAdapter } from '../adapters/chat-service.adapter';
 
 @Injectable()
 export class ChatSessionService {
@@ -23,6 +25,7 @@ export class ChatSessionService {
         private chatSessionRepository: Repository<ChatSession>,
         private workspaceSettingsService: WorkspaceSettingsService,
         private noResponseTracker: NoResponseTrackerService,
+        private chatServiceFactory: ChatServiceFactory,
     ) { }
 
     async startChat(workspaceId: string): Promise<ChatSession> {
@@ -71,222 +74,276 @@ export class ChatSessionService {
 
         // Get the workspace
         const workspace = await this.workspaceService.findById(session.workspace_id);
-        if (!workspace || !workspace.bot_token_slack) {
-            throw new Error('Workspace not configured for Slack');
+        if (!workspace) {
+            throw new Error('Workspace not found');
         }
 
-        // If this is the first message, create a new channel for this chat
+        const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
+        // console.log("🚀 ~ ChatSessionService ~ sendMessage ~ chatService:", chatService)
+
         if (!session.channel_id) {
             try {
-                console.log('Creating new Slack channel for chat session:', sessionId);
-                // Create a unique channel name based on user email or session ID
+                // Create a unique channel name
                 const channelName = userInfo?.email
                     ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
                     : `chat-${sessionId.substring(0, 8)}`;
 
-                // Create a new channel in Slack
-                const channelId = await this.slackService.createChannel(
-                    workspace.bot_token_slack,
-                    channelName
-                );
-                console.log('New channel created:', channelId);
+                // Create channel using the adapter
+                const channelId = await chatService.createChannel(channelName);
 
-                // Update the chat session with the new channel ID
+                // Update session with channel ID
                 session.channel_id = channelId;
                 await this.chatSessionRepository.save(session);
 
-                const referer = request?.headers['referer'] || 'Unknown Page';
-                const location = 'Ho Chi Minh City, Vietnam';
-                const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
-                const localTime = format(vietnamTime, 'hh:mm a');
+                // Build welcome blocks
+                // const welcomeBlocks = this.buildWelcomeBlocks(sessionId, message, userInfo);
 
-                // Create the user info section
-                const userFields: { type: string; text: string }[] = [];
+                // Send through the adapter
+                await chatService.sendMessage(channelId, message);
 
-                // Add user email if available
-                if (userInfo?.email) {
-                    userFields.push({
-                        "type": "mrkdwn",
-                        "text": "*User Email:*\n" + userInfo.email
-                    });
-                } else {
-                    userFields.push({
-                        "type": "mrkdwn",
-                        "text": "*Session ID:*\n" + sessionId
-                    });
-                }
-
-                if (userInfo?.userId) {
-                    userFields.push({
-                        "type": "mrkdwn",
-                        "text": "*Name:*\n" + userInfo.userId
-                    });
-                }
-
-                const welcomeBlocks = [
-                    {
-                        "type": "header",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "New chat session started",
-                            "emoji": true
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "fields": userFields
-                    },
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*STATUS:*\nActive"
-                            },
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Channel:*\n<#" + channelId + ">"
-                            }
-                        ]
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*First Message:*\n" + message
-                            },
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Location:*\n:flag-VN: " + location
-                            }
-                        ]
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Local Time:*\n" + localTime
-                            },
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Current Page:*\n" + referer
-                            }
-                        ]
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Session ID:*\n" + sessionId
-                            }
-                        ]
-                    },
-                    {
-                        "type": "divider"
-                    },
-                ];
-
-                await this.slackService.postBlockKitMessage(workspace.bot_token_slack, channelId, welcomeBlocks);
-
+                // Send notification if needed
                 if (workspace.selected_channel_id) {
-                    const userInfoText = userInfo?.email
-                        ? `*User:* ${userInfo.email}${userInfo.userId ? `\n*Name:* ${userInfo.userId}` : ''}`
-                        : "*Session ID:* " + sessionId;
-                    const notificationBlocks = [
-                        {
-                            "type": "section",
-                            "text": {
-                                "type": "mrkdwn",
-                                "text": ":speech_balloon: *New Chat Session*"
-                            }
-                        },
-                        {
-                            "type": "section",
-                            "fields": [
-                                {
-                                    "type": "mrkdwn",
-                                    "text": userInfoText
-                                }
-                            ]
-                        },
-                        {
-                            "type": "divider"
-                        },
-                        {
-                            "type": "section",
-                            "fields": [
-                                {
-                                    "type": "mrkdwn",
-                                    "text": "*Status:*\nActive"
-                                },
-                                {
-                                    "type": "mrkdwn",
-                                    "text": "*Click channel to join:*\n<#" + channelId + ">"
-                                }
-                            ]
-                        },
-                        {
-                            "type": "section",
-                            "fields": [
-                                {
-                                    "type": "mrkdwn",
-                                    "text": "*First Message:*\n" + message
-                                },
-                                {
-                                    "type": "mrkdwn",
-                                    "text": "*Location:*\n:flag-VN: " + location
-                                }
-                            ]
-                        },
-                        {
-                            "type": "section",
-                            "fields": [
-                                {
-                                    "type": "mrkdwn",
-                                    "text": "*Local Time:*\n" + localTime
-                                }
-                            ]
-                        }
-                    ];
-
-                    await this.slackService.postBlockKitMessage(workspace.bot_token_slack, workspace.selected_channel_id, notificationBlocks);
+                    // const notificationBlocks = this.buildNotificationBlocks(channelId, message, userInfo);
+                    await chatService.sendMessage(workspace.selected_channel_id, message);
                 }
             } catch (error) {
-                console.error('Error creating Slack channel:', error);
+                console.error('Error creating chat channel:', error);
                 throw new Error('Failed to create chat channel');
             }
         }
 
+        // Send the message
         try {
-            // Make sure bot has joined the channel before posting messages
-            await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
+            // Make sure the service is in the channel
+            await chatService.joinChannel(session.channel_id);
 
-            const location = 'Ho Chi Minh City, Vietnam';
-            let username = effectiveUserInfo?.email;
-
+            // Use username based on available info
+            let username = userInfo?.email;
             if (!username) {
-                username = `${location}`
+                username = 'Anonymous User';
             }
 
-            // Post the message to the session's channel
-            await this.slackService.postMessage(
-                workspace.bot_token_slack,
-                session.channel_id,
-                `${message}`,
-                username
-            );
+            // Send the message via the adapter
+            await chatService.sendMessage(session.channel_id, message);
 
             await this.noResponseTracker.trackUserMessage(sessionId, true);
         } catch (error) {
-            console.error('Error sending message to Slack channel:', error);
-            throw new Error('Failed to send message to Slack channel');
+            console.error('Error sending message:', error);
+            throw new Error('Failed to send message');
         }
+
+        // If this is the first message, create a new channel for this chat
+        // if (!session.channel_id) {
+        //     try {
+        //         console.log('Creating new Slack channel for chat session:', sessionId);
+        //         // Create a unique channel name based on user email or session ID
+        //         const channelName = userInfo?.email
+        //             ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
+        //             : `chat-${sessionId.substring(0, 8)}`;
+
+        //         // Create a new channel in Slack
+        //         const channelId = await this.slackService.createChannel(
+        //             workspace.bot_token_slack,
+        //             channelName
+        //         );
+        //         console.log('New channel created:', channelId);
+
+        //         // Update the chat session with the new channel ID
+        //         session.channel_id = channelId;
+        //         await this.chatSessionRepository.save(session);
+
+        //         const referer = request?.headers['referer'] || 'Unknown Page';
+        //         const location = 'Ho Chi Minh City, Vietnam';
+        //         const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
+        //         const localTime = format(vietnamTime, 'hh:mm a');
+
+        //         // Create the user info section
+        //         const userFields: { type: string; text: string }[] = [];
+
+        //         // Add user email if available
+        //         if (userInfo?.email) {
+        //             userFields.push({
+        //                 "type": "mrkdwn",
+        //                 "text": "*User Email:*\n" + userInfo.email
+        //             });
+        //         } else {
+        //             userFields.push({
+        //                 "type": "mrkdwn",
+        //                 "text": "*Session ID:*\n" + sessionId
+        //             });
+        //         }
+
+        //         if (userInfo?.userId) {
+        //             userFields.push({
+        //                 "type": "mrkdwn",
+        //                 "text": "*Name:*\n" + userInfo.userId
+        //             });
+        //         }
+
+        //         const welcomeBlocks = [
+        //             {
+        //                 "type": "header",
+        //                 "text": {
+        //                     "type": "plain_text",
+        //                     "text": "New chat session started",
+        //                     "emoji": true
+        //                 }
+        //             },
+        //             {
+        //                 "type": "section",
+        //                 "fields": userFields
+        //             },
+        //             {
+        //                 "type": "divider"
+        //             },
+        //             {
+        //                 "type": "section",
+        //                 "fields": [
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*STATUS:*\nActive"
+        //                     },
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*Channel:*\n<#" + channelId + ">"
+        //                     }
+        //                 ]
+        //             },
+        //             {
+        //                 "type": "section",
+        //                 "fields": [
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*First Message:*\n" + message
+        //                     },
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*Location:*\n:flag-VN: " + location
+        //                     }
+        //                 ]
+        //             },
+        //             {
+        //                 "type": "section",
+        //                 "fields": [
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*Local Time:*\n" + localTime
+        //                     },
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*Current Page:*\n" + referer
+        //                     }
+        //                 ]
+        //             },
+        //             {
+        //                 "type": "section",
+        //                 "fields": [
+        //                     {
+        //                         "type": "mrkdwn",
+        //                         "text": "*Session ID:*\n" + sessionId
+        //                     }
+        //                 ]
+        //             },
+        //             {
+        //                 "type": "divider"
+        //             },
+        //         ];
+
+        //         await this.slackService.postBlockKitMessage(workspace.bot_token_slack, channelId, welcomeBlocks);
+
+        //         if (workspace.selected_channel_id) {
+        //             const userInfoText = userInfo?.email
+        //                 ? `*User:* ${userInfo.email}${userInfo.userId ? `\n*Name:* ${userInfo.userId}` : ''}`
+        //                 : "*Session ID:* " + sessionId;
+        //             const notificationBlocks = [
+        //                 {
+        //                     "type": "section",
+        //                     "text": {
+        //                         "type": "mrkdwn",
+        //                         "text": ":speech_balloon: *New Chat Session*"
+        //                     }
+        //                 },
+        //                 {
+        //                     "type": "section",
+        //                     "fields": [
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": userInfoText
+        //                         }
+        //                     ]
+        //                 },
+        //                 {
+        //                     "type": "divider"
+        //                 },
+        //                 {
+        //                     "type": "section",
+        //                     "fields": [
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": "*Status:*\nActive"
+        //                         },
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": "*Click channel to join:*\n<#" + channelId + ">"
+        //                         }
+        //                     ]
+        //                 },
+        //                 {
+        //                     "type": "section",
+        //                     "fields": [
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": "*First Message:*\n" + message
+        //                         },
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": "*Location:*\n:flag-VN: " + location
+        //                         }
+        //                     ]
+        //                 },
+        //                 {
+        //                     "type": "section",
+        //                     "fields": [
+        //                         {
+        //                             "type": "mrkdwn",
+        //                             "text": "*Local Time:*\n" + localTime
+        //                         }
+        //                     ]
+        //                 }
+        //             ];
+
+        //             await this.slackService.postBlockKitMessage(workspace.bot_token_slack, workspace.selected_channel_id, notificationBlocks);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error creating Slack channel:', error);
+        //         throw new Error('Failed to create chat channel');
+        //     }
+        // }
+
+        // try {
+        //     // Make sure bot has joined the channel before posting messages
+        //     await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
+
+        //     const location = 'Ho Chi Minh City, Vietnam';
+        //     let username = effectiveUserInfo?.email;
+
+        //     if (!username) {
+        //         username = `${location}`
+        //     }
+
+        //     // Post the message to the session's channel
+        //     await this.slackService.postMessage(
+        //         workspace.bot_token_slack,
+        //         session.channel_id,
+        //         `${message}`,
+        //         username
+        //     );
+
+        //     await this.noResponseTracker.trackUserMessage(sessionId, true);
+        // } catch (error) {
+        //     console.error('Error sending message to Slack channel:', error);
+        //     throw new Error('Failed to send message to Slack channel');
+        // }
     }
 
     async endChatSession(sessionId: string): Promise<void> {

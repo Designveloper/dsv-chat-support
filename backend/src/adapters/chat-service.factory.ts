@@ -11,7 +11,7 @@ export class ChatServiceFactory {
         private mattermostService: MattermostService
     ) { }
 
-    async createForWorkspace(workspace: WorkSpace): Promise<ChatServiceAdapter> {
+    async getChatServiceAdapter(workspace: WorkSpace): Promise<ChatServiceAdapter> {
         if (!workspace) {
             throw new Error('Workspace not provided');
         }
@@ -30,11 +30,17 @@ export class ChatServiceFactory {
         //     return this.slackService;
         // }
 
+        if (!workspace.service_token) {
+            throw new Error('No token found for this workspace');
+        }
+
         await this.mattermostService.initialize(
             workspace.server_url,
-            workspace.service_username,
-            workspace.service_password,
-            undefined // team ID will be determined in the service
+            undefined,
+            undefined,
+            workspace.service_token,
+            workspace.service_team_id,
+            workspace.bot_token_slack
         );
         return this.mattermostService;
     }

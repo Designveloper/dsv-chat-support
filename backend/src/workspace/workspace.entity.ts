@@ -40,6 +40,9 @@ export class WorkSpace {
   @Column({ type: 'varchar', nullable: true })
   service_token: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  service_team_id: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

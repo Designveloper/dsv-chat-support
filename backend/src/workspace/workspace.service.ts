@@ -78,12 +78,13 @@ export class WorkspaceService {
     username: string,
     password: string,
     token: string,
-    channelId: string = ''
+    teamId?: string,
+    botToken?: string
   ): Promise<WorkSpace> {
     const workspace = await this.findById(workspaceId);
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     workspace.server_url = serverUrl;
     workspace.service_username = username;
@@ -91,16 +92,39 @@ export class WorkspaceService {
     workspace.service_type = 'mattermost';
     workspace.service_token = token;
 
-    if (channelId) {
-      workspace.selected_channel_id = channelId;
+    if (botToken) {
+      workspace.bot_token_slack = botToken;
     }
 
+    if (teamId) {
+      workspace.service_team_id = teamId;
+    }
+
+    return this.workspacesRepository.save(workspace);
+  }
+
+  // Add a method to update just the bot token
+  async updateMattermostBotToken(
+    workspaceId: string,
+    botToken: string
+  ): Promise<WorkSpace> {
+    const workspace = await this.findById(workspaceId);
+    workspace.bot_token_slack = botToken;
     return this.workspacesRepository.save(workspace);
   }
 
   async updateMattermostChannel(workspaceId: string, channelId: string): Promise<WorkSpace> {
     const workspace = await this.findById(workspaceId);
     workspace.selected_channel_id = channelId;
+    return this.workspacesRepository.save(workspace);
+  }
+
+  async updateMattermostTeamId(
+    workspaceId: string,
+    teamId: string
+  ): Promise<WorkSpace> {
+    const workspace = await this.findById(workspaceId);
+    workspace.service_team_id = teamId;
     return this.workspacesRepository.save(workspace);
   }
 }

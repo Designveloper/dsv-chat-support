@@ -11,12 +11,13 @@ export class MattermostService implements ChatServiceAdapter {
     private wsClient: WebSocketClient;
     private token: string;
     private teamId: string;
+    private botToken: string;
 
     constructor(private configService: ConfigService) {
         this.client = new Client4();
     }
 
-    async initialize(serverUrl: string, username?: string, password?: string, token?: string, teamId?: string): Promise<void> {
+    async initialize(serverUrl: string, username?: string, password?: string, token?: string, teamId?: string, botToken?: string): Promise<void> {
         // Clean up the server URL by removing trailing slashes
         const cleanServerUrl = serverUrl.replace(/\/+$/, '');
 
@@ -27,18 +28,118 @@ export class MattermostService implements ChatServiceAdapter {
 
         console.log(`Setting Mattermost base URL to: ${baseUrl}`);
         this.client.setUrl(baseUrl);
-        this.teamId = teamId || '';
+
+        // If teamId is provided, use it
+        if (teamId) {
+            this.teamId = teamId;
+            console.log(`Using provided team ID: ${teamId}`);
+        }
 
         // Set token if provided
         if (token) {
             this.token = token;
             this.client.setToken(token);
+
+            // If no teamId was provided, try to fetch it now that we have a token
+            if (!this.teamId) {
+                await this.fetchTeamId();
+            }
             return;
+        }
+
+        if (botToken) {
+            this.botToken = botToken;
         }
 
         // Otherwise try to authenticate with username/password
         if (username && password) {
-            await this.authenticate(username, password);
+            const success = await this.authenticate(username, password);
+            if (success && !this.teamId) {
+                // Now that we're authenticated, fetch team ID if needed
+                await this.fetchTeamId();
+            }
+        }
+    }
+
+    async fetchTeamId(): Promise<string | null> {
+        try {
+            console.log('Fetching teams to get team ID...');
+            const teamsResult = await this.client.getTeams();
+            let teamsArray: any[] = [];
+
+            if (Array.isArray(teamsResult)) {
+                teamsArray = teamsResult;
+            } else if (teamsResult && Array.isArray(teamsResult.teams)) {
+                teamsArray = teamsResult.teams;
+            }
+
+            console.log(`Found ${teamsArray.length} teams`);
+
+            if (teamsArray.length > 0) {
+                this.teamId = teamsArray[0].id;
+                console.log(`Selected team ID: ${this.teamId}`);
+                return this.teamId;
+            } else {
+                console.warn('No teams found, may need to create one');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching team ID:', error);
+            return null;
+        }
+    }
+
+    // Add method to create a team if needed
+    async createTeam(name: string, displayName: string): Promise<string> {
+        try {
+            console.log(`Creating team: ${displayName}`);
+            const team = await this.client.createTeam({
+                name: name.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
+                display_name: displayName,
+                type: 'O' // Open team
+            } as any);
+
+            this.teamId = team.id;
+            console.log(`Created team with ID: ${this.teamId}`);
+            return this.teamId;
+        } catch (error) {
+            console.error('Error creating team:', error);
+            throw error;
+        }
+    }
+
+    // Update createChannel to ensure there's a team ID
+    async createChannel(channelName: string): Promise<string> {
+        try {
+            // Make sure we have a team ID
+            if (!this.teamId) {
+                await this.fetchTeamId();
+
+                // If we still don't have a team ID, create one
+                if (!this.teamId) {
+                    await this.createTeam('chat-support', 'Chat Support');
+                    if (!this.teamId) {
+                        throw new Error('Unable to get or create a team');
+                    }
+                }
+            }
+
+            console.log(`Using team ID for channel creation: ${this.teamId}`);
+            console.log('Authorization token:', this.token ? `${this.token.substring(0, 5)}...` : 'MISSING');
+
+            // Create a public channel in the team
+            const channel = await this.client.createChannel({
+                team_id: this.teamId,
+                name: channelName.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
+                display_name: channelName,
+                type: 'O', // O = public channel
+            } as any);
+
+            console.log(`Created Mattermost channel: ${channelName} with id: ${channel.id}`);
+            return channel.id;
+        } catch (error) {
+            console.error('Error creating Mattermost channel:', error);
+            throw error;
         }
     }
 
@@ -97,7 +198,15 @@ export class MattermostService implements ChatServiceAdapter {
 
     async joinChannel(channelId: string): Promise<void> {
         try {
-            await this.client.addToChannel('me', channelId);
+            // First, get the current user ID
+            const me = await this.client.getMe();
+            const userId = me.id;
+
+            console.log(`Attempting to join channel ${channelId} with user ID: ${userId}`);
+
+            // Now add the user to the channel with the proper user ID
+            await this.client.addToChannel(userId, channelId);
+
             console.log(`Successfully joined channel: ${channelId}`);
         } catch (error) {
             // Check if error is because we're already in the channel
@@ -106,6 +215,10 @@ export class MattermostService implements ChatServiceAdapter {
                 return;
             }
             console.error('Error joining Mattermost channel:', error);
+
+            // Rethrow with better context but don't block the message flow
+            // This allows messages to be sent even if join fails
+            console.warn('Continuing with message sending despite channel join failure');
         }
     }
 
@@ -115,28 +228,26 @@ export class MattermostService implements ChatServiceAdapter {
                 channel_id: channelId,
                 message: text,
             };
-            await this.client.createPost(post);
+
+            console.log("🚀 ~ MattermostService ~ sendMessage ~ this.botToken:", this.botToken)
+            if (this.botToken) {
+                // Use bot token for sending messages
+                const originalToken = this.token;
+                this.client.setToken(this.botToken);
+
+                try {
+                    await this.client.createPost(post);
+                } finally {
+                    // Restore the original token
+                    this.client.setToken(originalToken);
+                }
+            } else {
+                // Fall back to admin token if no bot token
+                await this.client.createPost(post);
+            }
         } catch (error) {
             console.error('Error sending message to Mattermost channel:', error);
             throw new Error('Failed to send message to Mattermost channel');
-        }
-    }
-
-    async createChannel(channelName: string): Promise<string> {
-        try {
-            // Create a public channel in the team
-            const channel = await this.client.createChannel({
-                team_id: this.teamId,
-                name: channelName.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
-                display_name: channelName,
-                type: 'O', // O = public channel
-            });
-
-            console.log(`Created Mattermost channel: ${channelName} with id: ${channel.id}`);
-            return channel.id;
-        } catch (error) {
-            console.error('Error creating Mattermost channel:', error);
-            throw error;
         }
     }
 

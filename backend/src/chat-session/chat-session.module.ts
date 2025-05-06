@@ -8,6 +8,7 @@ import { SlackModule } from '../slack/slack.module';
 import { ChatGateway } from './chat.gateway';
 import { EavModule } from '../eav/eav.module';
 import { NoResponseTrackerService } from './no-response-tracker.service';
+import { AdaptersModule } from 'src/adapters/adapters.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { NoResponseTrackerService } from './no-response-tracker.service';
         forwardRef(() => WorkspaceModule),
         forwardRef(() => SlackModule),
         EavModule,
+        AdaptersModule,
     ],
     controllers: [ChatSessionController],
     providers: [ChatSessionService, ChatGateway, NoResponseTrackerService],

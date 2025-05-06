@@ -28,6 +28,9 @@ export class MattermostController {
 
             const token = await this.mattermostService.getToken();
 
+            await this.mattermostService.fetchTeamId();
+            const teamId = this.mattermostService['teamId'];
+
             const worksapceId = uuidv4();
             const workspaceName = name || "Default Workspace";
 
@@ -46,6 +49,7 @@ export class MattermostController {
                 username,
                 password,
                 token,
+                teamId
             );
 
             return {
@@ -57,6 +61,29 @@ export class MattermostController {
         catch (error) {
             console.error('Error connecting to Mattermost:', error);
             return { success: false, message: 'Connection failed' };
+        }
+    }
+
+    @Post('connect-bot')
+    @UseGuards(JwtAuthGuard)
+    async connectBot(@Body() body: { workspaceId: string, botToken: string }) {
+        try {
+            const { workspaceId, botToken } = body;
+
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
+
+            return {
+                success: true,
+                message: 'Bot connected successfully'
+            };
+        } catch (error) {
+            console.error('Error connecting bot:', error);
+            return { success: false, message: 'Failed to connect bot' };
         }
     }
 
