@@ -12,7 +12,7 @@ export interface Workspace {
     bot_token_slack?: string;
     selected_channel_id?: string;
     service_slack_account_id?: string;
-    service_type_slack?: string;
+    service_type?: string;
 }
 
 export const workspaceService = {

@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkSpace } from './workspace.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { EavService } from '../eav/eav.service';
 
 @Injectable()
 export class WorkspaceService {
   constructor(
     @InjectRepository(WorkSpace)
     private workspacesRepository: Repository<WorkSpace>,
+    private eavService: EavService,
   ) { }
 
   async create(ownerId: number, name: string, serviceType?: string, entityTypeId: number = 1): Promise<WorkSpace> {
@@ -17,7 +19,7 @@ export class WorkspaceService {
       id,
       name,
       owner_id: ownerId,
-      service_type_slack: serviceType,
+      service_type: serviceType,
       entity_type_id: entityTypeId,
     });
     return this.workspacesRepository.save(workspace);
@@ -65,4 +67,34 @@ export class WorkspaceService {
     return this.workspacesRepository.find();
   }
 
+  async getOrCreateEntityType(name: string, description: string) {
+    return this.eavService.getOrCreateEntityType(name, description);
+  }
+
+  async updateMattermostDetails(
+    workspaceId: string,
+    serverUrl: string,
+    username: string,
+    password: string,
+    channelId: string = ''
+  ): Promise<WorkSpace> {
+    const workspace = await this.findById(workspaceId);
+
+    workspace.server_url = serverUrl;
+    workspace.service_username = username;
+    workspace.service_password = password;
+    workspace.service_type = 'mattermost';
+
+    if (channelId) {
+      workspace.selected_channel_id = channelId;
+    }
+
+    return this.workspacesRepository.save(workspace);
+  }
+
+  async updateMattermostChannel(workspaceId: string, channelId: string): Promise<WorkSpace> {
+    const workspace = await this.findById(workspaceId);
+    workspace.selected_channel_id = channelId;
+    return this.workspacesRepository.save(workspace);
+  }
 }

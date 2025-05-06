@@ -13,6 +13,6 @@ export const getDatabaseConfig = (configService: ConfigService): MysqlConnection
     migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
     // migrationsRun: true,
     multipleStatements: true,
-    synchronize: false,
+    synchronize: true,
   };
 };
