@@ -1,0 +1,343 @@
+@use "../styles/mixins" as mix;
+
+.operating-hours {
+    padding: 1rem;
+    max-width: 800px;
+}
+
+.operating-hours__grid {
+    display: grid;
+    grid-template-columns: 3fr 7fr;
+    gap: 2rem;
+    align-items: start;
+
+    @include mix.tablet {
+        grid-template-columns: 1fr;
+    }
+}
+
+.operating-hours__image-container {
+    text-align: center;
+}
+
+.operating-hours__image {
+    max-width: 100%;
+    height: auto;
+}
+
+.operating-hours__content {
+    padding: 0.5rem 0;
+}
+
+.operating-hours__title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.operating-hours__description {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.operating-hours__note {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: #666;
+    line-height: 1.5;
+}
+
+.operating-hours__button {
+    padding: 0.75rem 1.5rem;
+    background-color: #2684FF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+.operating-hours__button:hover {
+    background-color: #0065ff;
+}
+
+.operating-hours__button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.4);
+}
+
+.operating-hours__button--secondary {
+    background-color: #f4f5f7;
+    color: #42526e;
+    margin-right: 1rem;
+}
+
+.operating-hours__button--secondary:hover {
+    background-color: #ebecf0;
+}
+
+.operating-hours__schedule {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f5f7fa;
+    border: 1px solid #eaeaea;
+    border-radius: 4px;
+}
+
+.operating-hours__schedule-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.operating-hours__schedule-setup {
+    width: 100%;
+}
+
+.operating-hours__timezone {
+    margin-bottom: 1.5rem;
+}
+
+.operating-hours__timezone-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.operating-hours__timezone-select {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.operating-hours__notification {
+    margin-bottom: 1.5rem;
+}
+
+.operating-hours__notification-checkbox {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.operating-hours__checkbox {
+    margin-right: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.operating-hours__table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+}
+
+.operating-hours__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.operating-hours__table-header-day {
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    border-bottom: 1px solid #eaeaea;
+    width: 30%;
+}
+
+.operating-hours__table-header-time {
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    border-bottom: 1px solid #eaeaea;
+    width: 70%;
+}
+
+.operating-hours__table-row {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.operating-hours__table-day {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+}
+
+.operating-hours__table-time {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+}
+
+.operating-hours__day-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.operating-hours__day-checkbox {
+    margin-right: 0.75rem;
+    cursor: pointer;
+}
+
+.operating-hours__time-selectors {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.operating-hours__time-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    width: 85px;
+}
+
+.operating-hours__time-select:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.operating-hours__time-separator {
+    margin: 0 1rem;
+    color: #666;
+}
+
+.operating-hours__time-disabled {
+    display: flex;
+    align-items: center;
+    color: #999;
+}
+
+.operating-hours__time-placeholder {
+    width: 85px;
+    text-align: center;
+}
+
+.operating-hours__note-text {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+.operating-hours__success-message {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #E3FCEF;
+    border: 1px solid #ABF5D1;
+    color: #006644;
+    border-radius: 4px;
+}
+
+.operating-hours__actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.operating-hours__time-ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.operating-hours__time-range {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.operating-hours__add-time-range {
+    background: none;
+    border: none;
+    color: #2684FF;
+    cursor: pointer;
+    text-align: left;
+    padding: 5px 0;
+    font-size: 0.9em;
+    margin-top: 5px;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.operating-hours__time-range-remove {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0 5px;
+
+    &:hover {
+        color: #c53030;
+    }
+}
+
+@include mix.tablet {
+    .operating-hours__timezone-select {
+        max-width: 100%;
+    }
+}
+
+@include mix.mobile {
+    .operating-hours {
+        padding: 0.5rem;
+    }
+
+    .operating-hours__grid {
+        gap: 1rem;
+    }
+
+    .operating-hours__title {
+        font-size: 1.2rem;
+    }
+
+    .operating-hours__button {
+        width: 100%;
+        padding: 0.6rem 1rem;
+    }
+
+    .operating-hours__actions {
+        flex-direction: column;
+    }
+
+    .operating-hours__button--secondary {
+        margin-right: 0;
+        margin-bottom: 0.75rem;
+    }
+
+    .operating-hours__time-separator {
+        margin: 0 0.5rem;
+    }
+
+    .operating-hours__time-selectors {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .operating-hours__time-select {
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .operating-hours__time-separator {
+        margin: 0.5rem 0;
+    }
+
+    .operating-hours__error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+}

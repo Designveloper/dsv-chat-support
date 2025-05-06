@@ -1,0 +1,227 @@
+@use "../styles/mixins" as mix;
+
+.appearance-settings {
+    padding: 1rem;
+    max-width: 800px;
+}
+
+.appearance-settings__loading {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+.appearance-settings__intro {
+    margin-bottom: 1.5rem;
+}
+
+.appearance-settings__intro p {
+    color: #666;
+    line-height: 1.5;
+}
+
+.appearance-settings__section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+}
+
+.appearance-settings__section-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.appearance-settings__form-group {
+    margin-bottom: 1.5rem;
+}
+
+.appearance-settings__label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #444;
+}
+
+.appearance-settings__text-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.appearance-settings__text-input:focus {
+    outline: none;
+    border-color: #2684FF;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.2);
+}
+
+.appearance-settings__textarea {
+    width: 100%;
+    max-width: 600px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+}
+
+.appearance-settings__textarea:focus {
+    outline: none;
+    border-color: #2684FF;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.2);
+}
+
+.appearance-settings__help-text {
+    display: block;
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.appearance-settings__color-picker {
+    position: relative;
+    max-width: 400px;
+}
+
+.appearance-settings__color-input {
+    width: 100%;
+    padding: 0.75rem;
+    padding-right: 40px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.appearance-settings__color-input:focus {
+    outline: none;
+    border-color: #2684FF;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.2);
+}
+
+.appearance-settings__color-preview {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 25px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.appearance-settings__color-selector {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.appearance-settings__radio-group {
+    margin-top: 0.5rem;
+}
+
+.appearance-settings__radio {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.appearance-settings__radio input {
+    margin-top: 3px;
+    margin-right: 10px;
+}
+
+.appearance-settings__radio-text {
+    line-height: 1.4;
+}
+
+.appearance-settings__widget-preview {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.appearance-settings__preview-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.appearance-settings__preview-image {
+    border: 1px solid #eaeaea;
+    border-radius: 4px;
+    overflow: hidden;
+    max-width: 600px;
+}
+
+.appearance-settings__preview-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.appearance-settings__actions {
+    margin-top: 2rem;
+}
+
+.appearance-settings__submit-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #2684FF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.appearance-settings__submit-button:hover {
+    background-color: #0065ff;
+}
+
+.appearance-settings__submit-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.4);
+}
+
+@include mix.tablet {
+    .appearance-settings {
+        padding: 0.75rem;
+    }
+
+    .appearance-settings__section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+    }
+}
+
+@include mix.mobile {
+    .appearance-settings {
+        padding: 0.5rem;
+    }
+
+    .appearance-settings__section-title {
+        font-size: 1.2rem;
+    }
+
+    .appearance-settings__form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .appearance-settings__text-input,
+    .appearance-settings__textarea {
+        max-width: 100%;
+    }
+
+    .appearance-settings__submit-button {
+        width: 100%;
+    }
+}

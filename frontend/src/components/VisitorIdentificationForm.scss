@@ -1,0 +1,72 @@
+@use 'sass:color';
+@use '../styles/variables' as vars;
+@use '../styles/mixins' as mix;
+
+.visitor-identification {
+    padding: 20px 32px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 20px;
+
+    h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 20px;
+        color: #333;
+        text-align: center;
+    }
+
+    p {
+        margin: 0 0 1.5rem 0;
+        color: #666;
+        text-align: center;
+        font-size: 16px;
+    }
+}
+
+.visitor-identification__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.visitor-identification__form-input {
+    margin: 0;
+    background-color: #f9fbfc;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 16px;
+    box-shadow: none;
+}
+
+.visitor-identification__form-submit {
+    background-color: #4050b5;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 32px;
+    font-size: 16px;
+}
+
+.btn.visitor-identification__form-submit:hover {
+    background-color: color.adjust(#4050b5, $lightness: -10%);
+}
+
+.btn.visitor-identification__form-submit:disabled {
+    background-color: #b4c0cc;
+    cursor: not-allowed;
+}
+
+.visitor-identification__error {
+    background-color: #ffe8e8;
+    color: #d32f2f;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    border-left: 3px solid #d32f2f;
+}

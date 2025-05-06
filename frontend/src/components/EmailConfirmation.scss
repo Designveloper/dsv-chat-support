@@ -1,0 +1,97 @@
+@use "sass:color";
+@use '../styles/variables' as vars;
+@use '../styles/mixins' as mix;
+
+.email-confirmation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: color.adjust(vars.$primary-color, $lightness: 70%);
+}
+
+.email-confirmation__form {
+  @include mix.form-container;
+}
+
+.email-confirmation__title {
+  font-size: 30px;
+  color: vars.$primary-color;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.email-confirmation__instructions {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 14px;
+}
+
+.email-confirmation__error {
+  color: #f44336;
+  font-size: 14px;
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.email-confirmation__resend {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.email-confirmation__resend-button {
+  background: none;
+  border: none;
+  color: vars.$primary-color;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 5px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.email-confirmation__success {
+  color: #4caf50;
+  font-size: 14px;
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.email-confirmation__countdown {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #959292;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+@include mix.mobile {
+  .email-confirmation__form {
+    padding: 30px 20px;
+  }
+
+  .email-confirmation__title {
+    font-size: 24px;
+  }
+
+  .email-confirmation__input {
+    padding: 10px;
+  }
+
+  .email-confirmation__button {
+    padding: 10px;
+  }
+}

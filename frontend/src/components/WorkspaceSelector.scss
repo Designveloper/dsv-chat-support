@@ -1,0 +1,121 @@
+.workspace-selector {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.workspace-selector__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 101;
+}
+
+.workspace-selector__content {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    background-color: white;
+    z-index: 102;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.workspace-selector__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #333;
+    }
+}
+
+.workspace-selector__close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+
+    &:hover {
+        color: #333;
+    }
+}
+
+.workspace-selector__loading,
+.workspace-selector__error,
+.workspace-selector__empty {
+    padding: 20px;
+    text-align: center;
+}
+
+.workspace-selector__error {
+    color: #d32f2f;
+}
+
+.workspace-selector__create-btn {
+    margin-top: 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+        background-color: #43a047;
+    }
+}
+
+.workspace-selector__list {
+    display: grid;
+    gap: 15px;
+}
+
+.workspace-selector__item {
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+        border-color: #2196f3;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.workspace-selector__workspace-name {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.workspace-selector__workspace-info {
+    font-size: 14px;
+    color: #666;
+
+    p {
+        margin: 5px 0;
+    }
+}
