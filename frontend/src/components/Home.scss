@@ -143,3 +143,40 @@
         margin-bottom: 15px;
     }
 }
+
+.home__copyright {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 60px;
+    animation: contentSlideUp 0.8s ease-out forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+
+    @include mix.tablet {
+        margin-top: 50px;
+        font-size: 13px;
+    }
+
+    @include mix.mobile {
+        margin-top: 40px;
+        font-size: 12px;
+    }
+}
+
+.home__link {
+    color: vars.$white;
+    text-decoration: none;
+    margin-left: 5px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:hover {
+        text-decoration: underline;
+        opacity: 0.9;
+    }
+
+    &:focus {
+        outline: 1px dotted rgba(255, 255, 255, 0.5);
+        outline-offset: 2px;
+    }
+}
