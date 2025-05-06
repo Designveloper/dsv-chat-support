@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Req, Res, UseGuards, Body } from "@nestjs/common";
+import { Controller, Get, Post, Req, Res, UseGuards, Body, Query } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { MattermostService } from "./mattermost.service";
 import { WorkspaceService } from "../workspace/workspace.service";
 import { v4 as uuidv4 } from "uuid";
+import { catchError } from "rxjs";
 
 @Controller('mattermost')
 export class MattermostController {
@@ -15,7 +16,7 @@ export class MattermostController {
     @UseGuards(JwtAuthGuard)
     async connect(@Req() req: any, @Body() body: { serverUrl: string; username: string; password: string, name?: string }) {
         try {
-            const userId = req.user.id;
+            const userId = req.user.userId;
             const { serverUrl, username, password, name } = body;
 
             await this.mattermostService.initialize(serverUrl, username, password);
@@ -24,6 +25,8 @@ export class MattermostController {
             if (!isAuthenticated) {
                 return { success: false, message: 'Authentication failed' };
             }
+
+            const token = await this.mattermostService.getToken();
 
             const worksapceId = uuidv4();
             const workspaceName = name || "Default Workspace";
@@ -42,6 +45,7 @@ export class MattermostController {
                 serverUrl,
                 username,
                 password,
+                token,
             );
 
             return {
@@ -53,6 +57,57 @@ export class MattermostController {
         catch (error) {
             console.error('Error connecting to Mattermost:', error);
             return { success: false, message: 'Connection failed' };
+        }
+    }
+
+    @Get('channels')
+    @UseGuards(JwtAuthGuard)
+    async getChannels(@Query('workspaceId') workspaceId: string) {
+        try {
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            if (!workspace.service_token) {
+                return { success: false, message: 'No token found for this workspace' };
+            }
+
+            // Initialize Mattermost client with workspace credentials
+            await this.mattermostService.initialize(
+                workspace.server_url,
+                undefined,
+                undefined,
+                workspace.service_token,
+            );
+
+            const channels = await this.mattermostService.listChannels();
+            return { success: true, channels };
+        } catch (error) {
+            console.error('Error fetching Mattermost channels:', error);
+            return { success: false, message: 'Failed to fetch channels' };
+        }
+    }
+
+    @Post('select-channel')
+    @UseGuards(JwtAuthGuard)
+    async selectChannel(@Req() req: any, @Body() body: { workspaceId: string; channelId: string }) {
+        try {
+            const userId = req.user.userId;
+            const { workspaceId, channelId } = body;
+
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            await this.workspaceService.updateMattermostChannel(workspaceId, channelId);
+
+            return { success: true, message: 'Channel selected successfully' };
+        } catch (error) {
+            console.error('Error selecting Mattermost channel:', error);
+            return { success: false, message: 'Failed to select channel' };
         }
     }
 }

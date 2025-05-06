@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { WorkSpace } from './workspace.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { EavService } from '../eav/eav.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class WorkspaceService {
@@ -76,14 +77,19 @@ export class WorkspaceService {
     serverUrl: string,
     username: string,
     password: string,
+    token: string,
     channelId: string = ''
   ): Promise<WorkSpace> {
     const workspace = await this.findById(workspaceId);
 
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     workspace.server_url = serverUrl;
     workspace.service_username = username;
-    workspace.service_password = password;
+    workspace.service_password = hashedPassword;
     workspace.service_type = 'mattermost';
+    workspace.service_token = token;
 
     if (channelId) {
       workspace.selected_channel_id = channelId;

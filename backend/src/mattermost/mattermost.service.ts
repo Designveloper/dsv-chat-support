@@ -16,11 +16,30 @@ export class MattermostService implements ChatServiceAdapter {
         this.client = new Client4();
     }
 
-    async initialize(serverUrl: string, username: string, password: string, teamId?: string): Promise<void> {
-        this.client.setUrl(serverUrl);
-        this.teamId = teamId ?? '';
-        await this.authenticate(username, password);
-        this.setupWebSocket(serverUrl);
+    async initialize(serverUrl: string, username?: string, password?: string, token?: string, teamId?: string): Promise<void> {
+        // Clean up the server URL by removing trailing slashes
+        const cleanServerUrl = serverUrl.replace(/\/+$/, '');
+
+        // Make sure URL doesn't already include /api/v4
+        const baseUrl = cleanServerUrl.includes('/api/v4')
+            ? cleanServerUrl.split('/api/v4')[0]
+            : cleanServerUrl;
+
+        console.log(`Setting Mattermost base URL to: ${baseUrl}`);
+        this.client.setUrl(baseUrl);
+        this.teamId = teamId || '';
+
+        // Set token if provided
+        if (token) {
+            this.token = token;
+            this.client.setToken(token);
+            return;
+        }
+
+        // Otherwise try to authenticate with username/password
+        if (username && password) {
+            await this.authenticate(username, password);
+        }
     }
 
     async authenticate(username?: string, password?: string): Promise<boolean> {
@@ -41,14 +60,6 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    private setupWebSocket(serverUrl: string): void {
-        // Create a WebSocket client for real-time events
-        const wsUrl = serverUrl.replace(/^http/, 'ws');
-        this.wsClient = new WebSocketClient();
-
-        this.wsClient.initialize(wsUrl, this.token);
-    }
-
     async listChannels(): Promise<any[]> {
         try {
             if (!this.teamId) {
@@ -60,6 +71,7 @@ export class MattermostService implements ChatServiceAdapter {
                 } else if (teamsResult && Array.isArray(teamsResult.teams)) {
                     teamsArray = teamsResult.teams;
                 }
+                console.log("🚀 ~ MattermostService ~ listChannels ~ teamsArray:", teamsArray)
 
                 if (teamsArray.length > 0) {
                     this.teamId = teamsArray[0].id;
@@ -69,6 +81,7 @@ export class MattermostService implements ChatServiceAdapter {
             }
 
             const channels = await this.client.getMyChannels(this.teamId);
+            console.log("🚀 ~ MattermostService ~ listChannels ~ channels:", channels)
 
             return channels.map(channel => ({
                 id: channel.id,
@@ -154,6 +167,10 @@ export class MattermostService implements ChatServiceAdapter {
                 }
             }
         });
+    }
+
+    getToken(): string {
+        return this.token;
     }
 
     async disconnect(): Promise<void> {
