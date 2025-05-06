@@ -9,8 +9,8 @@ A modern chat support application with Slack integration.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Designveloper/chat-support
-cd chat-support
+git clone https://github.com/Designveloper/dsv-chat-support
+cd dsv-chat-support
 ```
 
 ### 2. Environment Configuration
