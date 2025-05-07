@@ -10,6 +10,7 @@ export class MattermostService implements ChatServiceAdapter {
     private wsClient: WebSocketClient | null = null;
     private server: Server | null = null;
     private messageHandler: Function | null = null;
+    private botUserIds: Set<string> = new Set();
 
 
     constructor(private configService: ConfigService) {
@@ -126,18 +127,35 @@ export class MattermostService implements ChatServiceAdapter {
                         console.log('🚀 Received post from Mattermost:', {
                             channel_id: post.channel_id,
                             user_id: post.user_id,
-                            message: post.message
+                            message: post.message,
+                            type: post.type
                         });
 
-                        // Ignore messages from the bot itself
+                        // Check if the message is from a known bot user ID
+                        if (this.botUserIds.has(post.user_id)) {
+                            console.log(`Ignoring message from known bot user: ${post.user_id}`);
+                            return;
+                        }
+
+                        // Also ignore messages from the client itself
                         if (post.user_id === this.client.userId) {
                             console.log('Ignoring message from self');
                             return;
                         }
 
-                        // Forward the message to the handler
+                        // Ignore system messages
+                        if (
+                            post.message.includes('added to the channel') ||
+                            post.message.includes('joined the channel') ||
+                            post.message.includes('left the channel')
+                        ) {
+                            console.log('Ignoring system message:', post.message);
+                            return;
+                        }
+
+                        // Forward the message to the handler - must be from a staff member
                         if (this.messageHandler) {
-                            console.log('Calling message handler with post data');
+                            console.log('Calling message handler with staff post data');
                             this.messageHandler({
                                 channel: post.channel_id,
                                 text: post.message,
@@ -156,12 +174,11 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async fetchTeamId(token?: string): Promise<string | null> {
-        try {
-            // If token is provided, temporarily set it for this operation
-            const originalToken = token ? this.setTemporaryToken(token) : null;
 
-            console.log('Fetching teams to get team ID...');
+
+    async listTeams(): Promise<any[]> {
+        try {
+            console.log('Fetching teams from Mattermost...');
             const teamsResult = await this.client.getTeams();
             let teamsArray: any[] = [];
 
@@ -173,22 +190,16 @@ export class MattermostService implements ChatServiceAdapter {
 
             console.log(`Found ${teamsArray.length} teams`);
 
-            // Restore original token if needed
-            if (originalToken) {
-                this.client.setToken(originalToken);
-            }
-
-            if (teamsArray.length > 0) {
-                const teamId = teamsArray[0].id;
-                console.log(`Selected team ID: ${teamId}`);
-                return teamId;
-            } else {
-                console.warn('No teams found, may need to create one');
-                return null;
-            }
+            // Map the teams to a consistent format
+            return teamsArray.map(team => ({
+                id: team.id,
+                name: team.display_name || team.name,
+                description: team.description || '',
+                type: team.type
+            }));
         } catch (error) {
-            console.error('Error fetching team ID:', error);
-            return null;
+            console.error('Error listing Mattermost teams:', error);
+            return [];
         }
     }
 
@@ -217,31 +228,17 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async createChannel(channelName: string, teamId?: string): Promise<string> {
+    async createChannel(channelName: string, teamId: string): Promise<string> {
         try {
-            // Make sure we have a team ID
-            let effectiveTeamId = teamId;
-            if (!effectiveTeamId) {
-                // Try to fetch a team ID
-                const fetchedTeamId = await this.fetchTeamId();
-                if (fetchedTeamId !== null) {
-                    effectiveTeamId = fetchedTeamId;
-                }
-
-                // If we still don't have a team ID, create one
-                if (!effectiveTeamId) {
-                    effectiveTeamId = await this.createTeam('chat-support', 'Chat Support');
-                    if (!effectiveTeamId) {
-                        throw new Error('Unable to get or create a team');
-                    }
-                }
+            if (!teamId) {
+                throw new Error('Team ID is required to create a channel in Mattermost');
             }
 
-            console.log(`Using team ID for channel creation: ${effectiveTeamId}`);
+            console.log(`Creating Mattermost channel: ${channelName} in team ${teamId}`);
 
             // Create a public channel in the team
             const channel = await this.client.createChannel({
-                team_id: effectiveTeamId,
+                team_id: teamId,
                 name: channelName.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
                 display_name: channelName,
                 type: 'O', // O = public channel
@@ -265,38 +262,20 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async listChannels(teamId?: string): Promise<any[]> {
+    async listChannels(teamId: string): Promise<any[]> {
         try {
-            let effectiveTeamId = teamId;
-            if (!effectiveTeamId) {
-                // If no teamId provided, try to get one from the system
-                const teamsResult = await this.client.getTeams();
-                let teamsArray: any[] = [];
-
-                if (Array.isArray(teamsResult)) {
-                    teamsArray = teamsResult;
-                } else if (teamsResult && Array.isArray(teamsResult.teams)) {
-                    teamsArray = teamsResult.teams;
-                }
-                console.log("🚀 ~ MattermostService ~ listChannels ~ teamsArray:", teamsArray);
-
-                if (teamsArray.length > 0) {
-                    effectiveTeamId = teamsArray[0].id;
-                } else {
-                    throw new Error('No teams found');
-                }
+            if (!teamId) {
+                throw new Error('Team ID is required to list channels in Mattermost');
             }
 
-            if (!effectiveTeamId) {
-                throw new Error('Team ID is undefined when trying to list channels');
-            }
-            const channels = await this.client.getMyChannels(effectiveTeamId);
-            console.log("🚀 ~ MattermostService ~ listChannels ~ channels:", channels);
+            console.log(`Listing channels for team: ${teamId}`);
+            const channels = await this.client.getMyChannels(teamId);
+            console.log(`Found ${channels.length} channels in team ${teamId}`);
 
             return channels.map(channel => ({
                 id: channel.id,
                 name: channel.display_name || channel.name,
-                is_member: true, // If we retrieved it via getChannelsForTeamForUser, user is a member
+                is_member: true,
                 num_members: channel.total_msg_count || 0
             }));
         } catch (error) {
@@ -327,6 +306,7 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
+    // Modify the sendMessage method to track the bot user ID when sending messages
     async sendMessage(channelId: string, text: string, botToken?: string): Promise<void> {
         try {
             const post = {
@@ -339,6 +319,13 @@ export class MattermostService implements ChatServiceAdapter {
                 this.client.setToken(botToken);
 
                 try {
+                    // Get the bot user ID before sending the message
+                    const me = await this.client.getMe();
+                    if (me && me.id) {
+                        console.log(`Recording bot user ID: ${me.id}`);
+                        this.botUserIds.add(me.id);
+                    }
+
                     await this.client.createPost(post);
                 } finally {
                     // Restore the original token
@@ -353,6 +340,14 @@ export class MattermostService implements ChatServiceAdapter {
         } catch (error) {
             console.error('Error sending message to Mattermost channel:', error);
             throw new Error('Failed to send message to Mattermost channel');
+        }
+    }
+
+    // Add a method to register a bot user ID (for use when initializing with a known bot)
+    registerBotUserId(userId: string): void {
+        if (userId) {
+            console.log(`Registering bot user ID: ${userId}`);
+            this.botUserIds.add(userId);
         }
     }
 
@@ -379,6 +374,21 @@ export class MattermostService implements ChatServiceAdapter {
             return this.client.getWebSocketUrl();
         } catch (error) {
             console.error('Error getting WebSocket URL:', error);
+            return null;
+        }
+    }
+
+    setToken(token: string): void {
+        if (token) {
+            this.client.setToken(token);
+        }
+    }
+
+    async getMe(): Promise<any> {
+        try {
+            return await this.client.getMe();
+        } catch (error) {
+            console.error('Error getting user info:', error);
             return null;
         }
     }

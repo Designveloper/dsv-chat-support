@@ -16,29 +16,6 @@ export class ChatServiceFactory {
             throw new Error('Workspace not provided');
         }
 
-        // if (workspace.service_type === 'mattermost') {
-        //     if (!workspace.server_url || !workspace.service_token) {
-        //         throw new Error('Missing required Mattermost configuration for this workspace');
-        //     }
-
-        //     // Always initialize with the current workspace's data from the database
-        //     await this.mattermostService.initialize(
-        //         workspace.server_url,
-        //         undefined,
-        //         undefined,
-        //         workspace.service_token,
-        //         workspace.service_team_id,
-        //         workspace.bot_token_slack // Bot token is stored in this field
-        //     );
-        //     return this.mattermostService;
-        // } else {
-        //     // Default to Slack service
-        //     if (!workspace.bot_token_slack) {
-        //         throw new Error('No token found for this Slack workspace');
-        //     }
-        //     return this.slackService;
-        // }
-
         if (!workspace.server_url || !workspace.service_token) {
             throw new Error('Missing required Mattermost configuration for this workspace');
         }
@@ -52,6 +29,37 @@ export class ChatServiceFactory {
             workspace.service_team_id,
             workspace.bot_token_slack
         );
+
+        // Register bot user ID if available
+        if (workspace.service_slack_account_id) {
+            console.log(`Registering existing bot user ID: ${workspace.service_slack_account_id}`);
+            this.mattermostService.registerBotUserId(workspace.service_slack_account_id);
+        }
+        // If we have a bot token but no user ID, try to fetch and register it
+        else if (workspace.bot_token_slack) {
+            try {
+                console.log('Bot token available but no user ID. Fetching bot user ID...');
+                const originalToken = this.mattermostService.getToken();
+
+                // Temporarily use the bot token
+                this.mattermostService.setToken(workspace.bot_token_slack);
+
+                // Get the bot's user ID
+                const me = await this.mattermostService.getMe();
+                if (me && me.id) {
+                    console.log(`Discovered bot user ID: ${me.id}`);
+                    this.mattermostService.registerBotUserId(me.id);
+                }
+
+                // Restore original token
+                if (originalToken) {
+                    this.mattermostService.setToken(originalToken);
+                }
+            } catch (error) {
+                console.error('Failed to fetch bot user ID:', error);
+            }
+        }
+
         return this.mattermostService;
     }
 }

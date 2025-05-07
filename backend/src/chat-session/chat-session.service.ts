@@ -82,24 +82,21 @@ export class ChatSessionService {
 
         if (!session.channel_id) {
             try {
+                if (!workspace.service_team_id) {
+                    throw new Error('No team selected for this workspace');
+                }
+
                 // Create a unique channel name
                 const channelName = userInfo?.email
                     ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
                     : `chat-${sessionId.substring(0, 8)}`;
 
                 // Create channel using the adapter
-                const channelId = await chatService.createChannel(channelName);
+                const channelId = await chatService.createChannel(channelName, workspace.service_team_id);
 
                 // Update session with channel ID
                 session.channel_id = channelId;
                 await this.chatSessionRepository.save(session);
-
-                // Send through the adapter with bot token
-                await chatService.sendMessage(
-                    channelId,
-                    message,
-                    workspace.bot_token_slack // Pass the bot token
-                );
 
                 // Send notification if needed
                 if (workspace.selected_channel_id) {

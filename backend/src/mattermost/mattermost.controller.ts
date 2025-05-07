@@ -30,12 +30,6 @@ export class MattermostController {
             // Get token from the current client session
             const token = this.mattermostService.getToken();
 
-            // Fetch the team ID
-            const teamId = await this.mattermostService.fetchTeamId();
-            if (!teamId) {
-                return { success: false, message: 'Could not find or create a team' };
-            }
-
             // Create a new workspace ID
             const workspaceId = uuidv4();
             const workspaceName = name || "Default Workspace";
@@ -58,7 +52,6 @@ export class MattermostController {
                 username,
                 password,
                 token,
-                teamId
             );
 
             return {
@@ -99,11 +92,11 @@ export class MattermostController {
         }
     }
 
-    @Get('channels')
+    @Get('teams')
     @UseGuards(JwtAuthGuard)
-    async getChannels(@Query('workspaceId') workspaceId: string) {
+    async getTeams(@Query('workspaceId') workspaceId: string) {
         try {
-            console.log("🚀 ~ MattermostController ~ getChannels ~ workspaceId:", workspaceId)
+            console.log("Getting teams for workspace:", workspaceId);
 
             // Get the workspace details from the database
             const workspace = await this.workspaceService.findById(workspaceId);
@@ -114,6 +107,66 @@ export class MattermostController {
 
             if (!workspace.service_token) {
                 return { success: false, message: 'No token found for this workspace' };
+            }
+
+            // Initialize Mattermost client with workspace credentials from DB
+            await this.mattermostService.initialize(
+                workspace.server_url,
+                undefined,
+                undefined,
+                workspace.service_token
+            );
+
+            // Get teams
+            const teams = await this.mattermostService.listTeams();
+            return { success: true, teams };
+        } catch (error) {
+            console.error('Error fetching Mattermost teams:', error);
+            return { success: false, message: 'Failed to fetch teams' };
+        }
+    }
+
+    @Post('select-team')
+    @UseGuards(JwtAuthGuard)
+    async selectTeam(@Body() body: { workspaceId: string; teamId: string }) {
+        try {
+            const { workspaceId, teamId } = body;
+
+            // Verify workspace exists
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            // Update the selected team in the workspace record
+            await this.workspaceService.updateMattermostTeam(workspaceId, teamId);
+
+            return { success: true, message: 'Team selected successfully' };
+        } catch (error) {
+            console.error('Error selecting Mattermost team:', error);
+            return { success: false, message: 'Failed to select team' };
+        }
+    }
+
+    @Get('channels')
+    @UseGuards(JwtAuthGuard)
+    async getChannels(@Query('workspaceId') workspaceId: string) {
+        try {
+            console.log("Getting channels for workspace:", workspaceId);
+
+            // Get the workspace details from the database
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            if (!workspace.service_token) {
+                return { success: false, message: 'No token found for this workspace' };
+            }
+
+            if (!workspace.service_team_id) {
+                return { success: false, message: 'No team selected for this workspace' };
             }
 
             // Initialize Mattermost client with workspace credentials from DB

@@ -127,4 +127,11 @@ export class WorkspaceService {
     workspace.service_team_id = teamId;
     return this.workspacesRepository.save(workspace);
   }
+
+  async updateMattermostTeam(workspaceId: string, teamId: string): Promise<void> {
+    await this.workspacesRepository.update(
+      { id: workspaceId },
+      { service_team_id: teamId }
+    );
+  }
 }

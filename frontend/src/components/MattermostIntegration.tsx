@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MattermostIntegration.scss";
-import { mattermostService, Channel } from "../services/mattermostService";
+import {
+  mattermostService,
+  Channel,
+  Team,
+} from "../services/mattermostService";
 import Button from "./Button";
 import Layout from "./Layout";
 import { useAuth } from "../context/AuthContext";
@@ -18,6 +22,9 @@ const MattermostIntegration = () => {
   const [workspaceName, setWorkspaceName] = useState("");
   const [botToken, setBotToken] = useState("");
   const [selectedChannel, setSelectedChannel] = useState("");
+
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState("");
 
   // Data states
   const [workspaceId, setWorkspaceId] = useState("");
@@ -63,8 +70,21 @@ const MattermostIntegration = () => {
         }
 
         setWorkspaceId(extractedWorkspaceId);
-        console.log("Setting workspaceId to:", extractedWorkspaceId);
-        setStep(2);
+        // Fetch teams and move to team selection step
+        try {
+          const teamsData = await mattermostService.getTeams(
+            extractedWorkspaceId
+          );
+          if (teamsData && teamsData.length > 0) {
+            setTeams(teamsData);
+            setStep(2);
+          } else {
+            setError("No teams found in your Mattermost account");
+          }
+        } catch (teamsError) {
+          console.error("Error fetching teams:", teamsError);
+          setError("Failed to fetch teams from Mattermost");
+        }
       } else {
         setError(result.message || "Failed to connect to Mattermost server");
       }
@@ -73,6 +93,31 @@ const MattermostIntegration = () => {
       setError(
         "Error connecting to Mattermost. Please check your credentials."
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await mattermostService.selectTeam(
+        workspaceId,
+        selectedTeam
+      );
+
+      if (result.success) {
+        // After team is selected, move to bot setup step
+        setStep(3); // Now bot setup is step 3
+      } else {
+        setError(result.message || "Failed to select team");
+      }
+    } catch (error) {
+      setError("Error selecting team.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +135,7 @@ const MattermostIntegration = () => {
         // Fetch channels after connecting bot
         const channelsData = await mattermostService.getChannels(workspaceId);
         setChannels(channelsData || []);
-        setStep(3);
+        setStep(4);
       } else {
         setError(result.message || "Failed to connect bot");
       }
@@ -199,6 +244,54 @@ const MattermostIntegration = () => {
 
       case 2:
         return (
+          <form onSubmit={handleSelectTeam} className="mattermost-form">
+            <h2>Select Mattermost Team</h2>
+            <p>Choose a team to use for support chats</p>
+
+            {teams.length === 0 ? (
+              <div className="no-teams">
+                <p>
+                  No teams found. You may need to create a team in your
+                  Mattermost server first.
+                </p>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label htmlFor="team">Team</label>
+                <select
+                  id="team"
+                  value={selectedTeam}
+                  onChange={(e) => setSelectedTeam(e.target.value)}
+                  required
+                >
+                  <option value="">Select a team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="form-actions">
+              <Button
+                label="Back"
+                onClick={() => setStep(1)}
+                className="button-secondary"
+                disabled={loading}
+              />
+              <Button
+                label={loading ? "Selecting..." : "Select Team"}
+                type="submit"
+                disabled={loading || !selectedTeam}
+              />
+            </div>
+          </form>
+        );
+
+      case 3:
+        return (
           <form onSubmit={handleConnectBot} className="mattermost-form">
             <h2>Connect Bot Account (Optional)</h2>
             <p>Add a bot token to enable advanced features</p>
@@ -227,7 +320,7 @@ const MattermostIntegration = () => {
                       workspaceId
                     );
                     setChannels(channelsData || []);
-                    setStep(3);
+                    setStep(4);
                   } catch (error) {
                     setError("Failed to fetch channels");
                   } finally {
@@ -246,7 +339,7 @@ const MattermostIntegration = () => {
           </form>
         );
 
-      case 3:
+      case 4:
         return (
           <form onSubmit={handleSelectChannel} className="mattermost-form">
             <h2>Select Channel</h2>
@@ -318,10 +411,13 @@ const MattermostIntegration = () => {
               1. Connect
             </div>
             <div className={`step ${step >= 2 ? "step--active" : ""}`}>
-              2. Bot Setup
+              2. Team
             </div>
             <div className={`step ${step >= 3 ? "step--active" : ""}`}>
-              3. Channel
+              3. Bot Setup
+            </div>
+            <div className={`step ${step >= 4 ? "step--active" : ""}`}>
+              4. Channel
             </div>
           </div>
 

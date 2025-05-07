@@ -20,6 +20,13 @@ export interface Channel {
     num_members: number;
 }
 
+export interface Team {
+    id: string;
+    name: string;
+    description?: string;
+    type?: string;
+}
+
 export const mattermostService = {
     // Connect to Mattermost server
     async connectToMattermost(serverUrl: string, username: string, password: string, name?: string) {
@@ -57,6 +64,45 @@ export const mattermostService = {
                 {
                     workspaceId,
                     botToken
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response.data;
+        });
+    },
+
+    async getTeams(workspaceId: string) {
+        return this.executeWithTokenRefresh(async () => {
+            const token = authService.getAccessToken();
+            if (!token) throw new Error("Authentication required");
+
+            const response = await axios.get(
+                `${API_URL}/mattermost/teams?workspaceId=${workspaceId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response.data.teams as Team[];
+        });
+    },
+
+    // Select team for integration
+    async selectTeam(workspaceId: string, teamId: string) {
+        return this.executeWithTokenRefresh(async () => {
+            const token = authService.getAccessToken();
+            if (!token) throw new Error("Authentication required");
+
+            const response = await axios.post(
+                `${API_URL}/mattermost/select-team`,
+                {
+                    workspaceId,
+                    teamId
                 },
                 {
                     headers: {
