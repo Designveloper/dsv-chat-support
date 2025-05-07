@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { ChatServiceAdapter } from './chat-service.adapter';
 import { SlackService } from '../slack/slack.service';
 import { MattermostService } from '../mattermost/mattermost.service';
-import { ChatServiceAdapter } from './chat-service.adapter';
 import { WorkSpace } from '../workspace/workspace.entity';
 
 @Injectable()
@@ -17,23 +17,33 @@ export class ChatServiceFactory {
         }
 
         // if (workspace.service_type === 'mattermost') {
-        //     // Initialize and return Mattermost service
+        //     if (!workspace.server_url || !workspace.service_token) {
+        //         throw new Error('Missing required Mattermost configuration for this workspace');
+        //     }
+
+        //     // Always initialize with the current workspace's data from the database
         //     await this.mattermostService.initialize(
         //         workspace.server_url,
-        //         workspace.service_username,
-        //         workspace.service_password,
-        //         undefined // team ID will be determined in the service
+        //         undefined,
+        //         undefined,
+        //         workspace.service_token,
+        //         workspace.service_team_id,
+        //         workspace.bot_token_slack // Bot token is stored in this field
         //     );
         //     return this.mattermostService;
         // } else {
         //     // Default to Slack service
+        //     if (!workspace.bot_token_slack) {
+        //         throw new Error('No token found for this Slack workspace');
+        //     }
         //     return this.slackService;
         // }
 
-        if (!workspace.service_token) {
-            throw new Error('No token found for this workspace');
+        if (!workspace.server_url || !workspace.service_token) {
+            throw new Error('Missing required Mattermost configuration for this workspace');
         }
 
+        // Always initialize with the current workspace's data from the database
         await this.mattermostService.initialize(
             workspace.server_url,
             undefined,

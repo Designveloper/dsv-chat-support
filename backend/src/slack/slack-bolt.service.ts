@@ -83,6 +83,11 @@ export class SlackBoltService implements OnModuleInit {
         }
     }
 
+    // Get all socket IDs for a specific session
+    getSocketsForSession(sessionId: string): string[] {
+        return this.sessionToSocketMap.get(sessionId) || [];
+    }
+
     async onModuleInit() {
         // Set up message event listener
         await this.setupMessageListener();
@@ -177,5 +182,9 @@ export class SlackBoltService implements OnModuleInit {
             console.error('Error checking workspace online status:', error);
             return false; // Default to offline on error
         }
+    }
+
+    getSessionToSocketMap(): Map<string, string[]> {
+        return this.sessionToSocketMap;
     }
 }

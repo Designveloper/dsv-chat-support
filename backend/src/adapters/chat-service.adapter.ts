@@ -1,13 +1,19 @@
 import { Server } from 'socket.io';
 
 export interface ChatServiceAdapter {
-    authenticate(): Promise<boolean>;
+    // Make authenticate parameters optional to work with both implementations
+    authenticate(username?: string, password?: string): Promise<boolean>;
 
-    listChannels(): Promise<any[]>;
+    listChannels(teamId?: string): Promise<any[]>;
     joinChannel(channelId: string): Promise<void>;
-    createChannel(channelName: string): Promise<string>;
+    createChannel(channelName: string, teamId?: string): Promise<string>;
 
-    sendMessage(channelId: string, message: string): Promise<void>;
+    // Make botToken optional
+    sendMessage(channelId: string, text: string, botToken?: string): Promise<void>;
 
+    // Add optional setup for message listeners
+    setupMessageListener?(server: Server, sessionMapping: Map<string, string[]>, messageHandler: Function): void;
+
+    getToken?(): string;
     disconnect(): Promise<void>;
 }

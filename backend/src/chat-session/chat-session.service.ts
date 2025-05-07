@@ -29,6 +29,7 @@ export class ChatSessionService {
     ) { }
 
     async startChat(workspaceId: string): Promise<ChatSession> {
+        console.log("🚀 ~ ChatSessionService ~ startChat ~ workspaceId:", workspaceId)
         // Verify the workspace exists
         const workspace = await this.workspaceService.findById(workspaceId);
         if (!workspace) {
@@ -71,7 +72,6 @@ export class ChatSessionService {
             await this.chatSessionRepository.save(session);
         }
 
-
         // Get the workspace
         const workspace = await this.workspaceService.findById(session.workspace_id);
         if (!workspace) {
@@ -79,7 +79,6 @@ export class ChatSessionService {
         }
 
         const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
-        // console.log("🚀 ~ ChatSessionService ~ sendMessage ~ chatService:", chatService)
 
         if (!session.channel_id) {
             try {
@@ -95,16 +94,20 @@ export class ChatSessionService {
                 session.channel_id = channelId;
                 await this.chatSessionRepository.save(session);
 
-                // Build welcome blocks
-                // const welcomeBlocks = this.buildWelcomeBlocks(sessionId, message, userInfo);
-
-                // Send through the adapter
-                await chatService.sendMessage(channelId, message);
+                // Send through the adapter with bot token
+                await chatService.sendMessage(
+                    channelId,
+                    message,
+                    workspace.bot_token_slack // Pass the bot token
+                );
 
                 // Send notification if needed
                 if (workspace.selected_channel_id) {
-                    // const notificationBlocks = this.buildNotificationBlocks(channelId, message, userInfo);
-                    await chatService.sendMessage(workspace.selected_channel_id, message);
+                    await chatService.sendMessage(
+                        workspace.selected_channel_id,
+                        message,
+                        workspace.bot_token_slack // Pass the bot token
+                    );
                 }
             } catch (error) {
                 console.error('Error creating chat channel:', error);
@@ -123,227 +126,18 @@ export class ChatSessionService {
                 username = 'Anonymous User';
             }
 
-            // Send the message via the adapter
-            await chatService.sendMessage(session.channel_id, message);
+            // Send the message via the adapter with bot token
+            await chatService.sendMessage(
+                session.channel_id,
+                message,
+                workspace.bot_token_slack // Pass the bot token
+            );
 
             await this.noResponseTracker.trackUserMessage(sessionId, true);
         } catch (error) {
             console.error('Error sending message:', error);
             throw new Error('Failed to send message');
         }
-
-        // If this is the first message, create a new channel for this chat
-        // if (!session.channel_id) {
-        //     try {
-        //         console.log('Creating new Slack channel for chat session:', sessionId);
-        //         // Create a unique channel name based on user email or session ID
-        //         const channelName = userInfo?.email
-        //             ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
-        //             : `chat-${sessionId.substring(0, 8)}`;
-
-        //         // Create a new channel in Slack
-        //         const channelId = await this.slackService.createChannel(
-        //             workspace.bot_token_slack,
-        //             channelName
-        //         );
-        //         console.log('New channel created:', channelId);
-
-        //         // Update the chat session with the new channel ID
-        //         session.channel_id = channelId;
-        //         await this.chatSessionRepository.save(session);
-
-        //         const referer = request?.headers['referer'] || 'Unknown Page';
-        //         const location = 'Ho Chi Minh City, Vietnam';
-        //         const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
-        //         const localTime = format(vietnamTime, 'hh:mm a');
-
-        //         // Create the user info section
-        //         const userFields: { type: string; text: string }[] = [];
-
-        //         // Add user email if available
-        //         if (userInfo?.email) {
-        //             userFields.push({
-        //                 "type": "mrkdwn",
-        //                 "text": "*User Email:*\n" + userInfo.email
-        //             });
-        //         } else {
-        //             userFields.push({
-        //                 "type": "mrkdwn",
-        //                 "text": "*Session ID:*\n" + sessionId
-        //             });
-        //         }
-
-        //         if (userInfo?.userId) {
-        //             userFields.push({
-        //                 "type": "mrkdwn",
-        //                 "text": "*Name:*\n" + userInfo.userId
-        //             });
-        //         }
-
-        //         const welcomeBlocks = [
-        //             {
-        //                 "type": "header",
-        //                 "text": {
-        //                     "type": "plain_text",
-        //                     "text": "New chat session started",
-        //                     "emoji": true
-        //                 }
-        //             },
-        //             {
-        //                 "type": "section",
-        //                 "fields": userFields
-        //             },
-        //             {
-        //                 "type": "divider"
-        //             },
-        //             {
-        //                 "type": "section",
-        //                 "fields": [
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*STATUS:*\nActive"
-        //                     },
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*Channel:*\n<#" + channelId + ">"
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 "type": "section",
-        //                 "fields": [
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*First Message:*\n" + message
-        //                     },
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*Location:*\n:flag-VN: " + location
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 "type": "section",
-        //                 "fields": [
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*Local Time:*\n" + localTime
-        //                     },
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*Current Page:*\n" + referer
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 "type": "section",
-        //                 "fields": [
-        //                     {
-        //                         "type": "mrkdwn",
-        //                         "text": "*Session ID:*\n" + sessionId
-        //                     }
-        //                 ]
-        //             },
-        //             {
-        //                 "type": "divider"
-        //             },
-        //         ];
-
-        //         await this.slackService.postBlockKitMessage(workspace.bot_token_slack, channelId, welcomeBlocks);
-
-        //         if (workspace.selected_channel_id) {
-        //             const userInfoText = userInfo?.email
-        //                 ? `*User:* ${userInfo.email}${userInfo.userId ? `\n*Name:* ${userInfo.userId}` : ''}`
-        //                 : "*Session ID:* " + sessionId;
-        //             const notificationBlocks = [
-        //                 {
-        //                     "type": "section",
-        //                     "text": {
-        //                         "type": "mrkdwn",
-        //                         "text": ":speech_balloon: *New Chat Session*"
-        //                     }
-        //                 },
-        //                 {
-        //                     "type": "section",
-        //                     "fields": [
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": userInfoText
-        //                         }
-        //                     ]
-        //                 },
-        //                 {
-        //                     "type": "divider"
-        //                 },
-        //                 {
-        //                     "type": "section",
-        //                     "fields": [
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": "*Status:*\nActive"
-        //                         },
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": "*Click channel to join:*\n<#" + channelId + ">"
-        //                         }
-        //                     ]
-        //                 },
-        //                 {
-        //                     "type": "section",
-        //                     "fields": [
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": "*First Message:*\n" + message
-        //                         },
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": "*Location:*\n:flag-VN: " + location
-        //                         }
-        //                     ]
-        //                 },
-        //                 {
-        //                     "type": "section",
-        //                     "fields": [
-        //                         {
-        //                             "type": "mrkdwn",
-        //                             "text": "*Local Time:*\n" + localTime
-        //                         }
-        //                     ]
-        //                 }
-        //             ];
-
-        //             await this.slackService.postBlockKitMessage(workspace.bot_token_slack, workspace.selected_channel_id, notificationBlocks);
-        //         }
-        //     } catch (error) {
-        //         console.error('Error creating Slack channel:', error);
-        //         throw new Error('Failed to create chat channel');
-        //     }
-        // }
-
-        // try {
-        //     // Make sure bot has joined the channel before posting messages
-        //     await this.slackService.joinChannel(workspace.bot_token_slack, session.channel_id);
-
-        //     const location = 'Ho Chi Minh City, Vietnam';
-        //     let username = effectiveUserInfo?.email;
-
-        //     if (!username) {
-        //         username = `${location}`
-        //     }
-
-        //     // Post the message to the session's channel
-        //     await this.slackService.postMessage(
-        //         workspace.bot_token_slack,
-        //         session.channel_id,
-        //         `${message}`,
-        //         username
-        //     );
-
-        //     await this.noResponseTracker.trackUserMessage(sessionId, true);
-        // } catch (error) {
-        //     console.error('Error sending message to Slack channel:', error);
-        //     throw new Error('Failed to send message to Slack channel');
-        // }
     }
 
     async endChatSession(sessionId: string): Promise<void> {
@@ -359,23 +153,28 @@ export class ChatSessionService {
 
         // Get the workspace
         const workspace = await this.workspaceService.findById(session.workspace_id);
-        if (!workspace || !workspace.bot_token_slack) {
-            throw new Error('Workspace not configured for Slack');
+        if (!workspace) {
+            throw new Error('Workspace not found');
         }
 
-        // Post a message to the chat channel that the session has ended
         try {
-            await this.slackService.postMessage(
-                workspace.bot_token_slack,
-                session.channel_id,
-                `Chat session ended`
-            );
+            // Get appropriate chat service adapter based on workspace type
+            const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
 
-            console.log("🚀 ~ ChatSessionService ~ endChatSession ~ sessionId:", sessionId)
+            if (session.channel_id) {
+                // Use adapter to send end message with bot token
+                await chatService.sendMessage(
+                    session.channel_id,
+                    `Chat session ended`,
+                    workspace.bot_token_slack // Pass the bot token to ensure message is sent from the bot account
+                );
+            }
+
+            console.log(`Chat session ${sessionId} ended successfully`);
             await this.noResponseTracker.trackUserMessage(sessionId, false);
         } catch (error) {
-            console.error('Error sending message to Slack channel:', error);
-            throw new Error('Failed to send message to Slack channel');
+            console.error('Error sending end session message:', error);
+            throw new Error('Failed to send end session message');
         }
     }
 
@@ -549,5 +348,10 @@ export class ChatSessionService {
             console.error('Error posting Block Kit message to Slack:', error);
             throw new Error('Failed to send message to Slack');
         }
+    }
+
+    async trackStaffMessage(sessionId: string): Promise<void> {
+        // Forward to no-response tracker with isUserMessage=false to indicate this is a staff response
+        await this.noResponseTracker.trackUserMessage(sessionId, false);
     }
 }

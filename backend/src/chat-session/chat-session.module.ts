@@ -9,6 +9,7 @@ import { ChatGateway } from './chat.gateway';
 import { EavModule } from '../eav/eav.module';
 import { NoResponseTrackerService } from './no-response-tracker.service';
 import { AdaptersModule } from 'src/adapters/adapters.module';
+import { MattermostModule } from 'src/mattermost/mattermost.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { AdaptersModule } from 'src/adapters/adapters.module';
         forwardRef(() => SlackModule),
         EavModule,
         AdaptersModule,
+        forwardRef(() => MattermostModule),
     ],
     controllers: [ChatSessionController],
     providers: [ChatSessionService, ChatGateway, NoResponseTrackerService],

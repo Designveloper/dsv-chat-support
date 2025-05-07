@@ -3,7 +3,6 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { MattermostService } from "./mattermost.service";
 import { WorkspaceService } from "../workspace/workspace.service";
 import { v4 as uuidv4 } from "uuid";
-import { catchError } from "rxjs";
 
 @Controller('mattermost')
 export class MattermostController {
@@ -19,23 +18,32 @@ export class MattermostController {
             const userId = req.user.userId;
             const { serverUrl, username, password, name } = body;
 
+            // Initialize client with the server URL
             await this.mattermostService.initialize(serverUrl, username, password);
 
+            // Authenticate with the provided credentials
             const isAuthenticated = await this.mattermostService.authenticate(username, password);
             if (!isAuthenticated) {
                 return { success: false, message: 'Authentication failed' };
             }
 
-            const token = await this.mattermostService.getToken();
+            // Get token from the current client session
+            const token = this.mattermostService.getToken();
 
-            await this.mattermostService.fetchTeamId();
-            const teamId = this.mattermostService['teamId'];
+            // Fetch the team ID
+            const teamId = await this.mattermostService.fetchTeamId();
+            if (!teamId) {
+                return { success: false, message: 'Could not find or create a team' };
+            }
 
-            const worksapceId = uuidv4();
+            // Create a new workspace ID
+            const workspaceId = uuidv4();
             const workspaceName = name || "Default Workspace";
 
+            // Get or create the entity type for the workspace
             const entityType = await this.workspaceService.getOrCreateEntityType('workspace', 'Default workspace entity type');
 
+            // Create the workspace entry
             const workspace = await this.workspaceService.create(
                 userId,
                 workspaceName,
@@ -43,6 +51,7 @@ export class MattermostController {
                 entityType.type_id,
             );
 
+            // Save the Mattermost details to the workspace
             await this.workspaceService.updateMattermostDetails(
                 workspace.id,
                 serverUrl,
@@ -55,6 +64,7 @@ export class MattermostController {
             return {
                 success: true,
                 message: 'Connected to Mattermost successfully',
+                workspaceId: workspace.id,
                 redirectUrl: `/mattermost/select-channel?workspaceId=${workspace.id}`
             };
         }
@@ -70,11 +80,13 @@ export class MattermostController {
         try {
             const { workspaceId, botToken } = body;
 
+            // Verify workspace exists
             const workspace = await this.workspaceService.findById(workspaceId);
             if (!workspace) {
                 return { success: false, message: 'Workspace not found' };
             }
 
+            // Update the bot token in the workspace record
             await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
 
             return {
@@ -91,6 +103,9 @@ export class MattermostController {
     @UseGuards(JwtAuthGuard)
     async getChannels(@Query('workspaceId') workspaceId: string) {
         try {
+            console.log("🚀 ~ MattermostController ~ getChannels ~ workspaceId:", workspaceId)
+
+            // Get the workspace details from the database
             const workspace = await this.workspaceService.findById(workspaceId);
 
             if (!workspace) {
@@ -101,15 +116,16 @@ export class MattermostController {
                 return { success: false, message: 'No token found for this workspace' };
             }
 
-            // Initialize Mattermost client with workspace credentials
+            // Initialize Mattermost client with workspace credentials from DB
             await this.mattermostService.initialize(
                 workspace.server_url,
                 undefined,
                 undefined,
-                workspace.service_token,
+                workspace.service_token
             );
 
-            const channels = await this.mattermostService.listChannels();
+            // Get channels using the team ID from the workspace
+            const channels = await this.mattermostService.listChannels(workspace.service_team_id);
             return { success: true, channels };
         } catch (error) {
             console.error('Error fetching Mattermost channels:', error);
@@ -124,11 +140,13 @@ export class MattermostController {
             const userId = req.user.userId;
             const { workspaceId, channelId } = body;
 
+            // Verify workspace exists
             const workspace = await this.workspaceService.findById(workspaceId);
             if (!workspace) {
                 return { success: false, message: 'Workspace not found' };
             }
 
+            // Update the selected channel in the workspace record
             await this.workspaceService.updateMattermostChannel(workspaceId, channelId);
 
             return { success: true, message: 'Channel selected successfully' };

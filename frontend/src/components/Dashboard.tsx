@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { workspaceService, Workspace } from "../services/workspaceService";
 import Button from "./Button";
 import Layout from "./Layout";
+import mattermostLogo from "../assets/mattermost-logo.png";
+import ChatWidget from "./ChatWidget";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -16,6 +18,7 @@ const Dashboard = () => {
   const [isSlackLoading, setIsSlackLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isMattermostLoading, setIsMattermostLoading] = useState(false);
 
   useEffect(() => {
     fetchWorkspaces();
@@ -58,6 +61,10 @@ const Dashboard = () => {
     }
   };
 
+  const handleConnectToMattermost = () => {
+    navigate("/mattermost-connect");
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -85,6 +92,7 @@ const Dashboard = () => {
   }
 
   // Dashboard content with proper tab-based structure
+  console.log("🚀 ~ Dashboard ~ workspaces[0]?.id:", workspaces[0]?.id);
   return (
     <Layout>
       <div className="settings__content">
@@ -199,25 +207,50 @@ const Dashboard = () => {
                   )}
 
                   {!slackConnected && (
-                    <button
-                      onClick={handleAddToSlack}
-                      className="dashboard__slack-button"
-                      disabled={isSlackLoading}
-                    >
-                      {isSlackLoading ? (
-                        <div className="loading">
-                          <div className="loading__spinner"></div>
-                        </div>
-                      ) : (
-                        <img
-                          alt="Add to Slack"
-                          height="40"
-                          width="139"
-                          src="https://platform.slack-edge.com/img/add_to_slack.png"
-                          srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                        />
-                      )}
-                    </button>
+                    <div className="dashboard__integration-buttons">
+                      <button
+                        onClick={handleAddToSlack}
+                        className="dashboard__slack-button"
+                        disabled={isSlackLoading}
+                      >
+                        {isSlackLoading ? (
+                          <div className="loading">
+                            <div className="loading__spinner"></div>
+                          </div>
+                        ) : (
+                          <img
+                            alt="Add to Slack"
+                            height="40"
+                            width="139"
+                            src="https://platform.slack-edge.com/img/add_to_slack.png"
+                            srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                          />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={handleConnectToMattermost}
+                        className="dashboard__mattermost-button"
+                        disabled={isMattermostLoading}
+                      >
+                        {isMattermostLoading ? (
+                          <div className="loading">
+                            <div className="loading__spinner"></div>
+                          </div>
+                        ) : (
+                          <div className="dashboard__mattermost-btn-content">
+                            <img
+                              alt="Connect to Mattermost"
+                              height="20"
+                              width="20"
+                              src={mattermostLogo}
+                              className="dashboard__mattermost-icon"
+                            />
+                            Add to Mattermost
+                          </div>
+                        )}
+                      </button>
+                    </div>
                   )}
                 </div>
               </section>
@@ -225,6 +258,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <ChatWidget workspaceId={workspaces[0]?.id}></ChatWidget>
     </Layout>
   );
 };

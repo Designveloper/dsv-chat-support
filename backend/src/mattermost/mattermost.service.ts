@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { Client4 } from '@mattermost/client';
+import { Client4, WebSocketClient } from '@mattermost/client';
 import { ConfigService } from '@nestjs/config';
 import { Server } from 'socket.io';
 import { ChatServiceAdapter } from '../adapters/chat-service.adapter';
-import { WebSocketClient } from '@mattermost/client';
 
 @Injectable()
 export class MattermostService implements ChatServiceAdapter {
     private client: Client4;
-    private wsClient: WebSocketClient;
-    private token: string;
-    private teamId: string;
-    private botToken: string;
+    private wsClient: WebSocketClient | null = null;
+    private server: Server | null = null;
+    private messageHandler: Function | null = null;
+
 
     constructor(private configService: ConfigService) {
         this.client = new Client4();
     }
 
     async initialize(serverUrl: string, username?: string, password?: string, token?: string, teamId?: string, botToken?: string): Promise<void> {
+        if (!serverUrl) {
+            throw new Error('Server URL is required for Mattermost initialization');
+        }
+
         // Clean up the server URL by removing trailing slashes
         const cleanServerUrl = serverUrl.replace(/\/+$/, '');
 
@@ -29,40 +32,135 @@ export class MattermostService implements ChatServiceAdapter {
         console.log(`Setting Mattermost base URL to: ${baseUrl}`);
         this.client.setUrl(baseUrl);
 
-        // If teamId is provided, use it
-        if (teamId) {
-            this.teamId = teamId;
-            console.log(`Using provided team ID: ${teamId}`);
-        }
-
-        // Set token if provided
+        // Set token if provided (main authentication method)
         if (token) {
-            this.token = token;
             this.client.setToken(token);
+            console.log('Client initialized with provided token');
 
-            // If no teamId was provided, try to fetch it now that we have a token
-            if (!this.teamId) {
-                await this.fetchTeamId();
-            }
+            // Re-initialize WebSocket when we have valid credentials
+            console.log('Reconnecting WebSocket with new credentials');
+            this.setupWebSocketConnection();
+
             return;
-        }
-
-        if (botToken) {
-            this.botToken = botToken;
         }
 
         // Otherwise try to authenticate with username/password
         if (username && password) {
             const success = await this.authenticate(username, password);
-            if (success && !this.teamId) {
-                // Now that we're authenticated, fetch team ID if needed
-                await this.fetchTeamId();
+            if (!success) {
+                console.error('Failed to authenticate with provided credentials');
+            } else {
+                // Re-initialize WebSocket after successful authentication
+                console.log('Reconnecting WebSocket after authentication');
+                this.setupWebSocketConnection();
             }
         }
     }
 
-    async fetchTeamId(): Promise<string | null> {
+    private setupWebSocketConnection(): void {
+        // Only proceed if we have a messageHandler set up
+        if (!this.messageHandler) {
+            console.log('No message handler registered yet, skipping WebSocket setup');
+            return;
+        }
+
+        if (this.wsClient) {
+            console.log('Closing existing WebSocket connection before creating a new one');
+            try {
+                this.wsClient.close();
+            } catch (e) {
+                console.error('Error closing existing WebSocket:', e);
+            }
+            this.wsClient = null;
+        }
+
+        this.wsClient = new WebSocketClient();
+
         try {
+            // Get the WebSocket URL directly from the Client4 instance
+            const wsUrl = this.client.getWebSocketUrl();
+            const token = this.client.getToken();
+
+            console.log(`Re-initializing Mattermost WebSocket with URL: ${wsUrl} and token: ${token ? 'Present' : 'Missing'}`);
+
+            if (!wsUrl || !token) {
+                console.error('Missing WebSocket URL or token, cannot initialize WebSocket client');
+                return;
+            }
+
+            // Initialize WebSocket connection
+            this.wsClient.initialize(wsUrl, token);
+
+            console.log('Mattermost WebSocket client initialized with current credentials');
+
+            // Set up event listeners for connection status
+            this.wsClient.addFirstConnectListener(() => {
+                console.log('Mattermost WebSocket connected successfully');
+            });
+
+            this.wsClient.addReconnectListener(() => {
+                console.log('Mattermost WebSocket reconnected');
+            });
+
+            this.wsClient.addErrorListener((err) => {
+                console.error('Mattermost WebSocket error:', err);
+                // Try to reconnect after error
+                setTimeout(() => this.setupWebSocketConnection(), 5000);
+            });
+
+            this.wsClient.addCloseListener(() => {
+                console.log('Mattermost WebSocket connection closed');
+                // Try to reconnect after close
+                setTimeout(() => this.setupWebSocketConnection(), 5000);
+            });
+
+            // Listen for new posts
+            this.wsClient.addMessageListener(event => {
+                console.log('🚀 Received Mattermost WebSocket event:', event.event);
+
+                if (event && event.data && event.event === 'posted') {
+                    try {
+                        const post = JSON.parse(event.data.post);
+
+                        // Debug the received post
+                        console.log('🚀 Received post from Mattermost:', {
+                            channel_id: post.channel_id,
+                            user_id: post.user_id,
+                            message: post.message
+                        });
+
+                        // Ignore messages from the bot itself
+                        if (post.user_id === this.client.userId) {
+                            console.log('Ignoring message from self');
+                            return;
+                        }
+
+                        // Forward the message to the handler
+                        if (this.messageHandler) {
+                            console.log('Calling message handler with post data');
+                            this.messageHandler({
+                                channel: post.channel_id,
+                                text: post.message,
+                                user: post.user_id
+                            });
+                        } else {
+                            console.error('Message handler is not available');
+                        }
+                    } catch (error) {
+                        console.error('Error processing Mattermost message:', error);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error setting up Mattermost WebSocket:', error);
+        }
+    }
+
+    async fetchTeamId(token?: string): Promise<string | null> {
+        try {
+            // If token is provided, temporarily set it for this operation
+            const originalToken = token ? this.setTemporaryToken(token) : null;
+
             console.log('Fetching teams to get team ID...');
             const teamsResult = await this.client.getTeams();
             let teamsArray: any[] = [];
@@ -75,10 +173,15 @@ export class MattermostService implements ChatServiceAdapter {
 
             console.log(`Found ${teamsArray.length} teams`);
 
+            // Restore original token if needed
+            if (originalToken) {
+                this.client.setToken(originalToken);
+            }
+
             if (teamsArray.length > 0) {
-                this.teamId = teamsArray[0].id;
-                console.log(`Selected team ID: ${this.teamId}`);
-                return this.teamId;
+                const teamId = teamsArray[0].id;
+                console.log(`Selected team ID: ${teamId}`);
+                return teamId;
             } else {
                 console.warn('No teams found, may need to create one');
                 return null;
@@ -87,6 +190,12 @@ export class MattermostService implements ChatServiceAdapter {
             console.error('Error fetching team ID:', error);
             return null;
         }
+    }
+
+    private setTemporaryToken(token: string): string | null {
+        const originalToken = this.client.getToken();
+        this.client.setToken(token);
+        return originalToken;
     }
 
     // Add method to create a team if needed
@@ -99,37 +208,40 @@ export class MattermostService implements ChatServiceAdapter {
                 type: 'O' // Open team
             } as any);
 
-            this.teamId = team.id;
-            console.log(`Created team with ID: ${this.teamId}`);
-            return this.teamId;
+            const teamId = team.id;
+            console.log(`Created team with ID: ${teamId}`);
+            return teamId;
         } catch (error) {
             console.error('Error creating team:', error);
             throw error;
         }
     }
 
-    // Update createChannel to ensure there's a team ID
-    async createChannel(channelName: string): Promise<string> {
+    async createChannel(channelName: string, teamId?: string): Promise<string> {
         try {
             // Make sure we have a team ID
-            if (!this.teamId) {
-                await this.fetchTeamId();
+            let effectiveTeamId = teamId;
+            if (!effectiveTeamId) {
+                // Try to fetch a team ID
+                const fetchedTeamId = await this.fetchTeamId();
+                if (fetchedTeamId !== null) {
+                    effectiveTeamId = fetchedTeamId;
+                }
 
                 // If we still don't have a team ID, create one
-                if (!this.teamId) {
-                    await this.createTeam('chat-support', 'Chat Support');
-                    if (!this.teamId) {
+                if (!effectiveTeamId) {
+                    effectiveTeamId = await this.createTeam('chat-support', 'Chat Support');
+                    if (!effectiveTeamId) {
                         throw new Error('Unable to get or create a team');
                     }
                 }
             }
 
-            console.log(`Using team ID for channel creation: ${this.teamId}`);
-            console.log('Authorization token:', this.token ? `${this.token.substring(0, 5)}...` : 'MISSING');
+            console.log(`Using team ID for channel creation: ${effectiveTeamId}`);
 
             // Create a public channel in the team
             const channel = await this.client.createChannel({
-                team_id: this.teamId,
+                team_id: effectiveTeamId,
                 name: channelName.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
                 display_name: channelName,
                 type: 'O', // O = public channel
@@ -143,17 +255,9 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async authenticate(username?: string, password?: string): Promise<boolean> {
+    async authenticate(username: string, password: string): Promise<boolean> {
         try {
-            if (!username || !password) {
-                return false;
-            }
-
-            // Login with username and password
             await this.client.login(username, password);
-            this.token = this.client.getToken();
-            this.client.setToken(this.token);
-
             return true;
         } catch (error) {
             console.error('Mattermost authentication error:', error);
@@ -161,9 +265,11 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async listChannels(): Promise<any[]> {
+    async listChannels(teamId?: string): Promise<any[]> {
         try {
-            if (!this.teamId) {
+            let effectiveTeamId = teamId;
+            if (!effectiveTeamId) {
+                // If no teamId provided, try to get one from the system
                 const teamsResult = await this.client.getTeams();
                 let teamsArray: any[] = [];
 
@@ -172,17 +278,20 @@ export class MattermostService implements ChatServiceAdapter {
                 } else if (teamsResult && Array.isArray(teamsResult.teams)) {
                     teamsArray = teamsResult.teams;
                 }
-                console.log("🚀 ~ MattermostService ~ listChannels ~ teamsArray:", teamsArray)
+                console.log("🚀 ~ MattermostService ~ listChannels ~ teamsArray:", teamsArray);
 
                 if (teamsArray.length > 0) {
-                    this.teamId = teamsArray[0].id;
+                    effectiveTeamId = teamsArray[0].id;
                 } else {
                     throw new Error('No teams found');
                 }
             }
 
-            const channels = await this.client.getMyChannels(this.teamId);
-            console.log("🚀 ~ MattermostService ~ listChannels ~ channels:", channels)
+            if (!effectiveTeamId) {
+                throw new Error('Team ID is undefined when trying to list channels');
+            }
+            const channels = await this.client.getMyChannels(effectiveTeamId);
+            console.log("🚀 ~ MattermostService ~ listChannels ~ channels:", channels);
 
             return channels.map(channel => ({
                 id: channel.id,
@@ -198,13 +307,11 @@ export class MattermostService implements ChatServiceAdapter {
 
     async joinChannel(channelId: string): Promise<void> {
         try {
-            // First, get the current user ID
             const me = await this.client.getMe();
             const userId = me.id;
 
             console.log(`Attempting to join channel ${channelId} with user ID: ${userId}`);
 
-            // Now add the user to the channel with the proper user ID
             await this.client.addToChannel(userId, channelId);
 
             console.log(`Successfully joined channel: ${channelId}`);
@@ -216,33 +323,31 @@ export class MattermostService implements ChatServiceAdapter {
             }
             console.error('Error joining Mattermost channel:', error);
 
-            // Rethrow with better context but don't block the message flow
-            // This allows messages to be sent even if join fails
             console.warn('Continuing with message sending despite channel join failure');
         }
     }
 
-    async sendMessage(channelId: string, text: string, username?: string): Promise<void> {
+    async sendMessage(channelId: string, text: string, botToken?: string): Promise<void> {
         try {
             const post = {
                 channel_id: channelId,
                 message: text,
             };
 
-            console.log("🚀 ~ MattermostService ~ sendMessage ~ this.botToken:", this.botToken)
-            if (this.botToken) {
-                // Use bot token for sending messages
-                const originalToken = this.token;
-                this.client.setToken(this.botToken);
+            if (botToken) {
+                const originalToken = this.client.getToken();
+                this.client.setToken(botToken);
 
                 try {
                     await this.client.createPost(post);
                 } finally {
                     // Restore the original token
-                    this.client.setToken(originalToken);
+                    if (originalToken) {
+                        this.client.setToken(originalToken);
+                    }
                 }
             } else {
-                // Fall back to admin token if no bot token
+                // Fall back to regular token if no bot token
                 await this.client.createPost(post);
             }
         } catch (error) {
@@ -252,41 +357,37 @@ export class MattermostService implements ChatServiceAdapter {
     }
 
     setupMessageListener(server: Server, sessionMapping: Map<string, string[]>, messageHandler: Function): void {
-        if (!this.wsClient) {
-            console.error('WebSocket client not initialized');
-            return;
+        console.log('Registering Mattermost message handler...');
+        this.server = server;
+        this.messageHandler = messageHandler;
+
+        // Try to initialize WebSocket if we already have credentials
+        if (this.client.getUrl() && this.client.getToken()) {
+            console.log('We have existing credentials, setting up WebSocket connection');
+            this.setupWebSocketConnection();
+        } else {
+            console.log('No credentials available yet, WebSocket will be set up when initialized');
         }
-
-        // Listen for new posts
-        this.wsClient.addMessageListener(event => {
-            if (event && event.data && event.event === 'posted') {
-                try {
-                    const post = JSON.parse(event.data.post);
-
-                    // Ignore messages from the bot itself
-                    if (post.user_id === this.client.userId) {
-                        return;
-                    }
-
-                    messageHandler({
-                        channel: post.channel_id,
-                        text: post.message,
-                        user: post.user_id
-                    });
-                } catch (error) {
-                    console.error('Error processing Mattermost message:', error);
-                }
-            }
-        });
     }
 
     getToken(): string {
-        return this.token;
+        return this.client.getToken();
+    }
+
+    getWebSocketUrl(): string | null {
+        try {
+            return this.client.getWebSocketUrl();
+        } catch (error) {
+            console.error('Error getting WebSocket URL:', error);
+            return null;
+        }
     }
 
     async disconnect(): Promise<void> {
         if (this.wsClient) {
+            console.log('Closing Mattermost WebSocket connection');
             this.wsClient.close();
+            this.wsClient = null;
         }
     }
 }
