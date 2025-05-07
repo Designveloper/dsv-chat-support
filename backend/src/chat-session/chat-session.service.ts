@@ -49,6 +49,8 @@ export class ChatSessionService {
         return newSession;
     }
 
+    // Update the sendMessage method to use the adapter pattern consistently
+
     async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string, userId?: string }): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
@@ -78,65 +80,93 @@ export class ChatSessionService {
             throw new Error('Workspace not found');
         }
 
+        // Get the appropriate chat service adapter
         const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
 
+        // If this is the first message, create a new channel for this chat
         if (!session.channel_id) {
             try {
                 if (!workspace.service_team_id) {
                     throw new Error('No team selected for this workspace');
                 }
 
-                // Create a unique channel name
-                const channelName = userInfo?.email
-                    ? `chat-${userInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
+                console.log(`Creating new channel for chat session:`, sessionId);
+
+                // Create a unique channel name based on user email or session ID
+                const channelName = effectiveUserInfo?.email
+                    ? `chat-${effectiveUserInfo.email.split('@')[0]}-${sessionId.substring(0, 8)}`
                     : `chat-${sessionId.substring(0, 8)}`;
 
-                // Create channel using the adapter
+                // Create the channel using the adapter
                 const channelId = await chatService.createChannel(channelName, workspace.service_team_id);
+                console.log('New channel created:', channelId);
 
-                // Update session with channel ID
+                // Update the chat session with the new channel ID
                 session.channel_id = channelId;
                 await this.chatSessionRepository.save(session);
 
-                // Send notification if needed
+                // Get additional context information
+                const referer = request?.headers['referer'] || 'Unknown Page';
+                const location = 'Ho Chi Minh City, Vietnam';
+                const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
+                const localTime = format(vietnamTime, 'hh:mm a');
+
+                // Generate welcome message using the adapter's formatting method
+                const welcomeMessage = chatService.formatWelcomeMessage(
+                    sessionId,
+                    message,
+                    effectiveUserInfo,
+                    referer,
+                    location,
+                    localTime
+                );
+
+                // Send the welcome message
+                await chatService.sendMessage(channelId, welcomeMessage, workspace.bot_token_slack);
+
+                // Post notification to the admin-selected channel if it exists
                 if (workspace.selected_channel_id) {
+                    // Generate notification message using the adapter's formatting method
+                    const notificationMessage = chatService.formatNotificationMessage(
+                        channelName,
+                        sessionId,
+                        message,
+                        effectiveUserInfo,
+                        referer,
+                        location,
+                        localTime
+                    );
+
                     await chatService.sendMessage(
                         workspace.selected_channel_id,
-                        message,
-                        workspace.bot_token_slack // Pass the bot token
+                        notificationMessage,
+                        workspace.bot_token_slack
                     );
                 }
             } catch (error) {
-                console.error('Error creating chat channel:', error);
+                console.error(`Error creating channel:`, error);
                 throw new Error('Failed to create chat channel');
             }
         }
 
-        // Send the message
+        // Send the regular message to the existing channel
         try {
             // Make sure the service is in the channel
             await chatService.joinChannel(session.channel_id);
 
-            // Use username based on available info
-            let username = userInfo?.email;
-            if (!username) {
-                username = 'Anonymous User';
-            }
-
-            // Send the message via the adapter with bot token
+            // Send the message using the adapter
             await chatService.sendMessage(
                 session.channel_id,
                 message,
-                workspace.bot_token_slack // Pass the bot token
+                workspace.bot_token_slack
             );
 
             await this.noResponseTracker.trackUserMessage(sessionId, true);
         } catch (error) {
-            console.error('Error sending message:', error);
-            throw new Error('Failed to send message');
+            console.error(`Error sending message to channel:`, error);
+            throw new Error(`Failed to send message to channel`);
         }
     }
-
     async endChatSession(sessionId: string): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });

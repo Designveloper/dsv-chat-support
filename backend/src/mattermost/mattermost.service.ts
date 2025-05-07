@@ -174,8 +174,6 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-
-
     async listTeams(): Promise<any[]> {
         try {
             console.log('Fetching teams from Mattermost...');
@@ -341,6 +339,49 @@ export class MattermostService implements ChatServiceAdapter {
             console.error('Error sending message to Mattermost channel:', error);
             throw new Error('Failed to send message to Mattermost channel');
         }
+    }
+
+    formatWelcomeMessage(
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): string {
+        return `### :speech_balloon: New chat session started\n\n` +
+            `**User Email:** ${userInfo?.email || 'Anonymous'}\n` +
+            `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
+            `**Status:** Active\n` +
+            `**Session ID:** ${sessionId}\n\n` +
+            `**First Message:** ${message}\n` +
+            `**Location:** :flag-VN: ${location}\n` +
+            `**Local Time:** ${localTime}\n` +
+            `**Current Page:** ${referer}\n\n` +
+            `---\n`;
+    }
+
+    formatNotificationMessage(
+        channelName: string,
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): string {
+        // Create a Mattermost notification with a link to the new channel
+        const channelLink = `~${channelName}`; // Mattermost uses ~ for channel links
+
+        return `### :bell: New Chat Session\n\n` +
+            `**User:** ${userInfo?.email || 'Anonymous'}\n` +
+            `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
+            `**Status:** Active\n` +
+            `**Click to join:** ${channelLink}\n\n` +
+            `**First Message:** ${message}\n` +
+            `**Location:** :flag-VN: ${location}\n` +
+            `**Local Time:** ${localTime}\n\n` +
+            `---\n`;
     }
 
     // Add a method to register a bot user ID (for use when initializing with a known bot)

@@ -273,4 +273,241 @@ export class SlackService {
             throw new Error('Failed to send message to Slack');
         }
     }
+
+    // Add this method to implement the ChatServiceAdapter interface
+
+    async sendMessage(channelId: string, text: string, botToken?: string): Promise<void> {
+        try {
+            // Determine which token to use
+            const token = botToken || this.configService.get('SLACK_BOT_TOKEN');
+
+            if (!token) {
+                throw new Error('No bot token provided for Slack message');
+            }
+
+            // Check if the text is actually a Block Kit message (JSON object)
+            try {
+                const parsedBlocks = JSON.parse(text);
+                if (Array.isArray(parsedBlocks)) {
+                    // If it's a valid Block Kit message, post it using the Block Kit method
+                    await this.postBlockKitMessage(token, channelId, parsedBlocks);
+                    return;
+                }
+            } catch (e) {
+                // Not a JSON string, just continue with regular message
+            }
+
+            // Make sure bot has joined the channel before posting
+            await this.joinChannel(token, channelId);
+
+            // Post regular text message
+            await this.postMessage(token, channelId, text);
+        } catch (error) {
+            console.error('Error in SlackService.sendMessage:', error);
+            throw new Error('Failed to send message to Slack channel');
+        }
+    }
+
+    formatWelcomeMessage(
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): any[] {
+        // Create the user info section
+        const userFields: { type: string; text: string }[] = [];
+
+        // Add user email if available
+        if (userInfo?.email) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*User Email:*\n" + userInfo.email
+            });
+        } else {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Session ID:*\n" + sessionId
+            });
+        }
+
+        if (userInfo?.userId) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Name:*\n" + userInfo.userId
+            });
+        }
+
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "New chat session started",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "fields": userFields
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*STATUS:*\nActive"
+                    },
+                    // {
+                    //     "type": "mrkdwn",
+                    //     "text": "*Channel:*\n<#" + channelId + ">"
+                    // }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*First Message:*\n" + message
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Location:*\n:flag-VN: " + location
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Local Time:*\n" + localTime
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Current Page:*\n" + referer
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Session ID:*\n" + sessionId
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+        ];
+    }
+
+    formatNotificationMessage(
+        channelName: string,
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): any[] {
+        // Create the user info section
+        const userFields: { type: string; text: string }[] = [];
+
+        // Add user email if available
+        if (userInfo?.email) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*User Email:*\n" + userInfo.email
+            });
+        } else {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Session ID:*\n" + sessionId
+            });
+        }
+
+        if (userInfo?.userId) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Name:*\n" + userInfo.userId
+            });
+        }
+
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": `New message in ${channelName}`,
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "fields": userFields
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*STATUS:*\nActive"
+                    },
+                    // {
+                    //     "type": "mrkdwn",
+                    //     "text": "*Channel:*\n<#" + channelId + "> "
+                    // }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Message:*\n" + message
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Location:*\n:flag-VN:  *" + location + "*"
+                    }
+                ]
+            },
+            {
+                type: 'section',
+                fields: [
+                    {
+                        type: 'mrkdwn',
+                        text: '*Local Time:*\n' + localTime,
+                    },
+                    {
+                        type: 'mrkdwn',
+                        text: '*Current Page:*\n' + referer,
+                    }
+                ]
+            },
+            {
+                type: 'section',
+                fields: [
+                    {
+                        type: 'mrkdwn',
+                        text: '*Session ID:*\n' + sessionId,
+                    }
+                ]
+            },
+            {
+                type: 'divider'
+            },
+        ];
+    }
 }
