@@ -91,8 +91,6 @@ const Dashboard = () => {
     );
   }
 
-  // Dashboard content with proper tab-based structure
-  console.log("🚀 ~ Dashboard ~ workspaces[0]?.id:", workspaces[0]?.id);
   return (
     <Layout>
       <div className="settings__content">

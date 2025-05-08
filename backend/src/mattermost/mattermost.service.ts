@@ -365,10 +365,10 @@ export class MattermostService implements ChatServiceAdapter {
             `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
             `**Status:** Active\n` +
             `**Session ID:** ${sessionId}\n\n` +
-            `**First Message:** ${message}\n` +
             `**Location:** :flag-VN: ${location}\n` +
             `**Local Time:** ${localTime}\n` +
             `**Current Page:** ${referer}\n\n` +
+            `**First Message:** ${message}\n` +
             `---\n`;
     }
 
@@ -390,9 +390,34 @@ export class MattermostService implements ChatServiceAdapter {
             `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
             `**Status:** Active\n` +
             `**Click to join:** ${channelLink}\n\n` +
-            `**First Message:** ${message}\n` +
             `**Location:** :flag-VN: ${location}\n` +
             `**Local Time:** ${localTime}\n\n` +
+            `**First Message:** ${message}\n` +
+            `---\n`;
+    }
+
+    // Add this method to the MattermostService class
+    formatOfflineMessage(
+        sessionId: string,
+        message: string,
+        email: string,
+        name: string | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): string {
+        return `### :email: Live-chat offline message\n\n` +
+            `**Offline message from:** ${email}\n\n` +
+            `---\n\n` +
+            `**Message:**\n` +
+            `> ${message.split('\n').join('\n> ')}\n\n` +
+            `---\n\n` +
+            `**Email:** ${email}\n` +
+            `**Name:** ${name || 'Not provided'}\n\n` +
+            `**Location:** :flag-VN: ${location}\n` +
+            `**Local Time:** ${localTime}\n\n` +
+            `**Current Page:** ${referer}\n` +
+            `**Session ID:** ${sessionId}\n\n` +
             `---\n`;
     }
 

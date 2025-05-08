@@ -204,7 +204,7 @@ export class ChatSessionService {
                 await chatService.sendMessage(
                     session.channel_id,
                     `Chat session ended`,
-                    workspace.bot_token // Pass the bot token to ensure message is sent from the bot account
+                    workspace.bot_token
                 );
             }
 
@@ -283,8 +283,11 @@ export class ChatSessionService {
         // Get the workspace
         const workspace = await this.workspaceService.findById(workspaceId);
         if (!workspace || !workspace.bot_token || !workspace.selected_channel_id) {
-            throw new Error('Workspace not configured for Slack');
+            throw new Error(`Workspace not fully configured for ${workspace?.service_type || 'unknown service'}`);
         }
+
+        // Get appropriate chat service adapter based on workspace type
+        const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
 
         // Get additional context information
         const referer = request?.headers['referer'] || 'Unknown Page';
@@ -292,99 +295,27 @@ export class ChatSessionService {
         const vietnamTime = new Date(new Date().getTime() + (7 * 60 * 60 * 1000));
         const localTime = format(vietnamTime, 'hh:mm a');
 
-        // Build the message blocks for Slack
-        const messageBlocks = [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Live-chat offline message",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": `:email: *Offline message from ${email}*`
-                }
-            },
-            {
-                "type": "divider"
-            },
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": ":memo: *Message:*"
-                    }
-                ]
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": `>${message.split('\n').join('\n>')}`
-                }
-            },
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": `*Email:* ${email}`
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": name ? `*Name:* ${name}` : "*Name:* Not provided"
-                    }
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": `*Location:* :flag-VN: ${location}`
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": `*Local Time:* ${localTime}`
-                    }
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": `*Current Page:* ${referer}`
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": `*Session ID:* ${sessionId}`
-                    }
-                ]
-            },
-            {
-                "type": "divider"
-            },
-        ];
+        // Format the offline message using the adapter
+        const offlineMessage = chatService.formatOfflineMessage(
+            sessionId,
+            message,
+            email,
+            name,
+            referer,
+            location,
+            localTime
+        );
 
         try {
-            // Post to the Slack channel
-            await this.slackService.postBlockKitMessage(
-                workspace.bot_token,
+            // Send the message using the adapter's sendMessage method
+            await chatService.sendMessage(
                 workspace.selected_channel_id,
-                messageBlocks
+                offlineMessage,
+                workspace.bot_token
             );
         } catch (error) {
-            console.error('Error posting Block Kit message to Slack:', error);
-            throw new Error('Failed to send message to Slack');
+            console.error(`Error sending offline message to ${workspace.service_type}:`, error);
+            throw new Error(`Failed to send offline message to ${workspace.service_type}`);
         }
     }
 

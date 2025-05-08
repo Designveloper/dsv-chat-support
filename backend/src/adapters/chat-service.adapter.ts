@@ -21,7 +21,7 @@ export interface ChatServiceAdapter {
         referer: string,
         location: string,
         localTime: string,
-        channelId: string  // Add channelId parameter
+        channelId: string
     ): string | any[];
 
     formatNotificationMessage(
@@ -32,7 +32,17 @@ export interface ChatServiceAdapter {
         referer: string,
         location: string,
         localTime: string,
-        channelId: string  // Add channelId parameter
+        channelId: string
+    ): string | any[];
+
+    formatOfflineMessage(
+        sessionId: string,
+        message: string,
+        email: string,
+        name: string | undefined,
+        referer: string,
+        location: string,
+        localTime: string
     ): string | any[];
 
     getToken?(): string;

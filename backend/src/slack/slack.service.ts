@@ -274,8 +274,6 @@ export class SlackService {
         }
     }
 
-    // Add this method to implement the ChatServiceAdapter interface
-
     // Replace your current sendMessage method with this one
     async sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void> {
         console.log("🚀 ~ SlackService ~ sendMessage ~ channelId:", channelId);
@@ -522,6 +520,99 @@ export class SlackService {
             {
                 "type": "divider"
             },
+        ];
+    }
+
+    // Add this method to the SlackService class
+    formatOfflineMessage(
+        sessionId: string,
+        message: string,
+        email: string,
+        name: string | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): any[] {
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Live-chat offline message",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `:email: *Offline message from ${email}*`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": ":memo: *Message:*"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `>${message.split('\n').join('\n>')}`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Email:* ${email}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": name ? `*Name:* ${name}` : "*Name:* Not provided"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Location:* :flag-VN: ${location}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Local Time:* ${localTime}`
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Current Page:* ${referer}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Session ID:* ${sessionId}`
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            }
         ];
     }
 }
