@@ -26,9 +26,6 @@ export class WorkSpace {
   service_type: string; // e.g., "slack"
 
   @Column({ type: 'varchar', nullable: true })
-  service_slack_account_id: string;
-
-  @Column({ type: 'varchar', nullable: true })
   service_username: string;
 
   @Column({ type: 'varchar', nullable: true })

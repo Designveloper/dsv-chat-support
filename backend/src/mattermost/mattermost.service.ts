@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { Server } from 'socket.io';
 import { ChatServiceAdapter } from '../adapters/chat-service.adapter';
 import { WorkspaceService } from 'src/workspace/workspace.service';
+import { WorkSpace } from 'src/workspace/workspace.entity';
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export class MattermostService implements ChatServiceAdapter {
@@ -26,10 +28,9 @@ export class MattermostService implements ChatServiceAdapter {
             throw new Error('Server URL is required for Mattermost initialization');
         }
 
-        // Clean up the server URL by removing trailing slashes
+        // Clean up the server URL
         const cleanServerUrl = serverUrl.replace(/\/+$/, '');
 
-        // Make sure URL doesn't already include /api/v4
         const baseUrl = cleanServerUrl.includes('/api/v4')
             ? cleanServerUrl.split('/api/v4')[0]
             : cleanServerUrl;
@@ -37,7 +38,7 @@ export class MattermostService implements ChatServiceAdapter {
         console.log(`Setting Mattermost base URL to: ${baseUrl}`);
         this.client.setUrl(baseUrl);
 
-        // Set token if provided (main authentication method)
+        // Set token if provided
         if (token) {
             this.client.setToken(token);
             console.log('Client initialized with provided token');
@@ -58,6 +59,53 @@ export class MattermostService implements ChatServiceAdapter {
                 // Re-initialize WebSocket after successful authentication
                 console.log('Reconnecting WebSocket after authentication');
                 this.setupWebSocketConnection();
+            }
+        }
+    }
+
+    async initializeFromWorkspace(workspace: WorkSpace): Promise<void> {
+        // Basic initialization with workspace settings
+        await this.initialize(
+            workspace.server_url,
+            undefined,
+            undefined,
+            workspace.service_token,
+            workspace.service_team_id,
+            workspace.bot_token
+        );
+
+        // Try to authenticate with admin token
+        try {
+            await this.getMe();
+        } catch (authError) {
+            if (authError.status_code === 401 && workspace.bot_token) {
+                console.log('Admin token expired, switching to bot token');
+                this.setToken(workspace.bot_token);
+            }
+        }
+
+        // Handle bot token and user ID if available
+        if (workspace.bot_token) {
+            try {
+                console.log('Bot token available, registering bot user ID...');
+                const originalToken = this.getToken();
+
+                // Temporarily use the bot token to get user info
+                this.setToken(workspace.bot_token);
+
+                // Get the bot's user ID
+                const me = await this.getMe();
+                if (me && me.id) {
+                    console.log(`Discovered bot user ID: ${me.id}`);
+                    this.registerBotUserId(me.id);
+                }
+
+                // Restore original token if needed
+                if (originalToken && originalToken !== workspace.bot_token) {
+                    this.setToken(originalToken);
+                }
+            } catch (error) {
+                console.error('Failed to fetch bot user ID:', error);
             }
         }
     }
@@ -178,6 +226,177 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
+    async connectWorkspace(userId: number, serverUrl: string, username: string, password: string, workspaceName?: string): Promise<{ workspace: any; success: boolean; message: string }> {
+        try {
+            // Initialize client with the server URL
+            await this.initialize(serverUrl, username, password);
+
+            // Authenticate with the provided credentials
+            const isAuthenticated = await this.authenticate(username, password);
+            if (!isAuthenticated) {
+                return { workspace: null, success: false, message: 'Authentication failed' };
+            }
+
+            // Get token from the current client session
+            const token = this.getToken();
+
+            // Create a new workspace ID
+            const workspaceId = uuidv4();
+            const name = workspaceName || "Default Workspace";
+
+            // Get or create the entity type for the workspace
+            const entityType = await this.workspaceService.getOrCreateEntityType('workspace', 'Default workspace entity type');
+
+            // Create the workspace entry
+            const workspace = await this.workspaceService.create(
+                userId,
+                name,
+                'mattermost',
+                entityType.type_id,
+            );
+
+            // Save the Mattermost details to the workspace
+            await this.workspaceService.updateMattermostDetails(
+                workspace.id,
+                serverUrl,
+                username,
+                password,
+                token,
+            );
+
+            return {
+                workspace,
+                success: true,
+                message: 'Connected to Mattermost successfully'
+            };
+        }
+        catch (error) {
+            console.error('Error connecting to Mattermost:', error);
+            return { workspace: null, success: false, message: 'Connection failed: ' + error.message };
+        }
+    }
+
+    async connectBotToWorkspace(workspaceId: string, botToken: string): Promise<{ success: boolean; message: string }> {
+        try {
+            // Verify workspace exists
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            // Update the bot token in the workspace record
+            await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
+
+            return {
+                success: true,
+                message: 'Bot connected successfully'
+            };
+        } catch (error) {
+            console.error('Error connecting bot:', error);
+            return { success: false, message: 'Failed to connect bot: ' + error.message };
+        }
+    }
+
+    async getTeamsForWorkspace(workspaceId: string): Promise<{ teams?: any[]; success: boolean; message: string }> {
+        try {
+            // Get the workspace details from the database
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            if (!workspace.service_token) {
+                return { success: false, message: 'No token found for this workspace' };
+            }
+
+            // Initialize Mattermost client with workspace credentials from DB
+            await this.initialize(
+                workspace.server_url,
+                undefined,
+                undefined,
+                workspace.service_token
+            );
+
+            // Get teams
+            const teams = await this.listTeams();
+            return { teams, success: true, message: 'Teams fetched successfully' };
+        } catch (error) {
+            console.error('Error fetching Mattermost teams:', error);
+            return { success: false, message: 'Failed to fetch teams: ' + error.message };
+        }
+    }
+
+    async selectTeamForWorkspace(workspaceId: string, teamId: string): Promise<{ success: boolean; message: string }> {
+        try {
+            // Verify workspace exists
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            // Update the selected team in the workspace record
+            await this.workspaceService.updateMattermostTeam(workspaceId, teamId);
+
+            return { success: true, message: 'Team selected successfully' };
+        } catch (error) {
+            console.error('Error selecting Mattermost team:', error);
+            return { success: false, message: 'Failed to select team: ' + error.message };
+        }
+    }
+
+    async getChannelsForWorkspace(workspaceId: string): Promise<{ channels?: any[]; success: boolean; message: string }> {
+        try {
+            // Get the workspace details from the database
+            const workspace = await this.workspaceService.findById(workspaceId);
+
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            if (!workspace.service_token) {
+                return { success: false, message: 'No token found for this workspace' };
+            }
+
+            if (!workspace.service_team_id) {
+                return { success: false, message: 'No team selected for this workspace' };
+            }
+
+            // Initialize Mattermost client with workspace credentials from DB
+            await this.initialize(
+                workspace.server_url,
+                undefined,
+                undefined,
+                workspace.service_token
+            );
+
+            // Get channels using the team ID from the workspace
+            const channels = await this.listChannels(workspace.service_team_id);
+            return { channels, success: true, message: 'Channels fetched successfully' };
+        } catch (error) {
+            console.error('Error fetching Mattermost channels:', error);
+            return { success: false, message: 'Failed to fetch channels: ' + error.message };
+        }
+    }
+
+    async selectChannelForWorkspace(workspaceId: string, channelId: string): Promise<{ success: boolean; message: string }> {
+        try {
+            // Verify workspace exists
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                return { success: false, message: 'Workspace not found' };
+            }
+
+            // Update the selected channel in the workspace record
+            await this.workspaceService.updateMattermostChannel(workspaceId, channelId);
+
+            return { success: true, message: 'Channel selected successfully' };
+        } catch (error) {
+            console.error('Error selecting Mattermost channel:', error);
+            return { success: false, message: 'Failed to select channel: ' + error.message };
+        }
+    }
+
     async listTeams(): Promise<any[]> {
         try {
             console.log('Fetching teams from Mattermost...');
@@ -205,7 +424,6 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    // Add method to create a team if needed
     async createTeam(name: string, displayName: string): Promise<string> {
         try {
             console.log(`Creating team: ${displayName}`);
@@ -302,7 +520,6 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    // Modify the sendMessage method to track the bot user ID when sending messages
     async sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void> {
         try {
             const post: any = {
@@ -325,16 +542,8 @@ export class MattermostService implements ChatServiceAdapter {
                 this.client.setToken(botToken);
 
                 try {
-                    // Get the bot user ID before sending the message
-                    const me = await this.client.getMe();
-                    if (me && me.id) {
-                        console.log(`Recording bot user ID: ${me.id}`);
-                        this.botUserIds.add(me.id);
-                    }
-
                     await this.client.createPost(post);
                 } finally {
-                    // Restore the original token
                     if (originalToken) {
                         this.client.setToken(originalToken);
                     }
@@ -394,7 +603,6 @@ export class MattermostService implements ChatServiceAdapter {
             `---\n`;
     }
 
-    // Add this method to the MattermostService class
     formatOfflineMessage(
         sessionId: string,
         message: string,
@@ -419,7 +627,6 @@ export class MattermostService implements ChatServiceAdapter {
             `---\n`;
     }
 
-    // Add a method to register a bot user ID (for use when initializing with a known bot)
     registerBotUserId(userId: string): void {
         if (userId) {
             console.log(`Registering bot user ID: ${userId}`);

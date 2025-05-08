@@ -30,7 +30,6 @@ export class WorkspaceService {
     workspaceId: string,
     botToken: string,
     selectedChannelId: string,
-    slackWorkspaceId: string,
   ): Promise<WorkSpace> {
     const workspace = await this.workspacesRepository.findOne({ where: { id: workspaceId } });
     if (!workspace) {
@@ -38,7 +37,6 @@ export class WorkspaceService {
     }
     workspace.bot_token = botToken;
     workspace.selected_channel_id = selectedChannelId;
-    workspace.service_slack_account_id = slackWorkspaceId;
     console.log('Updating workspace:', workspace);
     return this.workspacesRepository.save(workspace);
   }
@@ -56,12 +54,6 @@ export class WorkspaceService {
       throw new Error('Workspace not found');
     }
     return workspace;
-  }
-
-  async findBySlackWorkspaceId(slackWorkspaceId: string): Promise<WorkSpace | null> {
-    return this.workspacesRepository.findOne({
-      where: { service_slack_account_id: slackWorkspaceId }
-    });
   }
 
   async findAll(): Promise<WorkSpace[]> {

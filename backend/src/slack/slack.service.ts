@@ -99,7 +99,6 @@ export class SlackService {
                     workspace.id,
                     botToken,
                     '',
-                    slackWorkspaceId
                 );
 
                 // Redirect to channel selection page
@@ -182,7 +181,6 @@ export class SlackService {
                 workspaceId,
                 workspace.bot_token,
                 channelId,
-                workspace.service_slack_account_id
             );
 
             return { success: true };

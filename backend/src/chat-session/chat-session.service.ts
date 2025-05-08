@@ -21,9 +21,9 @@ export class ChatSessionService {
         private workspaceService: WorkspaceService,
         @Inject(forwardRef(() => MattermostService))
         private mattermostService: MattermostService,
-        @Inject(forwardRef(() => SlackService))  // Add forwardRef here
+        @Inject(forwardRef(() => SlackService))
         private slackService: SlackService,
-        @Inject(forwardRef(() => SlackBoltService)) // Add forwardRef for circular dependency
+        @Inject(forwardRef(() => SlackBoltService))
         private slackBoltService: SlackBoltService,
         @InjectRepository(ChatSession)
         private chatSessionRepository: Repository<ChatSession>,
@@ -347,7 +347,6 @@ export class ChatSessionService {
     }
 
     async trackStaffMessage(sessionId: string): Promise<void> {
-        // Forward to no-response tracker with isUserMessage=false to indicate this is a staff response
         await this.noResponseTracker.trackUserMessage(sessionId, false);
     }
 }
