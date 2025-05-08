@@ -17,11 +17,11 @@ import { MattermostModule } from 'src/mattermost/mattermost.module';
         forwardRef(() => WorkspaceModule),
         forwardRef(() => SlackModule),
         EavModule,
-        AdaptersModule,
+        forwardRef(() => AdaptersModule),
         forwardRef(() => MattermostModule),
     ],
     controllers: [ChatSessionController],
     providers: [ChatSessionService, ChatGateway, NoResponseTrackerService],
-    exports: [ChatSessionService],
+    exports: [ChatSessionService, NoResponseTrackerService],
 })
 export class ChatSessionModule { }

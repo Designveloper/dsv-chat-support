@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ChatServiceAdapter } from './chat-service.adapter';
 import { SlackService } from '../slack/slack.service';
 import { MattermostService } from '../mattermost/mattermost.service';
@@ -7,7 +7,9 @@ import { WorkSpace } from '../workspace/workspace.entity';
 @Injectable()
 export class ChatServiceFactory {
     constructor(
+        @Inject(forwardRef(() => SlackService))
         private slackService: SlackService,
+        @Inject(forwardRef(() => MattermostService))
         private mattermostService: MattermostService
     ) { }
 
@@ -43,6 +45,16 @@ export class ChatServiceFactory {
                 workspace.service_team_id,
                 workspace.bot_token
             );
+
+            try {
+                await this.mattermostService.getMe();
+            } catch (authError) {
+                // If the token is expired and we have a bot token, try using that
+                if (authError.status_code === 401 && workspace.bot_token) {
+                    console.log('Admin token expired, switching to bot token');
+                    this.mattermostService.setToken(workspace.bot_token);
+                }
+            }
 
             // Register bot user ID if available
             if (workspace.service_slack_account_id) {

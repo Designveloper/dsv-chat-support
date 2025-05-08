@@ -13,11 +13,15 @@ import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-
 import { NoResponseTrackerService } from './no-response-tracker.service';
 import { ChatServiceFactory } from '../adapters/chat-service.factory';
 import { ChatServiceAdapter } from '../adapters/chat-service.adapter';
+import { MattermostService } from 'src/mattermost/mattermost.service';
 
 @Injectable()
 export class ChatSessionService {
     constructor(
         private workspaceService: WorkspaceService,
+        @Inject(forwardRef(() => MattermostService))
+        private mattermostService: MattermostService,
+        @Inject(forwardRef(() => SlackService))  // Add forwardRef here
         private slackService: SlackService,
         @Inject(forwardRef(() => SlackBoltService)) // Add forwardRef for circular dependency
         private slackBoltService: SlackBoltService,
@@ -158,24 +162,26 @@ export class ChatSessionService {
                 throw new Error('Failed to create chat channel');
             }
         } else {
-            try {
-                const location = 'Ho Chi Minh City, Vietnam';
-                let username = effectiveUserInfo?.email || location;
+            console.log(`Using existing channel for chat session:`, session.channel_id);
+        }
 
-                await chatService.joinChannel(session.channel_id, workspace.bot_token);
+        try {
+            const location = 'Ho Chi Minh City, Vietnam';
+            let username = effectiveUserInfo?.email || location;
 
-                await chatService.sendMessage(
-                    session.channel_id,
-                    message,
-                    workspace.bot_token,
-                    username
-                );
+            await chatService.joinChannel(session.channel_id, workspace.bot_token);
 
-                await this.noResponseTracker.trackUserMessage(sessionId, true);
-            } catch (error) {
-                console.error(`Error sending message to channel:`, error);
-                throw new Error(`Failed to send message to channel`);
-            }
+            await chatService.sendMessage(
+                session.channel_id,
+                message,
+                workspace.bot_token,
+                username
+            );
+
+            await this.noResponseTracker.trackUserMessage(sessionId, true);
+        } catch (error) {
+            console.error(`Error sending message to channel:`, error);
+            throw new Error(`Failed to send message to channel`);
         }
     }
     async endChatSession(sessionId: string): Promise<void> {
@@ -237,9 +243,30 @@ export class ChatSessionService {
                 return true;
             }
 
-            const isOnline = await this.slackBoltService.isWorkspaceOnline(workspaceId);
-            console.log(`Workspace ${workspaceId} actual online status: ${isOnline}`);
-            return isOnline;
+            // Get the workspace to determine the service type
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace) {
+                console.error(`Workspace ${workspaceId} not found`);
+                return false;
+            }
+
+            // Use the adapter pattern to get the appropriate service
+            try {
+                const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
+
+                // Use the adapter's isWorkspaceOnline method
+                if (chatService.isWorkspaceOnline) {
+                    const isOnline = await chatService.isWorkspaceOnline(workspaceId);
+                    console.log(`${workspace.service_type} workspace ${workspaceId} online status: ${isOnline}`);
+                    return isOnline;
+                } else {
+                    console.log(`${workspace.service_type} adapter does not implement isWorkspaceOnline, returning false`);
+                    return false;
+                }
+            } catch (error) {
+                console.error(`Error getting adapter for workspace ${workspaceId}:`, error);
+                return false;
+            }
         } catch (error) {
             console.error(`Error checking workspace ${workspaceId} online status: ${error.message}`, error.stack);
             return false; // Default to offline if there's an error

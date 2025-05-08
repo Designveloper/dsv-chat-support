@@ -6,7 +6,7 @@ import { MattermostModule } from '../mattermost/mattermost.module';
 @Module({
     imports: [
         forwardRef(() => SlackModule),
-        MattermostModule,
+        forwardRef(() => MattermostModule),
     ],
     providers: [ChatServiceFactory],
     exports: [ChatServiceFactory],

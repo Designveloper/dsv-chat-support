@@ -74,7 +74,11 @@ const WorkspaceSelector = ({ onSelect, onClose }: WorkspaceSelectorProps) => {
                     {new Date(workspace.createdAt).toLocaleDateString()}
                   </p>
                   <p>
-                    Slack Status:{" "}
+                    {workspace.service_type
+                      ? workspace.service_type.charAt(0).toUpperCase() +
+                        workspace.service_type.slice(1)
+                      : "Unknown"}{" "}
+                    Status:{" "}
                     {workspace.bot_token ? "Connected" : "Not connected"}
                   </p>
                 </div>

@@ -3,6 +3,7 @@ import { ChatSessionService } from './chat-session.service';
 import { WorkspaceSettingsService, WORKSPACE_SETTINGS } from 'src/eav/workspace-settings.service';
 import { SlackService } from '../slack/slack.service';
 import { differenceInSeconds } from 'date-fns';
+import { ChatServiceFactory } from 'src/adapters/chat-service.factory';
 
 const activeTimer = new Map<string, NodeJS.Timeout>();
 const lastUserMessageTime = new Map<string, Date>();
@@ -14,7 +15,7 @@ export class NoResponseTrackerService {
         @Inject(forwardRef(() => ChatSessionService))
         private chatSessionService: ChatSessionService,
         private workspaceSettingsService: WorkspaceSettingsService,
-        private slackService: SlackService,
+        private chatServiceFactory: ChatServiceFactory,
     ) { }
 
     async trackUserMessage(sessionId: string, isUserMessage: boolean): Promise<void> {
@@ -108,13 +109,16 @@ export class NoResponseTrackerService {
             }
 
             const elapsedSeconds = differenceInSeconds(new Date(), lastUserMessageTime.get(session.session_id) || new Date());
-
             const formattedTime = this.formatElapsedTime(elapsedSeconds);
 
-            await this.slackService.postMessage(
-                workspace.bot_token,
+            // Use the adapter pattern to get the appropriate service
+            const chatService = await this.chatServiceFactory.getChatServiceAdapter(workspace);
+
+            // Send the message using the correct service adapter
+            await chatService.sendMessage(
                 session.channel_id,
-                `:exclamation: No reply sent after ${formattedTime}.`
+                `:exclamation: No reply sent after ${formattedTime}.`,
+                workspace.bot_token
             );
         } catch (error) {
             console.error('Error sending warning message:', error);

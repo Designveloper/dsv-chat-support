@@ -1,13 +1,15 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MattermostService } from './mattermost.service';
 import { MattermostController } from './mattermost.controller';
 import { WorkspaceModule } from 'src/workspace/workspace.module';
+import { ChatSessionModule } from 'src/chat-session/chat-session.module';
 
 @Module({
     imports: [
         ConfigModule,
-        WorkspaceModule,
+        forwardRef(() => WorkspaceModule),
+        forwardRef(() => ChatSessionModule),
     ],
     providers: [MattermostService],
     controllers: [MattermostController],

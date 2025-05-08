@@ -5,6 +5,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { WorkspaceService } from '../workspace/workspace.service';
 import { EavService } from 'src/eav/eav.service';
+import { ModuleRef } from '@nestjs/core';
+import { SlackBoltService } from './slack-bolt.service';
 
 @Injectable()
 export class SlackService {
@@ -15,6 +17,7 @@ export class SlackService {
         private httpService: HttpService,
         private workspaceService: WorkspaceService,
         private eavService: EavService,
+        private moduleRef: ModuleRef
     ) {
         this.slackClient = new WebClient();
     }
@@ -614,5 +617,22 @@ export class SlackService {
                 "type": "divider"
             }
         ];
+    }
+
+    async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
+        try {
+            const slackBoltService = await this.moduleRef.get(SlackBoltService, { strict: false });
+
+            if (slackBoltService && slackBoltService.isWorkspaceOnline) {
+                // Delegate to the bolt service implementation
+                return await slackBoltService.isWorkspaceOnline(workspaceId);
+            }
+
+            console.log(`Unable to check Slack workspace ${workspaceId} status, returning true as default`);
+            return true;
+        } catch (error) {
+            console.error('Error checking Slack workspace online status:', error);
+            return true; // Default to online for Slack if there's an error
+        }
     }
 }

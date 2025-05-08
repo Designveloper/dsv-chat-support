@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Client4, WebSocketClient } from '@mattermost/client';
 import { ConfigService } from '@nestjs/config';
 import { Server } from 'socket.io';
 import { ChatServiceAdapter } from '../adapters/chat-service.adapter';
+import { WorkspaceService } from 'src/workspace/workspace.service';
 
 @Injectable()
 export class MattermostService implements ChatServiceAdapter {
@@ -12,8 +13,11 @@ export class MattermostService implements ChatServiceAdapter {
     private messageHandler: Function | null = null;
     private botUserIds: Set<string> = new Set();
 
-
-    constructor(private configService: ConfigService) {
+    constructor(
+        private configService: ConfigService,
+        @Inject(forwardRef(() => WorkspaceService))
+        private workspaceService: WorkspaceService
+    ) {
         this.client = new Client4();
     }
 
@@ -359,10 +363,10 @@ export class MattermostService implements ChatServiceAdapter {
             `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
             `**Status:** Active\n` +
             `**Session ID:** ${sessionId}\n\n` +
+            `**First Message:** ${message}\n` +
             `**Location:** :flag-VN: ${location}\n` +
             `**Local Time:** ${localTime}\n` +
             `**Current Page:** ${referer}\n\n` +
-            `**First Message:** ${message}\n` +
             `---\n`;
     }
 
@@ -384,9 +388,9 @@ export class MattermostService implements ChatServiceAdapter {
             `${userInfo?.userId ? `**Name:** ${userInfo.userId}\n` : ''}` +
             `**Status:** Active\n` +
             `**Click to join:** ${channelLink}\n\n` +
+            `**First Message:** ${message}\n` +
             `**Location:** :flag-VN: ${location}\n` +
             `**Local Time:** ${localTime}\n\n` +
-            `**First Message:** ${message}\n` +
             `---\n`;
     }
 
@@ -470,6 +474,88 @@ export class MattermostService implements ChatServiceAdapter {
             console.log('Closing Mattermost WebSocket connection');
             this.wsClient.close();
             this.wsClient = null;
+        }
+    }
+
+    async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
+        try {
+            // Get the workspace by ID
+            const workspace = await this.workspaceService.findById(workspaceId);
+            if (!workspace || !workspace.selected_channel_id) {
+                console.log(`Workspace ${workspaceId} not found or channel not selected`);
+                return false;
+            }
+
+            // Initialize the Mattermost client with workspace credentials
+            await this.initialize(
+                workspace.server_url,
+                undefined,
+                undefined,
+                workspace.service_token,
+                workspace.service_team_id
+            );
+
+            try {
+                await this.joinChannel(workspace.selected_channel_id);
+            } catch (joinError) {
+                console.log(`Error joining channel: ${joinError.message}`);
+            }
+
+            // Get channel members
+            console.log(`Getting members for channel ${workspace.selected_channel_id}`);
+            const channelMembers = await this.client.getChannelMembers(workspace.selected_channel_id);
+
+            if (!channelMembers || !channelMembers.length) {
+                console.log('No members found in channel');
+                return false;
+            }
+
+            // Get bot and system user IDs to filter them out
+            const botUserIds = this.botUserIds;
+            const currentClientUserId = this.client.userId;
+
+            // Check presence status for each member
+            for (const member of channelMembers) {
+                const userId = member.user_id;
+
+                // Skip known bot users
+                if (botUserIds.has(userId)) {
+                    console.log(`Skipping bot user: ${userId}`);
+                    continue;
+                }
+
+                // Skip the client's own user ID
+                if (userId === currentClientUserId) {
+                    console.log(`Skipping current client user: ${userId}`);
+                    continue;
+                }
+
+                console.log(`Checking presence for staff user ${userId}`)
+                try {
+                    // Get additional user info to check if this is a bot account
+                    const userInfo = await this.client.getUser(userId);
+                    if (userInfo && (userInfo.is_bot || userInfo.roles.includes('system_admin') && userInfo.username.includes('bot'))) {
+                        console.log(`Skipping system bot user: ${userId}`);
+                        continue;
+                    }
+
+                    // Get user status
+                    const userStatus = await this.client.getStatus(userId);
+                    console.log(`Staff user ${userId} has status: ${userStatus.status}`);
+
+                    // Consider "online" or "away" as active
+                    if (userStatus.status === 'online' || userStatus.status === 'away') {
+                        return true;
+                    }
+                } catch (statusError) {
+                    console.error(`Error checking status for user ${userId}:`, statusError);
+                }
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Error checking Mattermost workspace online status:', error);
+            return false; // Default to offline on error
         }
     }
 }

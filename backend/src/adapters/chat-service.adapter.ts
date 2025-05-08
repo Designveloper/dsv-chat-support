@@ -46,4 +46,6 @@ export interface ChatServiceAdapter {
     ): string | any[];
 
     getToken?(): string;
+
+    isWorkspaceOnline?(workspaceId: string): Promise<boolean>;
 }
