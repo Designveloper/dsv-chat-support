@@ -28,6 +28,16 @@
     }
 }
 
+.btn--secondary {
+    background-color: #e0e0e0;
+    color: #333;
+
+    &:hover:not(:disabled) {
+        background-color: #c0c0c0;
+        color: #333;
+    }
+}
+
 .btn--outline {
     background-color: transparent;
     color: vars.$primary-color;

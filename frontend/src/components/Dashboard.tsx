@@ -7,6 +7,7 @@ import Button from "./Button";
 import Layout from "./Layout";
 import mattermostLogo from "../assets/mattermost-logo.png";
 import ChatWidget from "./ChatWidget";
+import ServiceSelectionModal from "./ServiceSelectionModal";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isMattermostLoading, setIsMattermostLoading] = useState(false);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
 
   useEffect(() => {
     fetchWorkspaces();
@@ -31,6 +33,10 @@ const Dashboard = () => {
       setError(params.get("error"));
     }
   }, [location]);
+
+  const handleOpenServiceModal = () => {
+    setIsServiceModalOpen(true);
+  };
 
   const fetchWorkspaces = async () => {
     try {
@@ -144,19 +150,18 @@ const Dashboard = () => {
           <div className="settings__content-section">
             {activeTab === "overview" && (
               <section className="dashboard__integrations-section">
-                {slackConnected ? (
+                {workspaces.length > 0 ? (
                   <div className="dashboard__header-actions">
                     <h2>Your workspaces</h2>
                     <Button
                       label="Add New Workspace"
-                      onClick={handleAddToSlack}
+                      onClick={handleOpenServiceModal}
                       className="dashboard__create-btn"
                     />
                   </div>
                 ) : (
                   <h2>
-                    Click the button below to add Chat Support to your Slack
-                    account
+                    Click the button below to add Chat Support to your workspace
                   </h2>
                 )}
 
@@ -179,7 +184,13 @@ const Dashboard = () => {
                               ).toLocaleDateString()}
                             </p>
                             <p>
-                              Slack:{" "}
+                              {workspace.service_type
+                                ? workspace.service_type
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  workspace.service_type.slice(1)
+                                : "Unknown"}
+                              :{" "}
                               {workspace.bot_token ? (
                                 <span className="dashboard__badge dashboard__badge--success">
                                   Connected
@@ -256,6 +267,12 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <ServiceSelectionModal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        onSelectSlack={handleAddToSlack}
+        onSelectMattermost={handleConnectToMattermost}
+      />
       <ChatWidget workspaceId={workspaces[0]?.id}></ChatWidget>
     </Layout>
   );

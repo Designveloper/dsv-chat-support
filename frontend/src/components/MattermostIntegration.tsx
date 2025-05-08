@@ -8,10 +8,8 @@ import {
 } from "../services/mattermostService";
 import Button from "./Button";
 import Layout from "./Layout";
-import { useAuth } from "../context/AuthContext";
 
 const MattermostIntegration = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Form states
@@ -231,7 +229,7 @@ const MattermostIntegration = () => {
               <Button
                 label="Cancel"
                 onClick={() => navigate("/dashboard")}
-                className="button-secondary"
+                variant="secondary"
               />
               <Button
                 label={loading ? "Connecting..." : "Connect"}
@@ -278,7 +276,7 @@ const MattermostIntegration = () => {
               <Button
                 label="Back"
                 onClick={() => setStep(1)}
-                className="button-secondary"
+                variant="secondary"
                 disabled={loading}
               />
               <Button
@@ -293,52 +291,87 @@ const MattermostIntegration = () => {
       case 3:
         return (
           <form onSubmit={handleConnectBot} className="mattermost-form">
-            <h2>Connect Bot Account (Optional)</h2>
-            <p>Add a bot token to enable advanced features</p>
+            <h2>Connect Bot Account</h2>
+            <p>
+              Add a bot token to enable posting messages as a dedicated bot.
+              This is required for proper message attribution in your Mattermost
+              channels.
+            </p>
+
+            <div className="bot-instructions">
+              <h3>How to create a Mattermost bot:</h3>
+              <ol>
+                <li>Log in to Mattermost as a System Admin</li>
+                <li>
+                  Go to <strong>System Console</strong> →{" "}
+                  <strong>Integrations</strong> → <strong>Bot Accounts</strong>
+                </li>
+                <li>
+                  Click <strong>Add Bot Account</strong>
+                </li>
+                <li>
+                  Fill in the required fields:
+                  <ul>
+                    <li>
+                      <strong>Username:</strong> Choose a name (e.g.,
+                      support-bot)
+                    </li>
+                    <li>
+                      <strong>Display Name:</strong> How the bot will appear
+                      (e.g., Support Bot)
+                    </li>
+                    <li>
+                      <strong>Description:</strong> "Bot for customer support
+                      notifications"
+                    </li>
+                    <li>
+                      Enable <strong>Post All</strong> permission
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Click <strong>Create Bot Account</strong>
+                </li>
+                <li>
+                  On the next screen, copy the <strong>Access Token</strong>
+                </li>
+                <li>Paste the token below</li>
+              </ol>
+              <div className="note-box">
+                <strong>Why a bot is required:</strong> The bot will post
+                notifications when new messages arrive from customers. This
+                ensures visitor messages are clearly distinguished from staff
+                responses, improving your team's workflow.
+              </div>
+            </div>
 
             <div className="form-group">
               <label htmlFor="bot-token">Bot Token</label>
               <input
                 id="bot-token"
                 type="text"
-                placeholder="xoxb-your-bot-token"
+                placeholder="Enter your bot's access token"
                 value={botToken}
                 onChange={(e) => setBotToken(e.target.value)}
+                required
               />
-              <small>
-                You can skip this step if you don't have a bot token yet
-              </small>
             </div>
 
             <div className="form-actions">
               <Button
-                label="Skip"
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    const channelsData = await mattermostService.getChannels(
-                      workspaceId
-                    );
-                    setChannels(channelsData || []);
-                    setStep(4);
-                  } catch (error) {
-                    setError("Failed to fetch channels");
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                className="button-secondary"
+                label="Back"
+                onClick={() => setStep(2)}
+                variant="secondary"
                 disabled={loading}
               />
               <Button
                 label={loading ? "Connecting..." : "Connect Bot"}
                 type="submit"
-                disabled={loading}
+                disabled={loading || !botToken}
               />
             </div>
           </form>
         );
-
       case 4:
         return (
           <form onSubmit={handleSelectChannel} className="mattermost-form">
@@ -375,7 +408,7 @@ const MattermostIntegration = () => {
               <Button
                 label="Skip"
                 onClick={() => navigate("/?mattermostConnected=true")}
-                className="button-secondary"
+                variant="secondary"
                 disabled={loading}
               />
               <Button

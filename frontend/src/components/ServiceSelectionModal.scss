@@ -1,0 +1,108 @@
+@use "../styles/mixins" as mix;
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.service-modal {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #eaeaea;
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+
+        &:hover {
+            color: #333;
+        }
+    }
+
+    &__content {
+        padding: 20px;
+
+        p {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #666;
+        }
+    }
+
+    &__options {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        border: 1px solid #eaeaea;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 16px;
+
+        &:hover {
+            background-color: #f0f0f0;
+        }
+
+        span {
+            margin-left: 12px;
+        }
+    }
+
+    &__mattermost {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__mattermost-icon {
+        margin-right: 8px;
+    }
+
+    @include mix.mobile {
+        width: 95%;
+
+        &__options {
+            gap: 12px;
+        }
+
+        &__option {
+            padding: 12px;
+        }
+    }
+}

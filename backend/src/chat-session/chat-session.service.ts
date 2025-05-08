@@ -79,7 +79,7 @@ export class ChatSessionService {
         }
 
         // Check for required bot token
-        if (!workspace.bot_token) {
+        if (workspace.service_type === 'slack' && !workspace.bot_token) {
             throw new Error('Workspace has no bot token configured');
         }
 
@@ -102,7 +102,7 @@ export class ChatSessionService {
                     : `chat-${sessionId.substring(0, 8)}`;
 
                 // Create the channel using the adapter
-                const channelId = await chatService.createChannel(channelName, workspace.bot_token, workspace.service_team_id);
+                const channelId = await chatService.createChannel(channelName, workspace.bot_token || undefined, workspace.service_team_id);
                 console.log('New channel created:', channelId);
 
                 // Update the chat session with the new channel ID
@@ -129,7 +129,7 @@ export class ChatSessionService {
                 await chatService.sendMessage(
                     channelId,
                     welcomeMessage,
-                    workspace.bot_token // Pass the bot token to ensure message is sent from the bot account
+                    workspace.bot_token
                 );
 
                 // Post notification to the admin-selected channel if it exists

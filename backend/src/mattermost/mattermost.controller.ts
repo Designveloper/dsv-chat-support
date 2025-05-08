@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Res, UseGuards, Body, Query } from "@nestjs/common";
+import { Controller, Get, Post, Req, Param, UseGuards, Body, Query, BadRequestException } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { MattermostService } from "./mattermost.service";
 import { WorkspaceService } from "../workspace/workspace.service";

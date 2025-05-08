@@ -201,12 +201,6 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    private setTemporaryToken(token: string): string | null {
-        const originalToken = this.client.getToken();
-        this.client.setToken(token);
-        return originalToken;
-    }
-
     // Add method to create a team if needed
     async createTeam(name: string, displayName: string): Promise<string> {
         try {
