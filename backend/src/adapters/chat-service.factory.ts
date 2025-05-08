@@ -21,13 +21,9 @@ export class ChatServiceFactory {
             console.log(`Using Slack adapter for workspace ${workspace.id}`);
 
             // Validate Slack configuration
-            if (!workspace.bot_token_slack) {
+            if (!workspace.bot_token) {
                 throw new Error('Missing required Slack configuration for this workspace');
             }
-
-            // Initialize Slack service if needed
-            // (You might need to add an initialize method to your SlackService)
-
             return this.slackService;
 
         } else if (workspace.service_type === 'mattermost') {
@@ -45,7 +41,7 @@ export class ChatServiceFactory {
                 undefined,
                 workspace.service_token,
                 workspace.service_team_id,
-                workspace.bot_token_slack
+                workspace.bot_token
             );
 
             // Register bot user ID if available
@@ -54,13 +50,13 @@ export class ChatServiceFactory {
                 this.mattermostService.registerBotUserId(workspace.service_slack_account_id);
             }
             // If we have a bot token but no user ID, try to fetch and register it
-            else if (workspace.bot_token_slack) {
+            else if (workspace.bot_token) {
                 try {
                     console.log('Bot token available but no user ID. Fetching bot user ID...');
                     const originalToken = this.mattermostService.getToken();
 
                     // Temporarily use the bot token
-                    this.mattermostService.setToken(workspace.bot_token_slack);
+                    this.mattermostService.setToken(workspace.bot_token);
 
                     // Get the bot's user ID
                     const me = await this.mattermostService.getMe();

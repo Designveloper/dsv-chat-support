@@ -226,7 +226,7 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async createChannel(channelName: string, teamId: string): Promise<string> {
+    async createChannel(channelName: string, botToken?: string, teamId?: string): Promise<string> {
         try {
             if (!teamId) {
                 throw new Error('Team ID is required to create a channel in Mattermost');
@@ -305,12 +305,22 @@ export class MattermostService implements ChatServiceAdapter {
     }
 
     // Modify the sendMessage method to track the bot user ID when sending messages
-    async sendMessage(channelId: string, text: string, botToken?: string): Promise<void> {
+    async sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void> {
         try {
-            const post = {
+            const post: any = {
                 channel_id: channelId,
-                message: text,
+                message: text as string,
             };
+
+            // If username is provided, add it to the props
+            console.log("🚀 ~ MattermostService ~ sendMessage ~ username:", username)
+            if (username) {
+                post.props = {
+                    from_webhook: 'true',
+                    override_username: username,
+                };
+                console.log("🚀 ~ MattermostService ~ sendMessage ~ post.props:", post.props)
+            }
 
             if (botToken) {
                 const originalToken = this.client.getToken();
@@ -347,7 +357,8 @@ export class MattermostService implements ChatServiceAdapter {
         userInfo: { email?: string, userId?: string } | undefined,
         referer: string,
         location: string,
-        localTime: string
+        localTime: string,
+        channelId: string  // Add channelId parameter (though not used in the markdown formatting)
     ): string {
         return `### :speech_balloon: New chat session started\n\n` +
             `**User Email:** ${userInfo?.email || 'Anonymous'}\n` +
@@ -368,7 +379,8 @@ export class MattermostService implements ChatServiceAdapter {
         userInfo: { email?: string, userId?: string } | undefined,
         referer: string,
         location: string,
-        localTime: string
+        localTime: string,
+        channelId: string  // Add channelId parameter
     ): string {
         // Create a Mattermost notification with a link to the new channel
         const channelLink = `~${channelName}`; // Mattermost uses ~ for channel links

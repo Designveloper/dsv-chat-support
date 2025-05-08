@@ -20,7 +20,7 @@ export class WorkSpace {
   selected_channel_id: string;
 
   @Column({ type: 'varchar', nullable: true })
-  bot_token_slack: string; // Slack bot token
+  bot_token: string;
 
   @Column({ type: 'varchar', nullable: true })
   service_type: string; // e.g., "slack"

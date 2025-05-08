@@ -182,7 +182,7 @@ const Dashboard = () => {
                             </p>
                             <p>
                               Slack:{" "}
-                              {workspace.bot_token_slack ? (
+                              {workspace.bot_token ? (
                                 <span className="dashboard__badge dashboard__badge--success">
                                   Connected
                                 </span>

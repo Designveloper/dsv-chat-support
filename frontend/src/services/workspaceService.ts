@@ -9,7 +9,7 @@ export interface Workspace {
     owner_id: number;
     createdAt: string;
     updatedAt?: string;
-    bot_token_slack?: string;
+    bot_token?: string;
     selected_channel_id?: string;
     service_slack_account_id?: string;
     service_type?: string;
@@ -94,7 +94,7 @@ export const workspaceService = {
     },
     // Check if any workspace has Slack connected
     hasSlackIntegration(workspaces: Workspace[]): boolean {
-        return workspaces.some(workspace => workspace.bot_token_slack);
+        return workspaces.some(workspace => workspace.bot_token);
     },
 
     // Helper method to execute API calls with token refresh handling

@@ -75,7 +75,7 @@ const WorkspaceSelector = ({ onSelect, onClose }: WorkspaceSelectorProps) => {
                   </p>
                   <p>
                     Slack Status:{" "}
-                    {workspace.bot_token_slack ? "Connected" : "Not connected"}
+                    {workspace.bot_token ? "Connected" : "Not connected"}
                   </p>
                 </div>
               </div>

@@ -153,7 +153,7 @@ export class SlackBoltService implements OnModuleInit {
             try {
                 console.log(`Joining channel ${workspace.selected_channel_id}`);
                 await this.boltApp.client.conversations.join({
-                    token: workspace.bot_token_slack,
+                    token: workspace.bot_token,
                     channel: workspace.selected_channel_id
                 });
             } catch (joinError) {
@@ -161,7 +161,7 @@ export class SlackBoltService implements OnModuleInit {
             }
 
             const membersResponse = await this.boltApp.client.conversations.members({
-                token: workspace.bot_token_slack,
+                token: workspace.bot_token,
                 channel: workspace.selected_channel_id,
             });
 
@@ -169,7 +169,7 @@ export class SlackBoltService implements OnModuleInit {
             for (const memberId of memberIds) {
                 console.log(`Checking presence for user ${memberId}`);
                 const presenceResponse = await this.boltApp.client.users.getPresence({
-                    token: workspace.bot_token_slack,
+                    token: workspace.bot_token,
                     user: memberId,
                 });
                 console.log(`User ${memberId} is ${presenceResponse.presence}`);

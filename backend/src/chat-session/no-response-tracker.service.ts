@@ -99,7 +99,7 @@ export class NoResponseTrackerService {
     private async sendWarningMessage(session: any): Promise<void> {
         try {
             const workspace = await this.chatSessionService.findWorkspaceById(session.workspace_id);
-            if (!workspace || !workspace.bot_token_slack) return;
+            if (!workspace || !workspace.bot_token) return;
 
             const updatedSession = await this.chatSessionService.findSessionBySessionId(session.session_id);
             if (!updatedSession || updatedSession.status !== 'active') {
@@ -112,7 +112,7 @@ export class NoResponseTrackerService {
             const formattedTime = this.formatElapsedTime(elapsedSeconds);
 
             await this.slackService.postMessage(
-                workspace.bot_token_slack,
+                workspace.bot_token,
                 session.channel_id,
                 `:exclamation: No reply sent after ${formattedTime}.`
             );

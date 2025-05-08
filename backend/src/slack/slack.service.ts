@@ -149,11 +149,11 @@ export class SlackService {
                 throw new NotFoundException('Workspace not found');
             }
 
-            if (!workspace.bot_token_slack) {
+            if (!workspace.bot_token) {
                 throw new BadRequestException('Slack not connected to this workspace');
             }
 
-            const channels = await this.listChannels(workspace.bot_token_slack);
+            const channels = await this.listChannels(workspace.bot_token);
             return { channels };
         } catch (error) {
             console.error('Error fetching channels:', error);
@@ -177,7 +177,7 @@ export class SlackService {
             // Update just the channel ID
             await this.workspaceService.updateSlackDetails(
                 workspaceId,
-                workspace.bot_token_slack,
+                workspace.bot_token,
                 channelId,
                 workspace.service_slack_account_id
             );
@@ -189,7 +189,7 @@ export class SlackService {
         }
     }
 
-    async createChannel(botToken: string, channelName: string): Promise<string> {
+    async createChannel(channelName: string, botToken: string, teamId?: string): Promise<string> {
         const web = new WebClient(botToken);
         try {
             console.log(`Creating channel: ${channelName}`);
@@ -276,7 +276,9 @@ export class SlackService {
 
     // Add this method to implement the ChatServiceAdapter interface
 
-    async sendMessage(channelId: string, text: string, botToken?: string): Promise<void> {
+    // Replace your current sendMessage method with this one
+    async sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void> {
+        console.log("🚀 ~ SlackService ~ sendMessage ~ channelId:", channelId);
         try {
             // Determine which token to use
             const token = botToken || this.configService.get('SLACK_BOT_TOKEN');
@@ -285,23 +287,33 @@ export class SlackService {
                 throw new Error('No bot token provided for Slack message');
             }
 
-            // Check if the text is actually a Block Kit message (JSON object)
-            try {
-                const parsedBlocks = JSON.parse(text);
-                if (Array.isArray(parsedBlocks)) {
-                    // If it's a valid Block Kit message, post it using the Block Kit method
-                    await this.postBlockKitMessage(token, channelId, parsedBlocks);
-                    return;
+            // Case 1: text is already an array (Block Kit message)
+            if (Array.isArray(text)) {
+                console.log("Message is already a Block Kit array, sending directly");
+                await this.postBlockKitMessage(token, channelId, text);
+                return;
+            }
+
+            // Case 2: text is a string that might be JSON
+            if (typeof text === 'string') {
+                try {
+                    const parsedBlocks = JSON.parse(text);
+                    if (Array.isArray(parsedBlocks)) {
+                        console.log("Parsed blocks are an array, sending as Block Kit message");
+                        await this.postBlockKitMessage(token, channelId, parsedBlocks);
+                        return;
+                    }
+                } catch (e) {
+                    // Not a JSON string, just continue with regular message
+                    console.log("Not a JSON string, sending as regular message");
                 }
-            } catch (e) {
-                // Not a JSON string, just continue with regular message
             }
 
             // Make sure bot has joined the channel before posting
             await this.joinChannel(token, channelId);
 
             // Post regular text message
-            await this.postMessage(token, channelId, text);
+            await this.postMessage(token, channelId, text as string, username);
         } catch (error) {
             console.error('Error in SlackService.sendMessage:', error);
             throw new Error('Failed to send message to Slack channel');
@@ -314,7 +326,8 @@ export class SlackService {
         userInfo: { email?: string, userId?: string } | undefined,
         referer: string,
         location: string,
-        localTime: string
+        localTime: string,
+        channelId: string  // Add channelId parameter
     ): any[] {
         // Create the user info section
         const userFields: { type: string; text: string }[] = [];
@@ -362,10 +375,10 @@ export class SlackService {
                         "type": "mrkdwn",
                         "text": "*STATUS:*\nActive"
                     },
-                    // {
-                    //     "type": "mrkdwn",
-                    //     "text": "*Channel:*\n<#" + channelId + ">"
-                    // }
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Channel:*\n<#" + channelId + ">"
+                    }
                 ]
             },
             {
@@ -416,7 +429,8 @@ export class SlackService {
         userInfo: { email?: string, userId?: string } | undefined,
         referer: string,
         location: string,
-        localTime: string
+        localTime: string,
+        channelId: string  // Add channelId parameter
     ): any[] {
         // Create the user info section
         const userFields: { type: string; text: string }[] = [];
@@ -464,10 +478,10 @@ export class SlackService {
                         "type": "mrkdwn",
                         "text": "*STATUS:*\nActive"
                     },
-                    // {
-                    //     "type": "mrkdwn",
-                    //     "text": "*Channel:*\n<#" + channelId + "> "
-                    // }
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Channel:*\n<#" + channelId + "> "
+                    }
                 ]
             },
             {
@@ -484,29 +498,29 @@ export class SlackService {
                 ]
             },
             {
-                type: 'section',
-                fields: [
+                "type": "section",
+                "fields": [
                     {
-                        type: 'mrkdwn',
-                        text: '*Local Time:*\n' + localTime,
+                        "type": "mrkdwn",
+                        "text": "*Local Time:*\n" + localTime
                     },
                     {
-                        type: 'mrkdwn',
-                        text: '*Current Page:*\n' + referer,
+                        "type": "mrkdwn",
+                        "text": "*Current Page:*\n" + referer
                     }
                 ]
             },
             {
-                type: 'section',
-                fields: [
+                "type": "section",
+                "fields": [
                     {
-                        type: 'mrkdwn',
-                        text: '*Session ID:*\n' + sessionId,
+                        "type": "mrkdwn",
+                        "text": "*Session ID:*\n" + sessionId
                     }
                 ]
             },
             {
-                type: 'divider'
+                "type": "divider"
             },
         ];
     }

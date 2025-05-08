@@ -49,8 +49,6 @@ export class ChatSessionService {
         return newSession;
     }
 
-    // Update the sendMessage method to use the adapter pattern consistently
-
     async sendMessage(sessionId: string, message: string, request?: Request | null, userInfo?: { email: string, userId?: string }): Promise<void> {
         // Find the chat session
         const session = await this.chatSessionRepository.findOne({ where: { session_id: sessionId } });
@@ -80,14 +78,20 @@ export class ChatSessionService {
             throw new Error('Workspace not found');
         }
 
+        // Check for required bot token
+        if (!workspace.bot_token) {
+            throw new Error('Workspace has no bot token configured');
+        }
+
         // Get the appropriate chat service adapter
         const chatService: ChatServiceAdapter = await this.chatServiceFactory.getChatServiceAdapter(workspace);
 
         // If this is the first message, create a new channel for this chat
         if (!session.channel_id) {
             try {
-                if (!workspace.service_team_id) {
-                    throw new Error('No team selected for this workspace');
+                // For Mattermost, we need a team ID
+                if (workspace.service_type === 'mattermost' && !workspace.service_team_id) {
+                    throw new Error('No team selected for this Mattermost workspace');
                 }
 
                 console.log(`Creating new channel for chat session:`, sessionId);
@@ -98,7 +102,7 @@ export class ChatSessionService {
                     : `chat-${sessionId.substring(0, 8)}`;
 
                 // Create the channel using the adapter
-                const channelId = await chatService.createChannel(channelName, workspace.service_team_id);
+                const channelId = await chatService.createChannel(channelName, workspace.bot_token, workspace.service_team_id);
                 console.log('New channel created:', channelId);
 
                 // Update the chat session with the new channel ID
@@ -118,11 +122,15 @@ export class ChatSessionService {
                     effectiveUserInfo,
                     referer,
                     location,
-                    localTime
+                    localTime,
+                    channelId
                 );
 
-                // Send the welcome message
-                await chatService.sendMessage(channelId, welcomeMessage, workspace.bot_token_slack);
+                await chatService.sendMessage(
+                    channelId,
+                    welcomeMessage,
+                    workspace.bot_token // Pass the bot token to ensure message is sent from the bot account
+                );
 
                 // Post notification to the admin-selected channel if it exists
                 if (workspace.selected_channel_id) {
@@ -134,37 +142,40 @@ export class ChatSessionService {
                         effectiveUserInfo,
                         referer,
                         location,
-                        localTime
+                        localTime,
+                        channelId
                     );
 
+                    // Send the notification message
                     await chatService.sendMessage(
                         workspace.selected_channel_id,
                         notificationMessage,
-                        workspace.bot_token_slack
+                        workspace.bot_token
                     );
                 }
             } catch (error) {
                 console.error(`Error creating channel:`, error);
                 throw new Error('Failed to create chat channel');
             }
-        }
+        } else {
+            try {
+                const location = 'Ho Chi Minh City, Vietnam';
+                let username = effectiveUserInfo?.email || location;
 
-        // Send the regular message to the existing channel
-        try {
-            // Make sure the service is in the channel
-            await chatService.joinChannel(session.channel_id);
+                await chatService.joinChannel(session.channel_id, workspace.bot_token);
 
-            // Send the message using the adapter
-            await chatService.sendMessage(
-                session.channel_id,
-                message,
-                workspace.bot_token_slack
-            );
+                await chatService.sendMessage(
+                    session.channel_id,
+                    message,
+                    workspace.bot_token,
+                    username
+                );
 
-            await this.noResponseTracker.trackUserMessage(sessionId, true);
-        } catch (error) {
-            console.error(`Error sending message to channel:`, error);
-            throw new Error(`Failed to send message to channel`);
+                await this.noResponseTracker.trackUserMessage(sessionId, true);
+            } catch (error) {
+                console.error(`Error sending message to channel:`, error);
+                throw new Error(`Failed to send message to channel`);
+            }
         }
     }
     async endChatSession(sessionId: string): Promise<void> {
@@ -193,7 +204,7 @@ export class ChatSessionService {
                 await chatService.sendMessage(
                     session.channel_id,
                     `Chat session ended`,
-                    workspace.bot_token_slack // Pass the bot token to ensure message is sent from the bot account
+                    workspace.bot_token // Pass the bot token to ensure message is sent from the bot account
                 );
             }
 
@@ -271,7 +282,7 @@ export class ChatSessionService {
 
         // Get the workspace
         const workspace = await this.workspaceService.findById(workspaceId);
-        if (!workspace || !workspace.bot_token_slack || !workspace.selected_channel_id) {
+        if (!workspace || !workspace.bot_token || !workspace.selected_channel_id) {
             throw new Error('Workspace not configured for Slack');
         }
 
@@ -367,7 +378,7 @@ export class ChatSessionService {
         try {
             // Post to the Slack channel
             await this.slackService.postBlockKitMessage(
-                workspace.bot_token_slack,
+                workspace.bot_token,
                 workspace.selected_channel_id,
                 messageBlocks
             );
