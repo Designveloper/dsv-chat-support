@@ -14,6 +14,10 @@ export class MattermostService implements ChatServiceAdapter {
     private server: Server | null = null;
     private messageHandler: Function | null = null;
     private botUserIds: Set<string> = new Set();
+    // Add a set to track recently processed message IDs
+    private recentlyProcessedMessages: Set<string> = new Set();
+    // Define a timeout for how long to remember processed messages
+    private readonly MESSAGE_DEDUP_TIMEOUT_MS: number = 5000; // 5 seconds
 
     constructor(
         @Inject(forwardRef(() => WorkspaceService))
@@ -203,6 +207,20 @@ export class MattermostService implements ChatServiceAdapter {
                             console.log('Ignoring system message:', post.message);
                             return;
                         }
+
+                        // Deduplicate messages
+                        if (this.recentlyProcessedMessages.has(post.id)) {
+                            console.log(`Ignoring duplicate message with ID: ${post.id}`);
+                            return;
+                        }
+
+                        // Add the message ID to the recently processed set
+                        this.recentlyProcessedMessages.add(post.id);
+
+                        // Remove the message ID after the timeout
+                        setTimeout(() => {
+                            this.recentlyProcessedMessages.delete(post.id);
+                        }, this.MESSAGE_DEDUP_TIMEOUT_MS);
 
                         // Forward the message to the handler - must be from a staff member
                         if (this.messageHandler) {
