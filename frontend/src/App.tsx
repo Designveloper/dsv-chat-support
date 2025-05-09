@@ -20,6 +20,7 @@ import AppearanceSettings from "./components/AppearanceSettings";
 import WidgetInstall from "./components/WidgetInstall";
 import OperatingHours from "./components/OperatingHours";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MattermostIntegration from "./components/MattermostIntegration";
 
 const App = () => {
   return (
@@ -83,6 +84,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <SlackChannelSelector />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mattermost-connect"
+            element={
+              <ProtectedRoute>
+                <MattermostIntegration />
               </ProtectedRoute>
             }
           />
