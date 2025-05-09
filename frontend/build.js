@@ -26,6 +26,7 @@ build({
     ".ts": "ts",
     ".js": "jsx",
     ".svg": "dataurl",
+    ".png": "dataurl",
   },
   define: {
     'global': 'window',
