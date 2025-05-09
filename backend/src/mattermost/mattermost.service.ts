@@ -22,7 +22,7 @@ export class MattermostService implements ChatServiceAdapter {
         this.client = new Client4();
     }
 
-    async initialize(serverUrl: string, username?: string, password?: string, token?: string): Promise<void> {
+    async initialize(serverUrl: string, username?: string, password?: string, token?: string, teamId?: string, botToken?: string): Promise<void> {
         if (!serverUrl) {
             throw new Error('Server URL is required for Mattermost initialization');
         }
@@ -58,6 +58,53 @@ export class MattermostService implements ChatServiceAdapter {
                 // Re-initialize WebSocket after successful authentication
                 console.log('Reconnecting WebSocket after authentication');
                 this.setupWebSocketConnection();
+            }
+        }
+    }
+
+    async initializeFromWorkspace(workspace: WorkSpace): Promise<void> {
+        // Basic initialization with workspace settings
+        await this.initialize(
+            workspace.server_url,
+            undefined,
+            undefined,
+            workspace.service_token,
+            workspace.service_team_id,
+            workspace.bot_token
+        );
+
+        // Try to authenticate with admin token
+        try {
+            await this.getMe();
+        } catch (authError) {
+            if (authError.status_code === 401 && workspace.bot_token) {
+                console.log('Admin token expired, switching to bot token');
+                this.setToken(workspace.bot_token);
+            }
+        }
+
+        // Handle bot token and user ID if available
+        if (workspace.bot_token) {
+            try {
+                console.log('Bot token available, registering bot user ID...');
+                const originalToken = this.getToken();
+
+                // Temporarily use the bot token to get user info
+                this.setToken(workspace.bot_token);
+
+                // Get the bot's user ID
+                const me = await this.getMe();
+                if (me && me.id) {
+                    console.log(`Discovered bot user ID: ${me.id}`);
+                    this.registerBotUserId(me.id);
+                }
+
+                // Restore original token if needed
+                if (originalToken && originalToken !== workspace.bot_token) {
+                    this.setToken(originalToken);
+                }
+            } catch (error) {
+                console.error('Failed to fetch bot user ID:', error);
             }
         }
     }
@@ -230,6 +277,7 @@ export class MattermostService implements ChatServiceAdapter {
 
     async connectBotToWorkspace(workspaceId: string, botToken: string): Promise<{ success: boolean; message: string }> {
         try {
+            // Verify workspace exists
             const workspace = await this.workspaceService.findById(workspaceId);
             if (!workspace) {
                 return { success: false, message: 'Workspace not found' };
@@ -238,30 +286,9 @@ export class MattermostService implements ChatServiceAdapter {
             // Update the bot token in the workspace record
             await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
 
-            try {
-                console.log('Registering bot user ID with new bot token');
-                const originalToken = this.getToken();
-
-                // Set the new bot token temporarily
-                this.setToken(botToken);
-
-                // Get the bot's user ID
-                const me = await this.getMe();
-                if (me && me.id) {
-                    console.log(`Discovered and registering bot user ID: ${me.id}`);
-                    this.registerBotUserId(me.id);
-                }
-
-                if (originalToken && originalToken !== botToken) {
-                    this.setToken(originalToken);
-                }
-            } catch (error) {
-                console.error('Failed to register bot user ID, but continuing:', error);
-            }
-
             return {
                 success: true,
-                message: 'Bot connected and registered successfully'
+                message: 'Bot connected successfully'
             };
         } catch (error) {
             console.error('Error connecting bot:', error);

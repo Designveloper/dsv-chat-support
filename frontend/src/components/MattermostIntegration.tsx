@@ -306,6 +306,11 @@ const MattermostIntegration = () => {
                   Go to <strong>System Console</strong> →{" "}
                   <strong>Integrations</strong> → <strong>Bot Accounts</strong>
                 </li>
+                <li>Enable bot accounts if not already enabled</li>
+                <li>
+                  Click <strong>Integrations</strong> {" > "}
+                  <strong>Bot Accounts</strong> {" link"}
+                </li>
                 <li>
                   Click <strong>Add Bot Account</strong>
                 </li>
@@ -333,7 +338,7 @@ const MattermostIntegration = () => {
                   Click <strong>Create Bot Account</strong>
                 </li>
                 <li>
-                  On the next screen, copy the <strong>Access Token</strong>
+                  On the next screen, copy the <strong>Token</strong>
                 </li>
                 <li>Paste the token below</li>
               </ol>
