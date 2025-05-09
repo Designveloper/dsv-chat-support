@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { Workspace } from "../services/workspaceService";
 import "./OperatingHours.scss";
 import { workspaceSettingsService } from "../services/workspaceSettingsService";
+import clockIcon from "../assets/clock-icon.png";
 
 type ContextType = { workspace: Workspace | null };
 
@@ -457,11 +458,7 @@ const OperatingHours = () => {
     <div className="operating-hours">
       <div className="operating-hours__grid">
         <div className="operating-hours__image-container">
-          <img
-            src="https://chatlio.com/app/img/clock3.png"
-            alt="Clock"
-            className="operating-hours__image"
-          />
+          <img src={clockIcon} alt="Clock" className="operating-hours__image" />
         </div>
         <div className="operating-hours__content">
           <h2 className="operating-hours__title">Operating Hours</h2>

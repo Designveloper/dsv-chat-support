@@ -10,6 +10,8 @@ import { workspaceSettingsService } from "../services/workspaceSettingsService";
 import { useOperatingHours } from "../hooks/useOperatingHours";
 import Button from "./Button";
 import Input from "./Input";
+import messageSentImg from "../assets/message-sent.png";
+import agentAvatar from "../assets/agent-avatar.png";
 
 interface ChatWidgetProps {
   workspaceId?: string;
@@ -238,10 +240,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
               className="chat-widget__close-button chat-widget__close-button--offline"
             />
             <div className="chat-widget__offline-thanks">
-              <img
-                src="https://w.chatlio.com/v5/images/offline-message-sent.e0d81f76.svg"
-                alt="Offline Message Sent"
-              />
+              <img src={messageSentImg} alt="Offline Message Sent" />
               <p>Thanks for your message. We will be in touch soon!</p>
             </div>
           </div>
@@ -356,10 +355,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
             <div key={index} className="chat-widget__message-container">
               {!msg.isUser && (
                 <div className="chat-widget__avatar">
-                  <img
-                    src="https://w.chatlio.com/v5/images/agent.a07867cf.png"
-                    alt="Support Agent"
-                  />
+                  <img src={agentAvatar} alt="Support Agent" />
                 </div>
               )}
               <div
@@ -468,10 +464,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
             >
               <div className="chat-widget__header-with-avatar">
                 <div className="chat-widget__avatar">
-                  <img
-                    src="https://w.chatlio.com/v5/images/agent.a07867cf.png"
-                    alt="Support Agent"
-                  />
+                  <img src={agentAvatar} alt="Support Agent" />
                   {isOnline && !needsIdentification && (
                     <div className="chat-widget__status"></div>
                   )}
