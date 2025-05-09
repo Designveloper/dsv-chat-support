@@ -6,7 +6,6 @@ import { workspaceService, Workspace } from "../services/workspaceService";
 import Button from "./Button";
 import Layout from "./Layout";
 import mattermostLogo from "../assets/mattermost-logo.png";
-import ChatWidget from "./ChatWidget";
 import ServiceSelectionModal from "./ServiceSelectionModal";
 
 const Dashboard = () => {
@@ -273,7 +272,6 @@ const Dashboard = () => {
         onSelectSlack={handleAddToSlack}
         onSelectMattermost={handleConnectToMattermost}
       />
-      <ChatWidget workspaceId={workspaces[0]?.id}></ChatWidget>
     </Layout>
   );
 };
