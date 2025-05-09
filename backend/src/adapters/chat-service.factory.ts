@@ -34,8 +34,6 @@ export class ChatServiceFactory {
                     throw new Error('Missing required Mattermost configuration for this workspace');
                 }
 
-                await this.mattermostService.initializeFromWorkspace(workspace);
-
                 return this.mattermostService;
 
             default:

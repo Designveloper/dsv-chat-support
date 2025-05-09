@@ -3,13 +3,10 @@ import { Server } from 'socket.io';
 export interface ChatServiceAdapter {
     authenticate?(username?: string, password?: string): Promise<boolean>;
 
-    listChannels(teamId?: string): Promise<any[]>;
     joinChannel(channelId: string, botToken?: string): Promise<void>;
     createChannel(channelName: string, botToken?: string, teamId?: string): Promise<string>;
 
     sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void>;
-
-    setupMessageListener?(server: Server, sessionMapping: Map<string, string[]>, messageHandler: Function): void;
 
     formatWelcomeMessage(
         sessionId: string,
@@ -42,7 +39,6 @@ export interface ChatServiceAdapter {
         localTime: string
     ): string | any[];
 
-    getToken?(): string;
 
-    isWorkspaceOnline?(workspaceId: string): Promise<boolean>;
+    isWorkspaceOnline(workspaceId: string): Promise<boolean>;
 }

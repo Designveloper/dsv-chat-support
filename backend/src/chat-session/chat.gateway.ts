@@ -51,9 +51,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         const session = await this.chatSessionService.findSessionBySessionId(sessionId);
 
         if (session) {
-            // console.log(`Client ${client.id} is connected to session ${session.session_id}`);
-            // const isOnline = await this.chatSessionService.isWorkspaceOnline(session.workspace_id);
-            // client.emit('status', { isOnline });
+            console.log(`Client ${client.id} is connected to session ${session.session_id}`);
+            const isOnline = await this.chatSessionService.isWorkspaceOnline(session.workspace_id);
+            client.emit('status', { isOnline });
 
             // Register socket with appropriate service based on workspace type
             const workspace = await this.chatSessionService.findWorkspaceById(session.workspace_id);
@@ -73,7 +73,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
                                 undefined,
                                 undefined,
                                 workspace.service_token,
-                                workspace.service_team_id
                             );
                             console.log('Mattermost client initialized for workspace');
 
