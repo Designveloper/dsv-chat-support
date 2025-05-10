@@ -78,12 +78,16 @@ const MattermostChannel = () => {
   };
 
   return (
-    <MattermostLayout error={error} title="Select Channel">
+    <MattermostLayout title="Select Channel">
       <form onSubmit={handleSelectChannel} className="mattermost-form">
         <h2>Select Channel</h2>
         <p>Choose a channel to receive support chat notifications</p>
 
-        {channels.length === 0 ? (
+        {loading ? (
+          <div className="loading">
+            <div className="loading__spinner"></div>
+          </div>
+        ) : channels.length === 0 ? (
           <div className="no-channels">
             <p>
               No channels found. You may need to create a channel in your
@@ -106,6 +110,12 @@ const MattermostChannel = () => {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
           </div>
         )}
 

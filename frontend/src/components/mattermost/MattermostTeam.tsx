@@ -75,12 +75,16 @@ const MattermostTeam = () => {
   };
 
   return (
-    <MattermostLayout error={error} title="Select Mattermost Team">
+    <MattermostLayout title="Select Mattermost Team">
       <form onSubmit={handleSelectTeam} className="mattermost-form">
         <h2>Select Mattermost Team</h2>
         <p>Choose a team to use for support chats</p>
 
-        {teams.length === 0 ? (
+        {loading ? (
+          <div className="loading">
+            <div className="loading__spinner"></div>
+          </div>
+        ) : teams.length === 0 ? (
           <div className="no-teams">
             <p>
               No teams found. You may need to create a team in your Mattermost
@@ -103,6 +107,12 @@ const MattermostTeam = () => {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
           </div>
         )}
 

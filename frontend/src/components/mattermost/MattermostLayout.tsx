@@ -5,13 +5,11 @@ import "./MattermostIntegration.scss";
 
 interface MattermostLayoutProps {
   children: ReactNode;
-  error: string | null;
   title?: string;
 }
 
 const MattermostLayout: React.FC<MattermostLayoutProps> = ({
   children,
-  error,
   title = "Mattermost Integration",
 }) => {
   // Determine current step based on the route
@@ -34,12 +32,6 @@ const MattermostLayout: React.FC<MattermostLayoutProps> = ({
         <div className="mattermost-integration__header">
           <h1>{title}</h1>
         </div>
-
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-          </div>
-        )}
 
         <div className="mattermost-integration__content">
           <div className="steps-indicator">

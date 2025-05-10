@@ -58,7 +58,7 @@ const MattermostConnect = () => {
   };
 
   return (
-    <MattermostLayout error={error} title="Connect to Mattermost">
+    <MattermostLayout title="Connect to Mattermost">
       <form onSubmit={handleConnectServer} className="mattermost-form">
         <h2>Connect to Mattermost Server</h2>
         <p>Enter your Mattermost server details to connect</p>
@@ -109,6 +109,12 @@ const MattermostConnect = () => {
             required
           />
         </div>
+
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+          </div>
+        )}
 
         <div className="form-actions">
           <Button
