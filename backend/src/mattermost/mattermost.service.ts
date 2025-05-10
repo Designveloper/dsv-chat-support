@@ -291,7 +291,7 @@ export class MattermostService implements ChatServiceAdapter {
         }
     }
 
-    async connectBotToWorkspace(workspaceId: string, botToken: string): Promise<{ success: boolean; message: string }> {
+    async connectBotToWorkspace(workspaceId: string, botToken: string): Promise<{ success: boolean; message: string; botUser?: any }> {
         try {
             // Verify workspace exists
             const workspace = await this.workspaceService.findById(workspaceId);
@@ -299,13 +299,43 @@ export class MattermostService implements ChatServiceAdapter {
                 return { success: false, message: 'Workspace not found' };
             }
 
-            // Update the bot token in the workspace record
-            await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
+            // Save original token to restore later
+            const originalToken = this.client.getToken();
 
-            return {
-                success: true,
-                message: 'Bot connected successfully'
-            };
+            try {
+                // Set the client to use the bot token temporarily
+                this.client.setToken(botToken);
+
+                // Try to get the bot's user info - this will fail if token is invalid
+                const botUser = await this.getMe();
+
+                if (!botUser || !botUser.id) {
+                    return { success: false, message: 'Invalid bot token' };
+                }
+
+                // Register the bot user ID to filter its messages
+                this.registerBotUserId(botUser.id);
+
+                // Token is valid, update in the workspace record
+                await this.workspaceService.updateMattermostBotToken(workspaceId, botToken);
+
+                return {
+                    success: true,
+                    message: 'Bot connected successfully',
+                    botUser: {
+                        id: botUser.id,
+                        username: botUser.username
+                    }
+                };
+            } catch (error) {
+                console.error('Bot token validation failed:', error);
+                return { success: false, message: 'Invalid bot token: ' + error.message };
+            } finally {
+                // Restore original token if there was one
+                if (originalToken) {
+                    this.client.setToken(originalToken);
+                }
+            }
         } catch (error) {
             console.error('Error connecting bot:', error);
             return { success: false, message: 'Failed to connect bot: ' + error.message };
