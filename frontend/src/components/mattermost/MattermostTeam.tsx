@@ -76,11 +76,6 @@ const MattermostTeam = () => {
 
   return (
     <MattermostLayout error={error} title="Select Mattermost Team">
-      {loading && (
-        <div className="loading">
-          <div className="loading__spinner"></div>
-        </div>
-      )}
       <form onSubmit={handleSelectTeam} className="mattermost-form">
         <h2>Select Mattermost Team</h2>
         <p>Choose a team to use for support chats</p>
@@ -123,7 +118,7 @@ const MattermostTeam = () => {
             disabled={loading}
           />
           <Button
-            label="Next"
+            label={loading ? "Selecting..." : "Select Team"}
             type="submit"
             disabled={loading || !selectedTeam}
           />

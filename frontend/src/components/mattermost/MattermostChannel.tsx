@@ -79,11 +79,6 @@ const MattermostChannel = () => {
 
   return (
     <MattermostLayout error={error} title="Select Channel">
-      {loading && (
-        <div className="loading">
-          <div className="loading__spinner"></div>
-        </div>
-      )}
       <form onSubmit={handleSelectChannel} className="mattermost-form">
         <h2>Select Channel</h2>
         <p>Choose a channel to receive support chat notifications</p>
@@ -128,7 +123,7 @@ const MattermostChannel = () => {
             disabled={loading}
           />
           <Button
-            label="Finish"
+            label={loading ? "Saving..." : "Save"}
             type="submit"
             disabled={loading || !selectedChannel}
           />

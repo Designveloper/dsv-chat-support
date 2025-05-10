@@ -59,11 +59,6 @@ const MattermostConnect = () => {
 
   return (
     <MattermostLayout error={error} title="Connect to Mattermost">
-      {loading && (
-        <div className="loading">
-          <div className="loading__spinner"></div>
-        </div>
-      )}
       <form onSubmit={handleConnectServer} className="mattermost-form">
         <h2>Connect to Mattermost Server</h2>
         <p>Enter your Mattermost server details to connect</p>
@@ -121,7 +116,11 @@ const MattermostConnect = () => {
             onClick={() => navigate("/dashboard")}
             variant="secondary"
           />
-          <Button label="Connect" type="submit" disabled={loading} />
+          <Button
+            label={loading ? "Connecting..." : "Connect"}
+            type="submit"
+            disabled={loading}
+          />
         </div>
       </form>
     </MattermostLayout>

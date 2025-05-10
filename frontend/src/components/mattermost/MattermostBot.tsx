@@ -50,11 +50,6 @@ const MattermostBot = () => {
 
   return (
     <MattermostLayout error={error} title="Connect Bot Account">
-      {loading && (
-        <div className="loading">
-          <div className="loading__spinner"></div>
-        </div>
-      )}
       <form onSubmit={handleConnectBot} className="mattermost-form">
         <h2>Connect Bot Account</h2>
         <p>
@@ -140,7 +135,7 @@ const MattermostBot = () => {
             disabled={loading}
           />
           <Button
-            label="Connect Bot"
+            label={loading ? "Connecting..." : "Connect Bot"}
             type="submit"
             disabled={loading || !botToken}
           />

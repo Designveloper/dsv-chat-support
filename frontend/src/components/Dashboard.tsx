@@ -7,7 +7,6 @@ import Button from "./Button";
 import Layout from "./Layout";
 import mattermostLogo from "../assets/mattermost-logo.png";
 import ServiceSelectionModal from "./ServiceSelectionModal";
-import ChatWidget from "./ChatWidget";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -273,7 +272,6 @@ const Dashboard = () => {
         onSelectSlack={handleAddToSlack}
         onSelectMattermost={handleConnectToMattermost}
       />
-      <ChatWidget workspaceId={workspaces[0]?.id} />
     </Layout>
   );
 };
