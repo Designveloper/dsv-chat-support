@@ -14,9 +14,7 @@ export class MattermostService implements ChatServiceAdapter {
     private server: Server | null = null;
     private messageHandler: Function | null = null;
     private botUserIds: Set<string> = new Set();
-    // Add a set to track recently processed message IDs
     private recentlyProcessedMessages: Set<string> = new Set();
-    // Define a timeout for how long to remember processed messages
     private readonly MESSAGE_DEDUP_TIMEOUT_MS: number = 5000; // 5 seconds
 
     constructor(

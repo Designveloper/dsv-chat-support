@@ -5,7 +5,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-// import Header from "./components/Header";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
@@ -20,7 +19,10 @@ import AppearanceSettings from "./components/AppearanceSettings";
 import WidgetInstall from "./components/WidgetInstall";
 import OperatingHours from "./components/OperatingHours";
 import ProtectedRoute from "./components/ProtectedRoute";
-import MattermostIntegration from "./components/MattermostIntegration";
+import MattermostConnect from "./components/mattermost/MattermostConnect";
+import MattermostTeam from "./components/mattermost/MattermostTeam";
+import MattermostBot from "./components/mattermost/MattermostBot";
+import MattermostChannel from "./components/mattermost/MattermostChannel";
 
 const App = () => {
   return (
@@ -61,10 +63,7 @@ const App = () => {
               </ProtectedRoute>
             }
           >
-            <Route
-              index
-              element={<Navigate to="/settings/behavior" replace />}
-            />
+            <Route index element={<Navigate to="behavior" replace />} />
             <Route path="behavior" element={<BehaviorSettings />} />
             <Route path="appearance" element={<AppearanceSettings />} />
             <Route path="operating-hours" element={<OperatingHours />} />
@@ -89,10 +88,34 @@ const App = () => {
           />
 
           <Route
-            path="/mattermost-connect"
+            path="/mattermost/connect"
             element={
               <ProtectedRoute>
-                <MattermostIntegration />
+                <MattermostConnect />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mattermost/team"
+            element={
+              <ProtectedRoute>
+                <MattermostTeam />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mattermost/bot"
+            element={
+              <ProtectedRoute>
+                <MattermostBot />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mattermost/channel"
+            element={
+              <ProtectedRoute>
+                <MattermostChannel />
               </ProtectedRoute>
             }
           />

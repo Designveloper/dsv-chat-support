@@ -20,7 +20,6 @@ export class MattermostController {
             return {
                 ...result,
                 workspaceId: result.workspace.id,
-                redirectUrl: `/mattermost/select-channel?workspaceId=${result.workspace.id}`
             };
         }
 
