@@ -83,11 +83,7 @@ const MattermostChannel = () => {
         <h2>Select Channel</h2>
         <p>Choose a channel to receive support chat notifications</p>
 
-        {loading ? (
-          <div className="loading">
-            <div className="loading__spinner"></div>
-          </div>
-        ) : channels.length === 0 ? (
+        {channels.length === 0 ? (
           <div className="no-channels">
             <p>
               No channels found. You may need to create a channel in your
