@@ -14,7 +14,8 @@ const Home: React.FC = () => {
           <div className="home__container">
             <h1 className="home__title">DSV Customer Support Made Simple</h1>
             <p className="home__subtitle">
-              Chat with visitors directly from Slack and never miss a message.
+              Chat with visitors directly from Slack/Mattermost and never miss a
+              message.
             </p>
             <a
               href="https://www.designveloper.com/"
