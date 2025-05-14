@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./Header.scss";
 import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
-import companyLogo from "../assets/company-logo.png";
 
 type HeaderProps = {
   showAnimation?: boolean;
@@ -35,15 +34,6 @@ const Header: React.FC<HeaderProps> = ({ showAnimation = false }) => {
           isMenuOpen ? "header__mobile-menu--open" : ""
         }`}
       >
-        {isHomePage && (
-          <nav className="header__nav">
-            <img
-              src={companyLogo}
-              alt="Logo"
-              style={{ width: "300px", height: "auto" }}
-            />
-          </nav>
-        )}
         <div className="header__auth">
           {isAuthenticated ? (
             <>

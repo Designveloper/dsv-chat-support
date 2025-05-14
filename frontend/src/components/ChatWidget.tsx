@@ -12,6 +12,7 @@ import Button from "./Button";
 import Input from "./Input";
 import messageSentImg from "../assets/message-sent.png";
 import agentAvatar from "../assets/agent-avatar.png";
+import closeIcon from "../assets/close-icon.png";
 
 interface ChatWidgetProps {
   workspaceId?: string;
@@ -235,9 +236,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
       if (offlineFormSubmitted) {
         return (
           <div className="chat-widget__offline">
-            <div
+            <img
+              src={closeIcon}
               onClick={() => hide()}
               className="chat-widget__close-button chat-widget__close-button--offline"
+              alt="Close"
             />
             <div className="chat-widget__offline-thanks">
               <img src={messageSentImg} alt="Offline Message Sent" />
@@ -310,9 +313,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
     if (needsIdentification && isOnline) {
       return (
         <div className="chat-widget__visitor-identification">
-          <div
+          <img
+            src={closeIcon}
             onClick={() => hide()}
             className="chat-widget__close-button chat-widget__close-button--offline"
+            alt="Close"
           />
           <VisitorIdentificationForm
             workspaceId={activeWorkspace}
@@ -488,9 +493,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
                     ></path>
                   </svg>
                 )}
-                <div
+                <img
+                  src={closeIcon}
                   onClick={() => hide()}
                   className="chat-widget__close-button"
+                  alt="Close"
                 />
                 {isOnline && (
                   <div

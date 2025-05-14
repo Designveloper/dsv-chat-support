@@ -5,6 +5,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { WorkspaceService } from '../workspace/workspace.service';
 import { EavService } from 'src/eav/eav.service';
+import { ModuleRef } from '@nestjs/core';
+import { SlackBoltService } from './slack-bolt.service';
 
 @Injectable()
 export class SlackService {
@@ -15,6 +17,7 @@ export class SlackService {
         private httpService: HttpService,
         private workspaceService: WorkspaceService,
         private eavService: EavService,
+        private moduleRef: ModuleRef
     ) {
         this.slackClient = new WebClient();
     }
@@ -96,7 +99,6 @@ export class SlackService {
                     workspace.id,
                     botToken,
                     '',
-                    slackWorkspaceId
                 );
 
                 // Redirect to channel selection page
@@ -149,11 +151,11 @@ export class SlackService {
                 throw new NotFoundException('Workspace not found');
             }
 
-            if (!workspace.bot_token_slack) {
+            if (!workspace.bot_token) {
                 throw new BadRequestException('Slack not connected to this workspace');
             }
 
-            const channels = await this.listChannels(workspace.bot_token_slack);
+            const channels = await this.listChannels(workspace.bot_token);
             return { channels };
         } catch (error) {
             console.error('Error fetching channels:', error);
@@ -177,9 +179,8 @@ export class SlackService {
             // Update just the channel ID
             await this.workspaceService.updateSlackDetails(
                 workspaceId,
-                workspace.bot_token_slack,
+                workspace.bot_token,
                 channelId,
-                workspace.service_slack_account_id
             );
 
             return { success: true };
@@ -189,7 +190,7 @@ export class SlackService {
         }
     }
 
-    async createChannel(botToken: string, channelName: string): Promise<string> {
+    async createChannel(channelName: string, botToken: string, teamId?: string): Promise<string> {
         const web = new WebClient(botToken);
         try {
             console.log(`Creating channel: ${channelName}`);
@@ -271,6 +272,365 @@ export class SlackService {
         } catch (error) {
             console.error('Error posting Block Kit message to Slack:', error);
             throw new Error('Failed to send message to Slack');
+        }
+    }
+
+    // Replace your current sendMessage method with this one
+    async sendMessage(channelId: string, text: string | any[], botToken?: string, username?: string): Promise<void> {
+        console.log("🚀 ~ SlackService ~ sendMessage ~ channelId:", channelId);
+        try {
+            // Determine which token to use
+            const token = botToken || this.configService.get('SLACK_BOT_TOKEN');
+
+            if (!token) {
+                throw new Error('No bot token provided for Slack message');
+            }
+
+            // Case 1: text is already an array (Block Kit message)
+            if (Array.isArray(text)) {
+                console.log("Message is already a Block Kit array, sending directly");
+                await this.postBlockKitMessage(token, channelId, text);
+                return;
+            }
+
+            // Case 2: text is a string that might be JSON
+            if (typeof text === 'string') {
+                try {
+                    const parsedBlocks = JSON.parse(text);
+                    if (Array.isArray(parsedBlocks)) {
+                        console.log("Parsed blocks are an array, sending as Block Kit message");
+                        await this.postBlockKitMessage(token, channelId, parsedBlocks);
+                        return;
+                    }
+                } catch (e) {
+                    // Not a JSON string, just continue with regular message
+                    console.log("Not a JSON string, sending as regular message");
+                }
+            }
+
+            // Make sure bot has joined the channel before posting
+            await this.joinChannel(token, channelId);
+
+            // Post regular text message
+            await this.postMessage(token, channelId, text as string, username);
+        } catch (error) {
+            console.error('Error in SlackService.sendMessage:', error);
+            throw new Error('Failed to send message to Slack channel');
+        }
+    }
+
+    formatWelcomeMessage(
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string,
+        channelId: string  // Add channelId parameter
+    ): any[] {
+        // Create the user info section
+        const userFields: { type: string; text: string }[] = [];
+
+        // Add user email if available
+        if (userInfo?.email) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*User Email:*\n" + userInfo.email
+            });
+        } else {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Session ID:*\n" + sessionId
+            });
+        }
+
+        if (userInfo?.userId) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Name:*\n" + userInfo.userId
+            });
+        }
+
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "New chat session started",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "fields": userFields
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*STATUS:*\nActive"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Channel:*\n<#" + channelId + ">"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*First Message:*\n" + message
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Location:*\n:flag-VN: " + location
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Local Time:*\n" + localTime
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Current Page:*\n" + referer
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Session ID:*\n" + sessionId
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+        ];
+    }
+
+    formatNotificationMessage(
+        channelName: string,
+        sessionId: string,
+        message: string,
+        userInfo: { email?: string, userId?: string } | undefined,
+        referer: string,
+        location: string,
+        localTime: string,
+        channelId: string  // Add channelId parameter
+    ): any[] {
+        // Create the user info section
+        const userFields: { type: string; text: string }[] = [];
+
+        // Add user email if available
+        if (userInfo?.email) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*User Email:*\n" + userInfo.email
+            });
+        } else {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Session ID:*\n" + sessionId
+            });
+        }
+
+        if (userInfo?.userId) {
+            userFields.push({
+                "type": "mrkdwn",
+                "text": "*Name:*\n" + userInfo.userId
+            });
+        }
+
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": `New message in ${channelName}`,
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "fields": userFields
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*STATUS:*\nActive"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Channel:*\n<#" + channelId + "> "
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Message:*\n" + message
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Location:*\n:flag-VN:  *" + location + "*"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Local Time:*\n" + localTime
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Current Page:*\n" + referer
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Session ID:*\n" + sessionId
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+        ];
+    }
+
+    // Add this method to the SlackService class
+    formatOfflineMessage(
+        sessionId: string,
+        message: string,
+        email: string,
+        name: string | undefined,
+        referer: string,
+        location: string,
+        localTime: string
+    ): any[] {
+        return [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Live-chat offline message",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `:email: *Offline message from ${email}*`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": ":memo: *Message:*"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `>${message.split('\n').join('\n>')}`
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Email:* ${email}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": name ? `*Name:* ${name}` : "*Name:* Not provided"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Location:* :flag-VN: ${location}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Local Time:* ${localTime}`
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Current Page:* ${referer}`
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": `*Session ID:* ${sessionId}`
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            }
+        ];
+    }
+
+    async isWorkspaceOnline(workspaceId: string): Promise<boolean> {
+        try {
+            const slackBoltService = await this.moduleRef.get(SlackBoltService, { strict: false });
+
+            if (slackBoltService && slackBoltService.isWorkspaceOnline) {
+                // Delegate to the bolt service implementation
+                return await slackBoltService.isWorkspaceOnline(workspaceId);
+            }
+
+            console.log(`Unable to check Slack workspace ${workspaceId} status, returning true as default`);
+            return true;
+        } catch (error) {
+            console.error('Error checking Slack workspace online status:', error);
+            return true; // Default to online for Slack if there's an error
         }
     }
 }

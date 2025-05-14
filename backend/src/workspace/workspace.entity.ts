@@ -20,13 +20,25 @@ export class WorkSpace {
   selected_channel_id: string;
 
   @Column({ type: 'varchar', nullable: true })
-  bot_token_slack: string; // Slack bot token
+  bot_token: string;
 
   @Column({ type: 'varchar', nullable: true })
-  service_type_slack: string; // e.g., "slack"
+  service_type: string; // e.g., "slack"
 
   @Column({ type: 'varchar', nullable: true })
-  service_slack_account_id: string;
+  service_username: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  service_password: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  server_url: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  service_token: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  service_team_id: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

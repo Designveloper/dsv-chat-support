@@ -10,6 +10,8 @@ import { WorkspaceModule } from './workspace/workspace.module';
 import { SlackModule } from './slack/slack.module';
 import { ChatSessionModule } from './chat-session/chat-session.module';
 import { EavModule } from './eav/eav.module';
+import { MattermostModule } from './mattermost/mattermost.module';
+import { AdaptersModule } from './adapters/adapters.module';
 
 @Module({
   imports: [
@@ -28,7 +30,9 @@ import { EavModule } from './eav/eav.module';
     WorkspaceModule,
     SlackModule,
     ChatSessionModule,
-    EavModule
+    EavModule,
+    MattermostModule,
+    AdaptersModule,
   ],
 })
 export class AppModule { }
