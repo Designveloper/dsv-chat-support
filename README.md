@@ -32,12 +32,22 @@ DB_PASSWORD=your-db-password
 DB_NAME=your-db-name
 
 # Slack configuration
+SLACK_BOT_TOKEN=your-slack-bot-token
 SLACK_CLIENT_ID=your-slack-client-id
+SLACK_CLIENT_SECRET=your-slack-client-secret
 SLACK_SIGNING_SECRET=your-slack-signing-secret
 SLACK_REDIRECT_URI=your-slack-redirect-uri
 
 # JWT signing key
 JWT_SECRET=your-jwt-secret
+
+# SMTP configuration (used for sending verification codes)
+SMTP_HOST=your-smtp-host
+SMTP_PORT=your-smtp-port
+SMTP_USER=your-smtp-user
+SMTP_PASS=your-smtp-pass
+SMTP_FROM=your-smtp-from
+
 ```
 
 ---
@@ -63,11 +73,14 @@ To enable Slack integration:
   - `users:read`
   - `users:read.email`
   - `commands`
-- Set the **Redirect URL** to:
+
+ - After setting up the OAuth scopes, you need to install the app to your workspace.
+ - Copy the **Bot User OAuth Token** from the Slack app settings to set `SLACK_BOT_TOKEN` in your `.env` file.
+ - Set the **Redirect URL** to:
   ```
-  https://chat-support-server.onrender.com/slack/oauth_redirect
+  https://<your-domain>/slack/oauth_redirect
   ```
-  (Replace with your own backend UR if self-hosting.)
+  (If you are running locally, use ngrok to expose your local server first)
 
 **Enable Event Subscriptions**
 
@@ -75,16 +88,17 @@ To enable Slack integration:
 - Enable events.
 - Set the **Request URL** to:
   ```
-  https://chat-support-server.onrender.com/slack/events
+  https://<your-domain>/slack/events
   ```
-  (Replace with your own backend URL if self-hosting.)
+  (If you are running locally, use ngrok to expose your local server first)
 
 **Get your credentials**
 
-- Copy the **Client ID** and **Signing Secret** from your Slack app settings.
+- Copy the **Client ID**, **Client Secret**, and **Signing Secret** from your Slack app settings.
 - Add them to your [.env](http://_vscodecontentref_/1) file:
   ```
   SLACK_CLIENT_ID=your-client-id
+  SLACK_CLIENT_SECRET=your-client-secret
   SLACK_SIGNING_SECRET=your-signing-secret
   SLACK_REDIRECT_URI=https://<your-domain>/slack/oauth_redirect
   ```
