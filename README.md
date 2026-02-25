@@ -91,14 +91,6 @@ https://<your-domain>/slack/oauth_redirect
 
 > If running locally, use [ngrok](https://ngrok.com/) to expose your local backend: `ngrok http 3000`
 
-**Enable Event Subscriptions**
-
-- Go to the **Event Subscriptions** tab and enable it.
-- Set the **Request URL** to:
-  ```
-  https://<your-domain>/slack/events
-  ```
-
 **Copy remaining credentials to `.env`**
 
 ```env
@@ -156,7 +148,25 @@ The frontend dev server will be available at [http://localhost:5173](http://loca
 
 ---
 
-### 6. Connect Your Slack Workspace
+### 6. Enable Event Subscriptions
+
+> **Important:** The backend (and ngrok tunnel, if running locally) **must be running** before this step. Slack sends a verification challenge to your server, so it needs to be reachable.
+
+1. Go to the [Event Subscriptions](https://api.slack.com/apps) tab for your Slack app and toggle it **on**.
+2. Set the **Request URL** to:
+   ```
+   https://<your-domain>/slack/events
+   ```
+   Slack will send a `url_verification` challenge — wait until it shows **Verified ✓**.
+
+3. Under **Subscribe to bot events**, click **Add Bot User Event** and add:
+   - `message.channels` — to receive messages posted in public channels
+
+4. Click **Save Changes** (the button is only enabled after adding at least one event above).
+
+---
+
+### 7. Connect Your Slack Workspace
 
 After the app is running, log in and navigate to the dashboard. Use the **Connect Slack** option to link your workspace and select a channel for notifications.
 
