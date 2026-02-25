@@ -204,7 +204,7 @@ export class SlackService {
 
             // Explicitly join the newly created channel
             console.log(`Joining newly created channel: ${channelId}`);
-            await this.joinChannel(botToken, channelId);
+            await this.joinChannel(channelId, botToken);
 
             return channelId;
         } catch (error) {
@@ -227,7 +227,7 @@ export class SlackService {
         await web.chat.postMessage(messageOptions);
     }
 
-    async joinChannel(botToken: string, channelId: string): Promise<void> {
+    async joinChannel(channelId: string, botToken?: string): Promise<void> {
         if (!channelId) {
             console.error('Cannot join channel: Invalid channel ID');
             return;
@@ -256,7 +256,7 @@ export class SlackService {
     async postBlockKitMessage(token: string, channelId: string, blocks: any[]): Promise<void> {
         try {
             // Ensure we're in the channel first
-            await this.joinChannel(token, channelId);
+            await this.joinChannel(channelId, token);
 
             const web = new WebClient(token);
             const result = await web.chat.postMessage({
@@ -309,7 +309,7 @@ export class SlackService {
             }
 
             // Make sure bot has joined the channel before posting
-            await this.joinChannel(token, channelId);
+            await this.joinChannel(channelId, token);
 
             // Post regular text message
             await this.postMessage(token, channelId, text as string, username);
