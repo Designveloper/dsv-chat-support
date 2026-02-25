@@ -15,7 +15,7 @@ import { MattermostService } from '../mattermost/mattermost.service';
 
 @WebSocketGateway({
     cors: {
-        origin: ['http://localhost:5173', 'https://chat-support-7j2g.onrender.com'],
+        origin: (process.env.WIDGET_URL || 'http://localhost:4173').split(',').map(o => o.trim()),
         credentials: true,
     },
 })

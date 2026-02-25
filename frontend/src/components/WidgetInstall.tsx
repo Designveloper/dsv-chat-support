@@ -41,13 +41,13 @@ const WidgetInstall: React.FC = () => {
         </p>
         <div className="widget-install__code-block">
           <pre>
-            <code>{`<script src="https://chat-support-7j2g.onrender.com/chat-widget.js" async></script>`}</code>
+            <code>{`<script src="${import.meta.env.VITE_WIDGET_URL}/chat-widget.js" async></script>`}</code>
           </pre>
           <button
             className="widget-install__copy-btn"
             onClick={() =>
               copyToClipboard(
-                '<script src="https://chat-support-7j2g.onrender.com/chat-widget.js" async></script>',
+                `<script src="${import.meta.env.VITE_WIDGET_URL}/chat-widget.js" async></script>`,
                 "Script"
               )
             }

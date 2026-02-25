@@ -1,39 +1,53 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db-migration.sql:/docker-entrypoint-initdb.d/db-migration.sql:ro
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_HOST=db
+      - WIDGET_URL=http://localhost
+    networks:
+      - chat-network
+
   frontend:
     build: ./frontend
     ports:
       - "80:80"
     depends_on:
       - backend
+    env_file:
+      - ./frontend/.env
     environment:
       - VITE_API_URL=http://localhost/api
-    networks:
-      - chat-network
-
-  backend:
-    build: ./backend
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - FRONTEND_URL=http://localhost
-      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
-      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
-      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
-      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
-      - SLACK_REDIRECT_URI=${SLACK_REDIRECT_URI}
-      - JWT_SECRET=${JWT_SECRET}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
+      - VITE_WIDGET_URL=http://localhost
     networks:
       - chat-network
 

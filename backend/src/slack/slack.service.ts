@@ -102,7 +102,7 @@ export class SlackService {
                 );
 
                 // Redirect to channel selection page
-                const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
+                const frontendUrl = this.configService.get('WIDGET_URL', 'http://localhost:4173');
                 return {
                     redirectUrl: `${frontendUrl}/slack/select-channel?workspaceId=${workspace.id}`
                 };
@@ -111,7 +111,7 @@ export class SlackService {
             }
         } catch (error) {
             console.error('Slack OAuth error:', error);
-            const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
+            const frontendUrl = this.configService.get('WIDGET_URL', 'http://localhost:4173');
             return {
                 redirectUrl: `${frontendUrl}/dashboard?error=slack_connection_failed`
             };
